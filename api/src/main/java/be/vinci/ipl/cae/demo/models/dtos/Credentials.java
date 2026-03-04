@@ -8,7 +8,13 @@ public class Credentials {
   private String username;
   private String password;
 
-  public Credentials() {}
+  /**
+   * constructor.
+   */
+  @SuppressWarnings("PMD.UnnecessaryConstructor")
+  public Credentials() {
+    // empty for jpa generation
+  }
 
   public String getUsername() {
     return username;
