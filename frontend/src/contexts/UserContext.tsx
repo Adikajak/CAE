@@ -8,6 +8,7 @@ import {
 
 import {
   clearAuthenticatedUser,
+  getAuthenticatedUser,
   storeAuthenticatedUser,
 } from '../utils/session';
 
@@ -22,7 +23,7 @@ const UserContext = createContext<UserContextType>(defaultUserContext);
 
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUser] =
-    useState<MaybeAuthenticatedUser>(undefined);
+    useState<MaybeAuthenticatedUser>(() => getAuthenticatedUser());
 
   const registerUser = async (newUser: User) => {
     try {
