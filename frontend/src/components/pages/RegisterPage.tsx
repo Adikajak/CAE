@@ -59,7 +59,7 @@ const RegisterPage = () => {
             required
             color="primary"
             sx={{
-              input: { color: theme.palette.secondary.contrastText },
+              input: { color: theme.palette.primary.main },
             }}
           />
         </Box>
@@ -75,7 +75,7 @@ const RegisterPage = () => {
             required
             color="primary"
             sx={{
-              input: { color: theme.palette.secondary.contrastText },
+              input: { color: theme.palette.primary.main },
             }}
           />
         </Box>

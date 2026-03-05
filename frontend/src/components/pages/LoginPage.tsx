@@ -59,9 +59,9 @@ const LoginPage = () => {
             value={email}
             onChange={handleEmailInputChange}
             required
-            color="secondary"
+            color="primary"
             sx={{
-              input: { color: theme.palette.secondary.contrastText },
+              input: { color: theme.palette.primary.main },
             }}
           />
         </Box>
@@ -75,9 +75,9 @@ const LoginPage = () => {
             value={password}
             onChange={handlePasswordChange}
             required
-            color="secondary"
+            color="primary"
             sx={{
-              input: { color: theme.palette.secondary.contrastText },
+              input: { color: theme.palette.primary.main },
             }}
           />
         </Box>
