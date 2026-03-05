@@ -17,14 +17,11 @@ const NavBar = () => {
         </Button>
         {authenticatedUser ? (
           <>
-            <Button color="inherit" onClick={() => navigate('/add-pizza')}>
-              Ajouter une pizza
-            </Button>
             <Button color="inherit" onClick={() => clearUser()}>
               Se déconnecter
             </Button>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Hello dear {authenticatedUser.username}
+              Hello dear {authenticatedUser.email}
             </Typography>
           </>
         ) : (

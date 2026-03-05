@@ -1,6 +1,6 @@
 import { useState, SyntheticEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, TextField, useTheme } from '@mui/material';
+import { Alert, Box, Button, TextField, useTheme } from '@mui/material';
 import { UserContextType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import './index.css';
@@ -8,23 +8,28 @@ import './index.css';
 const LoginPage = () => {
   const { loginUser }: UserContextType = useContext(UserContext);
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const theme = useTheme();
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     try {
-      await loginUser({ username, password });
+      await loginUser({ email, password });
       navigate('/');
     } catch (err) {
       console.error('LoginPage::error: ', err);
+      setErrorMessage(
+        "Echec de connexion. Verifiez l'email et le mot de passe.",
+      );
     }
   };
 
-  const handleUsernameInputChange = (e: SyntheticEvent) => {
+  const handleEmailInputChange = (e: SyntheticEvent) => {
     const input = e.target as HTMLInputElement;
-    setUsername(input.value);
+    setEmail(input.value);
   };
 
   const handlePasswordChange = (e: SyntheticEvent) => {
@@ -47,12 +52,13 @@ const LoginPage = () => {
         <Box sx={{ marginBottom: 2 }}>
           <TextField
             fullWidth
-            id="username"
-            name="username"
-            label="Username"
+            id="email"
+            name="email"
+            type="email"
+            label="Email"
             variant="outlined"
-            value={username}
-            onChange={handleUsernameInputChange}
+            value={email}
+            onChange={handleEmailInputChange}
             required
             color="primary"
             sx={{
@@ -79,6 +85,11 @@ const LoginPage = () => {
         <Button type="submit" variant="contained" color="primary">
           S'authentifier
         </Button>
+        {errorMessage && (
+          <Alert severity="error" sx={{ marginTop: 2 }}>
+            {errorMessage}
+          </Alert>
+        )}
       </form>
     </Box>
   );
