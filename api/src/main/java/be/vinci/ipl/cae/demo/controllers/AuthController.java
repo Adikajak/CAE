@@ -30,8 +30,8 @@ public class AuthController {
 
   private boolean isInvalidCredentials(Credentials credentials) {
     return credentials == null
-        || credentials.getUsername() == null
-        || credentials.getUsername().isBlank()
+        || credentials.getEmail() == null
+        || credentials.getEmail().isBlank()
         || credentials.getPassword() == null
         || credentials.getPassword().isBlank();
   }
@@ -48,7 +48,7 @@ public class AuthController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.register(credentials.getUsername(),
+    AuthenticatedUser user = userService.register(credentials.getEmail(),
         credentials.getPassword());
 
     if (user == null) {
@@ -69,7 +69,7 @@ public class AuthController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.login(credentials.getUsername(),
+    AuthenticatedUser user = userService.login(credentials.getEmail(),
         credentials.getPassword());
 
     if (user == null) {

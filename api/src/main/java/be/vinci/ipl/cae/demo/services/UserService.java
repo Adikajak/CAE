@@ -41,19 +41,19 @@ public class UserService {
   /**
    * Create a JWT token.
    *
-   * @param username the username to included in the claim
+   * @param email the email to included in the claim
    * @return the JWT token
    */
-  public AuthenticatedUser createJwtToken(String username) {
+  public AuthenticatedUser createJwtToken(String email) {
     String token = JWT.create()
         .withIssuer("auth0")
-        .withClaim("username", username)
+        .withClaim("email", email)
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
         .sign(algorithm);
 
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
-    authenticatedUser.setUsername(username);
+    authenticatedUser.setEmail(email);
     authenticatedUser.setToken(token);
 
     return authenticatedUser;
@@ -67,7 +67,7 @@ public class UserService {
    */
   public String verifyJwtToken(String token) {
     try {
-      return JWT.require(algorithm).build().verify(token).getClaim("username").asString();
+      return JWT.require(algorithm).build().verify(token).getClaim("email").asString();
     } catch (Exception e) {
       return null;
     }
@@ -76,12 +76,12 @@ public class UserService {
   /**
    * Login a user.
    *
-   * @param username the username
+   * @param email the email
    * @param password the password
    * @return the authenticated user if the login is successful, null otherwise
    */
-  public AuthenticatedUser login(String username, String password) {
-    User user = userRepository.findByUsername(username);
+  public AuthenticatedUser login(String email, String password) {
+    User user = userRepository.findByEmail(email);
     if (user == null) {
       return null;
     }
@@ -90,27 +90,27 @@ public class UserService {
       return null;
     }
 
-    System.out.println(createJwtToken(username));
+    System.out.println(createJwtToken(email));
 
-    return createJwtToken(username);
+    return createJwtToken(email);
   }
 
   /**
    * Register a new user.
    *
-   * @param username the username
+   * @param email the email
    * @param password the password
    * @return the authenticated user if the registration is successful, null otherwise
    */
-  public AuthenticatedUser register(String username, String password) {
-    User user = userRepository.findByUsername(username);
+  public AuthenticatedUser register(String email, String password) {
+    User user = userRepository.findByEmail(email);
     if (user != null) {
       return null;
     }
 
-    createOne(username, password);
+    createOne(email, password);
 
-    return createJwtToken(username);
+    return createJwtToken(email);
   }
 
   /**
@@ -120,20 +120,20 @@ public class UserService {
    * @return the user if it exists, null otherwise
    */
   public User readOneFromUsername(String username) {
-    return userRepository.findByUsername(username);
+    return userRepository.findByEmail(username);
   }
 
   /**
    * Create a new user.
    *
-   * @param username the username
+   * @param email the email
    * @param password the password
    */
-  public void createOne(String username, String password) {
+  public void createOne(String email, String password) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();
-    user.setUsername(username);
+    user.setEmail(email);
     user.setPassword(hashedPassword);
 
     userRepository.save(user);
