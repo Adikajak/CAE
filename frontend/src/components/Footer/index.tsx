@@ -24,10 +24,9 @@ const Footer = () => {
             color: theme.palette.secondary.contrastText,
           }}
         >
-          <Typography variant="body1">But we also love JS</Typography>
-          <Typography>
+          <Typography sx={{ alignContent: 'center' }}>
             <Copyright />
-            myAmazingPizzeria
+            CAE Vinci Groupe 21
           </Typography>
         </Box>
         <Box sx={{ display: 'inline-block' }}>
