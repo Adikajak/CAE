@@ -42,7 +42,6 @@ const LoginPage = () => {
       sx={{
         margin: 2,
         padding: 3,
-        backgroundColor: 'secondary.light',
         borderRadius: 4,
         boxShadow: 2,
       }}
@@ -60,7 +59,7 @@ const LoginPage = () => {
             value={email}
             onChange={handleEmailInputChange}
             required
-            color="primary"
+            color="secondary"
             sx={{
               input: { color: theme.palette.secondary.contrastText },
             }}
@@ -76,7 +75,7 @@ const LoginPage = () => {
             value={password}
             onChange={handlePasswordChange}
             required
-            color="primary"
+            color="secondary"
             sx={{
               input: { color: theme.palette.secondary.contrastText },
             }}

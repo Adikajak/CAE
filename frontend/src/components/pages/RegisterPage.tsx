@@ -40,7 +40,6 @@ const RegisterPage = () => {
       sx={{
         margin: 2,
         padding: 3,
-        backgroundColor: 'secondary.light',
         borderRadius: 4,
         boxShadow: 2,
       }}

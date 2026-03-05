@@ -4,21 +4,31 @@ import { Copyright } from '@mui/icons-material';
 
 const Footer = () => {
   return (
-    <Box component="footer" className="primary-color" sx={{ py: 3 }}>
-      <Container maxWidth="sm">
+    <Box
+      component="footer"
+      sx={{ py: 3, bgcolor: 'primary.main', color: '#fff' }}
+    >
+      <Container
+        maxWidth="sm"
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
         <Box
           sx={{
-            display: 'inline-block',
-            paddingRight: 2,
-            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
           }}
         >
-          <Typography sx={{ alignContent: 'center' }}>
+          <Typography sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Copyright />
             CAE Vinci Groupe 21
           </Typography>
         </Box>
-        <Box sx={{ display: 'inline-block' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <img src={logo} alt="" width={50} />
         </Box>
       </Container>
