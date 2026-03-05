@@ -1,27 +1,16 @@
-import { Box, Container, Typography, useTheme } from '@mui/material';
+import { Box, Container, Typography } from '@mui/material';
 import logo from '../../assets/images/js-logo.png';
 import { Copyright } from '@mui/icons-material';
 
 const Footer = () => {
-  const theme = useTheme();
-
   return (
-    <Box
-      component="footer"
-      sx={{
-        py: 3,
-        backgroundColor:
-          theme.palette.mode === 'light'
-            ? theme.palette.secondary.light
-            : theme.palette.secondary.dark,
-      }}
-    >
+    <Box component="footer" className="primary-color" sx={{ py: 3 }}>
       <Container maxWidth="sm">
         <Box
           sx={{
             display: 'inline-block',
             paddingRight: 2,
-            color: theme.palette.secondary.contrastText,
+            color: '#fff',
           }}
         >
           <Typography sx={{ alignContent: 'center' }}>

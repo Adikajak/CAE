@@ -5,7 +5,6 @@ import NavBar from '../Navbar';
 
 import { UserContext } from '../../contexts/UserContext';
 import Box from '@mui/material/Box';
-import { Container } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 
 const App = () => {
@@ -17,17 +16,9 @@ const App = () => {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        backgroundSize: 'cover',
       }}
     >
-      <Container
-        component="main"
-        sx={{
-          flex: '1',
-        }}
-      >
-        <NavBar />
-      </Container>
+      <NavBar />
 
       <Outlet />
 

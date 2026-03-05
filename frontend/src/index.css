@@ -2,3 +2,13 @@ div#root {
   width: 100%;
   display: inline-block; /* avoid margins to collapse to avoid vertical scrollbar */
 }
+
+.primary-color {
+  background-color: #0f254e;
+  color: #fff;
+}
+
+.primary-color.MuiAppBar-root {
+  background-color: #0f254e;
+  color: #fff;
+}
