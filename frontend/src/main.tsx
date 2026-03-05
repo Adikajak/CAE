@@ -5,7 +5,6 @@ import './index.css';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import App from './components/App/index.tsx';
 import HomePage from './components/pages/HomePage.tsx';
-import AddPizzaPage from './components/pages/AddPizzaPage.tsx';
 import RegisterPage from './components/pages/RegisterPage.tsx';
 import LoginPage from './components/pages/LoginPage.tsx';
 import { UserContextProvider } from './contexts/UserContext.tsx';
@@ -22,10 +21,6 @@ const router = createBrowserRouter([
       {
         path: '',
         element: <HomePage />,
-      },
-      {
-        path: 'add-pizza',
-        element: <AddPizzaPage />,
       },
       {
         path: 'register',
