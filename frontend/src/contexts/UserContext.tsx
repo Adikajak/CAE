@@ -19,6 +19,7 @@ const defaultUserContext: UserContextType = {
 };
 
 const UserContext = createContext<UserContextType>(defaultUserContext);
+const ApiUrl = 'http://localhost:3000';
 
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUser] =
@@ -34,7 +35,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
         },
       };
 
-      const response = await fetch('/api/auths/register', options);
+      const response = await fetch(`${ApiUrl}/auths/register`, options);
 
       if (!response.ok)
         throw new Error(
@@ -62,7 +63,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
         },
       };
 
-      const response = await fetch('/api/auths/login', options);
+      const response = await fetch(`${ApiUrl}/auths/login`, options);
 
       if (!response.ok)
         throw new Error(
