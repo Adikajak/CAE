@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +44,7 @@ public class AuthController {
    * @return the authenticated user.
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@RequestBody Credentials credentials) {
+  public AuthenticatedUser register(@Valid @RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
@@ -64,7 +65,7 @@ public class AuthController {
    * @return the authenticated user.
    */
   @PostMapping("/login")
-  public AuthenticatedUser login(@RequestBody Credentials credentials) {
+  public AuthenticatedUser login(@Valid @RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
