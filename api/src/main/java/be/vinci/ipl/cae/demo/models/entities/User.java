@@ -39,6 +39,8 @@ public class User {
 
   @Column(nullable = false)
   private @NotBlank String profilePicture;
+  @Column(nullable = false)
+  private boolean isAdmin;
 
   /**
    * constructor.
@@ -70,6 +72,8 @@ public class User {
 
   public String getProfilePicture() {
     return profilePicture;
+  public boolean isAdmin() {
+    return isAdmin;
   }
 
   public void setEmail(String email) {
@@ -90,5 +94,7 @@ public class User {
 
   public void setProfilePicture(String profilePicture) {
     this.profilePicture = profilePicture;
+  public void setAdmin(boolean isAdmin) {
+    this.isAdmin = isAdmin;
   }
 }
