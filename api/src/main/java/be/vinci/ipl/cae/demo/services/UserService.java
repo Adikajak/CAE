@@ -52,13 +52,14 @@ public class UserService {
     String token = JWT.create()
         .withIssuer("auth0")
         .withClaim("email", email)
-        .withClaim("isADmin", isAdmin)
+        .withClaim("isAdmin", isAdmin)
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
         .sign(algorithm);
 
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
     authenticatedUser.setEmail(email);
+    authenticatedUser.setAdmin(isAdmin);
     authenticatedUser.setToken(token);
 
     return authenticatedUser;
