@@ -44,10 +44,11 @@ public class UserService {
    * @param email the email to included in the claim
    * @return the JWT token
    */
-  public AuthenticatedUser createJwtToken(String email) {
+  public AuthenticatedUser createJwtToken(String email, boolean isAdmin) {
     String token = JWT.create()
         .withIssuer("auth0")
         .withClaim("email", email)
+        .withClaim("isADmin", isAdmin)
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
         .sign(algorithm);
@@ -90,9 +91,9 @@ public class UserService {
       return null;
     }
 
-    System.out.println(createJwtToken(email));
+    System.out.println(createJwtToken(email, user.isAdmin()));
 
-    return createJwtToken(email);
+    return createJwtToken(email, user.isAdmin());
   }
 
   /**
@@ -108,9 +109,9 @@ public class UserService {
       return null;
     }
 
-    createOne(email, password);
+    createOne(email, password, false);
 
-    return createJwtToken(email);
+    return createJwtToken(email, false);
   }
 
   /**
@@ -129,12 +130,13 @@ public class UserService {
    * @param email the email
    * @param password the password
    */
-  public void createOne(String email, String password) {
+  public void createOne(String email, String password, boolean isAdmin) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();
     user.setEmail(email);
     user.setPassword(hashedPassword);
+    user.setAdmin(isAdmin);
 
     userRepository.save(user);
   }
