@@ -210,5 +210,4 @@ public class UserService {
     unavailability.setEndDate(request.endDate());
     return unavailabilityRepository.save(unavailability);
   }
-
 }
