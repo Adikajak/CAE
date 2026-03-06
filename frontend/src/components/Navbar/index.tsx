@@ -5,9 +5,10 @@ import { UserContext } from '../../contexts/UserContext';
 import { UserContextType } from '../../types';
 
 const NavBar = () => {
-  const { authenticatedUser, clearUser } =
+  const { authenticatedUser, clearUser, jwtData } =
     useContext<UserContextType>(UserContext);
   const navigate = useNavigate();
+  const isAdmin = jwtData()?.admin ?? false;
 
   return (
     <AppBar position="static" className="primary-color">
@@ -16,6 +17,7 @@ const NavBar = () => {
           Home
         </Button>
         <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+          {isAdmin ? <Typography variant="h6">Hi Admin</Typography> : <></>}
           {authenticatedUser ? (
             <>
               <Button color="inherit" onClick={() => clearUser()}>

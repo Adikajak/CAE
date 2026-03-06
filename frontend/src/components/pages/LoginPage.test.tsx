@@ -34,6 +34,7 @@ describe('LoginPage', () => {
       registerUser: vi.fn(),
       loginUser: loginUserMock,
       clearUser: vi.fn(),
+      jwtData: vi.fn().mockReturnValue(null),
     };
 
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
@@ -78,6 +79,7 @@ describe('LoginPage', () => {
       registerUser: vi.fn(),
       loginUser: loginUserMock,
       clearUser: vi.fn(),
+      jwtData: vi.fn().mockReturnValue(null),
     };
 
     render(
