@@ -5,7 +5,7 @@ package be.vinci.ipl.cae.demo.models.dtos;
  */
 public class Credentials {
 
-  private String username;
+  private String email;
   private String password;
 
   /**
@@ -16,8 +16,8 @@ public class Credentials {
     // empty for jpa generation
   }
 
-  public String getUsername() {
-    return username;
+  public String getEmail() {
+    return email;
   }
 
   public String getPassword() {

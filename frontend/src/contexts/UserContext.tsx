@@ -8,6 +8,7 @@ import {
 
 import {
   clearAuthenticatedUser,
+  getAuthenticatedUser,
   storeAuthenticatedUser,
 } from '../utils/session';
 
@@ -22,7 +23,7 @@ const UserContext = createContext<UserContextType>(defaultUserContext);
 
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUser] =
-    useState<MaybeAuthenticatedUser>(undefined);
+    useState<MaybeAuthenticatedUser>(() => getAuthenticatedUser());
 
   const registerUser = async (newUser: User) => {
     try {
@@ -34,7 +35,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
         },
       };
 
-      const response = await fetch('/api/auths/register', options);
+      const response = await fetch('api/auths/register', options);
 
       if (!response.ok)
         throw new Error(
@@ -62,7 +63,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
         },
       };
 
-      const response = await fetch('/api/auths/login', options);
+      const response = await fetch('api/auths/login', options);
 
       if (!response.ok)
         throw new Error(

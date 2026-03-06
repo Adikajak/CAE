@@ -1,11 +1,29 @@
 @baseUrl = http://localhost:3000
 
-### Try to login an unknow user
+### Try to login an unknown user with an unvalid field (email must contain {value}@{value}.{value} like value)
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "username":"unknown",
+  "email":"unknown",
+  "password":"admin"
+}
+
+### Try to register an unknown user with an unvalid field (email must contain {value}@{value}.{value} like value)
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email":"unknown",
+  "password":"admin"
+}
+
+### Try to login an unknown user
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email":"unknown@unknown.com",
   "password":"admin"
 }
 
@@ -14,7 +32,7 @@ POST {{baseUrl}}/auths/register
 Content-Type: application/json
 
 {
-  "username":"admin",
+  "email":"admin@admin.com",
   "password":"admin"
 }
 
@@ -23,7 +41,7 @@ POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "username":"admin",
+  "email":"admin@admin.com",
   "password":"admin"
 }
 
@@ -33,7 +51,7 @@ POST {{baseUrl}}/auths/register
 Content-Type: application/json
 
 {
-  "username":"manager",
+  "email":"manager@manager.com",
   "password":"manager"
 }
 
@@ -42,6 +60,6 @@ POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "username":"manager",
+  "email":"manager@manager.com",
   "password":"manager"
 }

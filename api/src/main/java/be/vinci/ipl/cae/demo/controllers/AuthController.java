@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,8 +31,8 @@ public class AuthController {
 
   private boolean isInvalidCredentials(Credentials credentials) {
     return credentials == null
-        || credentials.getUsername() == null
-        || credentials.getUsername().isBlank()
+        || credentials.getEmail() == null
+        || credentials.getEmail().isBlank()
         || credentials.getPassword() == null
         || credentials.getPassword().isBlank();
   }
@@ -43,12 +44,12 @@ public class AuthController {
    * @return the authenticated user.
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@RequestBody Credentials credentials) {
+  public AuthenticatedUser register(@Valid @RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.register(credentials.getUsername(),
+    AuthenticatedUser user = userService.register(credentials.getEmail(),
         credentials.getPassword());
 
     if (user == null) {
@@ -64,12 +65,12 @@ public class AuthController {
    * @return the authenticated user.
    */
   @PostMapping("/login")
-  public AuthenticatedUser login(@RequestBody Credentials credentials) {
+  public AuthenticatedUser login(@Valid @RequestBody Credentials credentials) {
     if (isInvalidCredentials(credentials)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.login(credentials.getUsername(),
+    AuthenticatedUser user = userService.login(credentials.getEmail(),
         credentials.getPassword());
 
     if (user == null) {
