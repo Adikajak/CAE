@@ -27,6 +27,9 @@ public class User {
   @Column(nullable = false)
   private @NotBlank @Size(min = 8) String password;
 
+  @Column(nullable = false)
+  private boolean isAdmin;
+
   /**
    * constructor.
    * */
@@ -47,11 +50,19 @@ public class User {
     return password;
   }
 
+  public boolean isAdmin() {
+    return isAdmin;
+  }
+
   public void setEmail(String email) {
     this.email = email;
   }
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public void setAdmin(boolean isAdmin) {
+    this.isAdmin = isAdmin;
   }
 }
