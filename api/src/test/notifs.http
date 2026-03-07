@@ -1,5 +1,15 @@
-### GET request to example server
-GET https://examples.http-client.intellij.net/get
-    ?generated-in=IntelliJ IDEA
+@baseUrl = http://localhost:3000
 
 ###
+GET {{baseUrl}}/notifications/
+
+### POST notification for the test user
+
+POST {{baseUrl}}/notifications/
+Content-Type: application/json
+
+{
+  "object": "New notification",
+  "message": "0.000000002% of Mazovian was build",
+  "userId": 1
+}
