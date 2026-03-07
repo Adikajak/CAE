@@ -33,52 +33,23 @@ public class NotificationController {
     this.service = service;
   }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  /** GET all notifications for a user (it's the list). */
-=======
-  // GET all notifications for a user (it's the list)
->>>>>>> 3c48d87 (fix: google StyleCheck)
-=======
-  /** GET all notifications for a user (it's the list) */
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
-=======
-  /** GET all notifications for a user (it's the list). */
->>>>>>> 3b1a152 (fix: checkStyle Google version 4)
-=======
   /**
    * GET all notifications for a user (it's the list).
    *
    * @return Iterable of Notification objects for the user
    */
->>>>>>> 9398c65 (fix: google CheckStyle version 6)
   @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
     Long userId = 1L; // normally from logged-in user
     return service.getNotificationsForUser(userId);
   }
 
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  /** GET a single notification by idNotif (it's the detailed one). */
-=======
-  /** GET a single notification by idNotif (it's the detailed one) */
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
-=======
-  /** GET a single notification by idNotif (it's the detailed one). */
->>>>>>> 3b1a152 (fix: checkStyle Google version 4)
-=======
   /**
    * GET a single notification by id (it's the detailed one).
    *
    * @param notificationId the id of the notification
    * @return the Notification object
    */
->>>>>>> 9398c65 (fix: google CheckStyle version 6)
   @GetMapping("/{id}")
   public Notification getNotification(@PathVariable Long notificationId) {
     Long userId = 1L;
@@ -88,55 +59,17 @@ public class NotificationController {
         );
   }
 
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it. */
-=======
-  /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it */
->>>>>>> 3c48d87 (fix: google StyleCheck)
-=======
-  /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it. */
->>>>>>> 3b1a152 (fix: checkStyle Google version 4)
-=======
   /**
    * Mark a notification as read.
    *
    * @param id the id of the notification to mark as read
    */
->>>>>>> 8d740ce (refactor: reorganize imports and enhance documentation in service and controller classes)
   @PostMapping("/{id}/read")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void markAsRead(@PathVariable Long id) {
     service.markNotificationAsRead(id);
   }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  /** CREATE notification /+_+/ \+_+\ . */
-=======
-  /** CREATE notification /+_+/ \+_+\ */
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
-=======
-  /** CREATE notification /+_+/ \+_+\ . */
->>>>>>> 3b1a152 (fix: checkStyle Google version 4)
-  @PostMapping("/")
-  @ResponseStatus(HttpStatus.CREATED)
-<<<<<<< HEAD
-<<<<<<< HEAD
-  public Notification createNotification(@Valid @RequestBody
-  NotificationDto notification) {
-=======
-  public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
->>>>>>> 3c48d87 (fix: google StyleCheck)
-=======
-  public Notification createNotification(@Valid @RequestBody
-  NotificationDto notification) {
->>>>>>> 010307b (fix: checkStyle Google version 5)
-
-=======
   /**
    * CREATE notification.
    *
@@ -147,7 +80,6 @@ public class NotificationController {
   @ResponseStatus(HttpStatus.CREATED)
   public Notification createNotification(
       @Valid @RequestBody NotificationDto notification) {
->>>>>>> 9398c65 (fix: google CheckStyle version 6)
     return service.createNotification(notification);
   }
 }

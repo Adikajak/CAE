@@ -1,25 +1,7 @@
 package be.vinci.ipl.cae.demo.repositories;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-<<<<<<< HEAD
 import org.springframework.data.repository.CrudRepository;
-=======
->>>>>>> 010307b (fix: checkStyle Google version 5)
 import java.util.Optional;
-
-import be.vinci.ipl.cae.demo.models.entities.Notification;
-
-=======
->>>>>>> 8d740ce (refactor: reorganize imports and enhance documentation in service and controller classes)
-import be.vinci.ipl.cae.demo.models.entities.Notification;
-=======
-import be.vinci.ipl.cae.demo.models.entities.Notification;
-import java.util.Optional;
->>>>>>> 76249b4 (refactor: reorganize imports in Notification and User services, controller, and repository classes)
-import org.springframework.data.repository.CrudRepository;
-
 
 /**
  * Notification Repository.
