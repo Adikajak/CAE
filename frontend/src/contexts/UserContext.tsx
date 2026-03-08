@@ -12,6 +12,7 @@ import {
 import {
   clearAuthenticatedUser,
   getAuthenticatedUser,
+  setSessionStorage,
   storeAuthenticatedUser,
 } from '../utils/session';
 
@@ -59,7 +60,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const loginUser = async (user: User) => {
+  const loginUser = async (user: User, rememberMe: boolean) => {
     try {
       const options = {
         method: 'POST',
@@ -80,6 +81,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       console.log('authenticatedUser: ', authenticatedUser);
 
       setAuthenticatedUser(authenticatedUser);
+      setSessionStorage(!rememberMe);
       storeAuthenticatedUser(authenticatedUser);
     } catch (err) {
       console.error('loginUser::error: ', err);
