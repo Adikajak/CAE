@@ -1,6 +1,14 @@
 import { useState, SyntheticEvent, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, TextField, useTheme } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  TextField,
+  useTheme,
+} from '@mui/material';
 import { UserContextType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import './index.css';
@@ -10,6 +18,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const theme = useTheme();
 
@@ -17,7 +26,7 @@ const LoginPage = () => {
     e.preventDefault();
     setErrorMessage('');
     try {
-      await loginUser({ email, password });
+      await loginUser({ email, password }, rememberMe);
       navigate('/');
     } catch (err) {
       console.error('LoginPage::error: ', err);
@@ -35,6 +44,11 @@ const LoginPage = () => {
   const handlePasswordChange = (e: SyntheticEvent) => {
     const input = e.target as HTMLInputElement;
     setPassword(input.value);
+  };
+
+  const handleRememberMeChange = (e: SyntheticEvent) => {
+    const input = e.target as HTMLInputElement;
+    setRememberMe(input.checked);
   };
 
   return (
@@ -79,6 +93,20 @@ const LoginPage = () => {
             sx={{
               input: { color: theme.palette.primary.main },
             }}
+          />
+        </Box>
+        <Box sx={{ marginBottom: 2 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="remember-me"
+                name="remember-me"
+                checked={rememberMe}
+                onChange={handleRememberMeChange}
+                color="primary"
+              />
+            }
+            label="Se souvenir de moi"
           />
         </Box>
         <Button type="submit" variant="contained" color="primary">
