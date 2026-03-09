@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,6 +33,7 @@ public class User {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "speciality_id", nullable = false)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private Speciality speciality;
 
   @Column(nullable = false)
@@ -69,8 +71,10 @@ public class User {
 
   public String getProfilePicture() {
     return profilePicture;
-  public boolean isAdmin() {
-    return isAdmin;
+  }
+
+  public String getEmail() {
+    return email;
   }
 
   public void setEmail(String email) {

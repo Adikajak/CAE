@@ -93,8 +93,7 @@ public class UserController {
    */
   @PostMapping("/me/unavailabilities")
   @ResponseStatus(HttpStatus.CREATED)
-  public Unavailability addUnavailability(Authentication authentication,
-                                          @RequestBody UnavailabilityRequest request) {
+  public Unavailability addUnavailability(Authentication authentication, @RequestBody UnavailabilityRequest request) {
     User user = (User) authentication.getPrincipal();
     return userService.addUnavailability(user, request);
   }
