@@ -59,8 +59,12 @@ const ProfilePage = () => {
         if (!response.ok) throw new Error(`Erreur ${response.status}`);
         const data: Profile = await response.json();
         setProfile(data);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Une erreur inconnue est survenue');
+        }
       } finally {
         setLoading(false);
       }
@@ -74,7 +78,10 @@ const ProfilePage = () => {
         if (!response.ok) throw new Error();
         const data: Unavailability[] = await response.json();
         setUnavailabilities(data);
-      } catch {}
+      } catch (err: unknown) {
+        // Silently handle error - unavailabilities are optional
+        console.error('Erreur lors du chargement des indisponibilités:', err);
+      }
     };
 
     handleFetchProfile();
@@ -102,8 +109,12 @@ const ProfilePage = () => {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err: any) {
-      setPasswordError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setPasswordError(err.message);
+      } else {
+        setPasswordError('Une erreur inconnue est survenue');
+      }
     }
   };
 
@@ -132,8 +143,12 @@ const ProfilePage = () => {
       setStartDate('');
       setEndDate('');
       setOpenUnavailModal(false);
-    } catch (err: any) {
-      setUnavailError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setUnavailError(err.message);
+      } else {
+        setUnavailError('Une erreur inconnue est survenue');
+      }
     }
   };
 

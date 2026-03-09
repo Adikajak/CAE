@@ -8,9 +8,7 @@ import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-
 import java.util.Date;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -158,9 +156,12 @@ public class UserService {
    */
   public boolean updatePassword(String email, String oldPassword, String newPassword) {
     User user = userRepository.findByEmail(email);
-    if (user == null) return false;
-    if (!passwordEncoder.matches(oldPassword, user.getPassword()))
+    if (user == null) {
       return false;
+    }
+    if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+      return false;
+    }
     user.setPassword(passwordEncoder.encode(newPassword));
     userRepository.save(user);
     return true;
