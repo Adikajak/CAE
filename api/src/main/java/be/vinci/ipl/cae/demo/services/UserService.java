@@ -1,4 +1,4 @@
-﻿package be.vinci.ipl.cae.demo.services;
+package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
@@ -10,7 +10,9 @@ import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+
 import java.util.Date;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +53,6 @@ public class UserService {
    * Create a JWT token.
    *
    * @param email the email to included in the claim
-   * @param isAdmin whether the user is admin
    * @return the JWT token
    */
   public AuthenticatedUser createJwtToken(String email, boolean isAdmin) {
@@ -101,6 +102,8 @@ public class UserService {
     if (!passwordEncoder.matches(password, user.getPassword())) {
       return null;
     }
+
+    System.out.println(createJwtToken(email, user.isAdmin()));
 
     return createJwtToken(email, user.isAdmin());
   }

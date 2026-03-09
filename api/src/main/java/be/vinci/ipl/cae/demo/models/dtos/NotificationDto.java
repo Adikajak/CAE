@@ -1,3 +1,4 @@
+
 package be.vinci.ipl.cae.demo.models.dtos;
 
 import jakarta.validation.constraints.NotBlank;
@@ -5,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * Data Transfer Object for Notification entities.
+ * Data Transfer Object for Notification entities
  * Used to transfer notification data between layers without exposing the entity.
  */
 
