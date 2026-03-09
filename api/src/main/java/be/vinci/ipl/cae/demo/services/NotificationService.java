@@ -30,16 +30,23 @@ public class NotificationService {
     this.userRepository = userRepository;
   }
 
-  /** 
-   * ALL notifications for a specific user. 
-   * */
+  /**
+   * Get all notifications for a specific user.
+   *
+   * @param userId the user ID
+   * @return list of notifications
+   */
   public Iterable<Notification> getNotificationsForUser(Long userId) {
     return repository.findByUserIdOrderByCreatedAtDesc(userId);
   }
 
-  /** 
-   * Notification by id. 
-   * */
+  /**
+   * Get a notification by its ID and user ID.
+   *
+   * @param notificationId the notification ID
+   * @param userId         the user ID
+   * @return the notification if found
+   */
   public Optional<Notification> getNotificationById(Long notificationId, Long userId) {
     return repository.findByNotificationIdAndUserId(notificationId, userId);
   }
