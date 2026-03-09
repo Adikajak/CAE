@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.repositories;
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 import org.springframework.data.repository.CrudRepository;
@@ -9,7 +10,11 @@ import org.springframework.data.repository.CrudRepository;
 >>>>>>> 010307b (fix: checkStyle Google version 5)
 import java.util.Optional;
 
+=======
+>>>>>>> 76249b4110b16ebdb1c0e97dc71ccb983356e855
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import java.util.Optional;
+import org.springframework.data.repository.CrudRepository;
 
 =======
 >>>>>>> 8d740ce (refactor: reorganize imports and enhance documentation in service and controller classes)

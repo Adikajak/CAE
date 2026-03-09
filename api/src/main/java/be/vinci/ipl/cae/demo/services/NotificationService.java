@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.services;
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import java.util.Optional;
 
 =======
@@ -33,16 +34,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+=======
+>>>>>>> 76249b4110b16ebdb1c0e97dc71ccb983356e855
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+<<<<<<< HEAD
 =======
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 >>>>>>> 8d740ce (refactor: reorganize imports and enhance documentation in service and controller classes)
+=======
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+>>>>>>> 76249b4110b16ebdb1c0e97dc71ccb983356e855
 
 /**
  * service qui va etre utilise pour request http.
