@@ -55,10 +55,6 @@ public class User {
     return id;
   }
 
-  public String getEmail() {
-    return email;
-  }
-
   public String getPassword() {
     return password;
   }
@@ -69,5 +65,25 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public void setAdmin(boolean admin) {
+    isAdmin = admin;
+  }
+
+  public boolean isAdmin() {
+    return isAdmin;
+  }
+
+  public void setSpeciality(Speciality speciality) {
+    this.speciality = speciality;
+  }
+
+  public void setTag(String tag) {
+    this.tag = tag;
+  }
+
+  public void setProfilePicture(String profilePicture) {
+    this.profilePicture = profilePicture;
   }
 }
