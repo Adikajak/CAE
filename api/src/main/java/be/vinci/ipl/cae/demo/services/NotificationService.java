@@ -1,5 +1,7 @@
 package be.vinci.ipl.cae.demo.services;
-import be.vinci.ipl.cae.demo.models.dtos.NotificationDTO;
+
+
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
@@ -9,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * service qui va etre utilise pour request http
+ * */
 @Service
 public class NotificationService {
 
@@ -29,22 +34,22 @@ public class NotificationService {
   //notification by id
   public Optional<Notification> getNotificationById(Long notificationId, Long userId) {
 
-    return repository.findByNotificationIdAndUser_Id(notificationId,userId);
+    return repository.findByNotificationIdAndUser_Id(notificationId, userId);
   }
 
   //mark notification as read - logic
   public void markNotificationAsRead(Long notificationId) {
     Notification notif = repository.findById(notificationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    notif.setIs_read(true);
+    notif.setIsRead(true);
     repository.save(notif);
   }
 
   //Create a new notification
-  public Notification createNotification(NotificationDTO notificationDTO) {
+  public Notification createNotification(NotificationDto notificationDTO) {
 
     User user = userRepository.findById(notificationDTO.getUserId())
-        .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     Notification notif = new Notification();
     notif.setUser(user);
@@ -55,9 +60,9 @@ public class NotificationService {
   }
 
   //Update notification
-  public Notification updateNotification(Long id, NotificationDTO notificationDTO){
+  public Notification updateNotification(Long id, NotificationDto notificationDTO) {
     Notification notif = repository.findById(id)
-        .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     notif.setObject(notificationDTO.getObject());
     notif.setMessage(notificationDTO.getMessage());
