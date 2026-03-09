@@ -13,8 +13,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 
-
-
 /**
  * Notification entity pour tous notifications.
  * */
