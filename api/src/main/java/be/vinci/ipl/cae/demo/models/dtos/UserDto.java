@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 /**
  * Register payload DTO.
  */
-public class UserDTO {
+public class UserDto {
 
   @Email
   @NotBlank
