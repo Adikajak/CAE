@@ -1,8 +1,6 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-
 import jakarta.validation.Valid;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +31,7 @@ public class NotificationController {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   /** GET all notifications for a user (it's the list). */
 =======
   // GET all notifications for a user (it's the list)
@@ -43,6 +42,13 @@ public class NotificationController {
 =======
   /** GET all notifications for a user (it's the list). */
 >>>>>>> 3b1a152 (fix: checkStyle Google version 4)
+=======
+  /**
+   * GET all notifications for a user (it's the list).
+   *
+   * @return Iterable of Notification objects for the user
+   */
+>>>>>>> 9398c65 (fix: google CheckStyle version 6)
   @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
     Long userId = 1L; // normally from logged-in user
@@ -52,6 +58,7 @@ public class NotificationController {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   /** GET a single notification by idNotif (it's the detailed one). */
 =======
   /** GET a single notification by idNotif (it's the detailed one) */
@@ -59,13 +66,21 @@ public class NotificationController {
 =======
   /** GET a single notification by idNotif (it's the detailed one). */
 >>>>>>> 3b1a152 (fix: checkStyle Google version 4)
+=======
+  /**
+   * GET a single notification by id (it's the detailed one).
+   *
+   * @param notificationId the id of the notification
+   * @return the Notification object
+   */
+>>>>>>> 9398c65 (fix: google CheckStyle version 6)
   @GetMapping("/{id}")
   public Notification getNotification(@PathVariable Long notificationId) {
-
     Long userId = 1L;
-
     return service.getNotificationById(notificationId, userId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND)
+        );
   }
 
 
@@ -84,6 +99,7 @@ public class NotificationController {
     service.markNotificationAsRead(id);
   }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
   /** CREATE notification /+_+/ \+_+\ . */
@@ -107,6 +123,18 @@ public class NotificationController {
   NotificationDto notification) {
 >>>>>>> 010307b (fix: checkStyle Google version 5)
 
+=======
+  /**
+   * CREATE notification.
+   *
+   * @param notification the NotificationDto to create
+   * @return the created Notification object
+   */
+  @PostMapping("/")
+  @ResponseStatus(HttpStatus.CREATED)
+  public Notification createNotification(
+      @Valid @RequestBody NotificationDto notification) {
+>>>>>>> 9398c65 (fix: google CheckStyle version 6)
     return service.createNotification(notification);
   }
 }
