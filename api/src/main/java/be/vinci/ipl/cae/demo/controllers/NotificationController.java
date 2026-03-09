@@ -96,11 +96,16 @@ public class NotificationController {
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
 <<<<<<< HEAD
+<<<<<<< HEAD
   public Notification createNotification(@Valid @RequestBody
   NotificationDto notification) {
 =======
   public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
 >>>>>>> 3c48d87 (fix: google StyleCheck)
+=======
+  public Notification createNotification(@Valid @RequestBody
+  NotificationDto notification) {
+>>>>>>> 010307b (fix: checkStyle Google version 5)
 
     return service.createNotification(notification);
   }
