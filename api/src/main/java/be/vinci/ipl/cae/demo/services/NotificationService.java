@@ -37,7 +37,7 @@ public class NotificationService {
    * @return list of notifications
    */
   public Iterable<Notification> getNotificationsForUser(Long userId) {
-    return repository.findByUser_IdOrderByCreatedAtDesc(userId);
+    return repository.findByUserIdOrderByCreatedAtDesc(userId);
   }
 
   /**
@@ -48,7 +48,7 @@ public class NotificationService {
    * @return the notification if found
    */
   public Optional<Notification> getNotificationById(Long notificationId, Long userId) {
-    return repository.findByNotificationIdAndUser_Id(notificationId, userId);
+    return repository.findByNotificationIdAndUserId(notificationId, userId);
   }
 
   /**

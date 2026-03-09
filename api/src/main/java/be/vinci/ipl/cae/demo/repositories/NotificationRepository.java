@@ -15,7 +15,8 @@ public interface NotificationRepository extends CrudRepository<Notification, Lon
    * @param userId the user ID
    * @return list of notifications
    */
-  Iterable<Notification> findByUser_IdOrderByCreatedAtDesc(Long userId);
+  Iterable<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
+
 
   /**
    * Find a notification by its ID and user ID.
@@ -24,5 +25,5 @@ public interface NotificationRepository extends CrudRepository<Notification, Lon
    * @param userId         the user ID
    * @return the notification if found
    */
-  Optional<Notification> findByNotificationIdAndUser_Id(Long notificationId, Long userId);
+  Optional<Notification> findByNotificationIdAndUserId(Long notificationId, Long userId);
 }
