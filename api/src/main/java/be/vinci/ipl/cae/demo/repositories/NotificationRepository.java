@@ -1,30 +1,22 @@
 ﻿package be.vinci.ipl.cae.demo.repositories;
 
-import be.vinci.ipl.cae.demo.models.entities.Notification;
 import java.util.Optional;
+
 import org.springframework.data.repository.CrudRepository;
+
+import be.vinci.ipl.cae.demo.models.entities.Notification;
+
 
 /**
  * Notification Repository.
- */
+ * */
 public interface NotificationRepository extends CrudRepository<Notification,
     Long> {
 
-  /**
-   * Find by user ID (through the relation) and order by createdAt descending.
-   *
-   * @param userId the user id
-   * @return Iterable of Notification for the user
-   */
+  /** Find by user ID (through the relation) and order by createdAt descending. */
   Iterable<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
 
-  /**
-   * Find by notification ID and user ID.
-   *
-   * @param notificationId the notification id
-   * @param userId the user id
-   * @return Optional of Notification
-   */
+  /** Find by notification ID and user ID. */
   Optional<Notification> findByNotificationIdAndUserId(Long notificationId,
       Long userId);
 }
