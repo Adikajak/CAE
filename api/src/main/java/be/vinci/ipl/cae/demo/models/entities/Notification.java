@@ -13,14 +13,16 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 /**
- * Notification entity pour tous notifications
- * */
+ * Notification entity representing all user notifications.
+ */
 
 @Entity
 @Table(name = "notifications")
 public class Notification {
 
-  //Everything is not null (not date_heure and id bcs it's always will be generated no matter what
+  /**
+   * Everything is not null (not date_heure and id bcs it's always will be generated no matter what.
+   * */
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

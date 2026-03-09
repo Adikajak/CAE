@@ -1,6 +1,5 @@
 package be.vinci.ipl.cae.demo.services;
 
-
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -12,17 +11,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * service qui va etre utilise pour request http
- * */
+ * Service for managing notification-related HTTP requests.
+ */
 @Service
 public class NotificationService {
 
   private final NotificationRepository repository;
   private final UserRepository userRepository;
 
-  /** 
-   * A normal constructeur. 
-   * */
+  /**
+   * Constructor for NotificationService.
+   *
+   * @param repository     the notification repository
+   * @param userRepository the user repository
+   */
   public NotificationService(NotificationRepository repository, UserRepository userRepository) {
     this.repository = repository;
     this.userRepository = userRepository;
@@ -42,7 +44,11 @@ public class NotificationService {
     return repository.findByNotificationIdAndUserId(notificationId, userId);
   }
 
-  //mark notification as read - logic
+  /**
+   * Mark a notification as read.
+   *
+   * @param notificationId the notification ID
+   */
   public void markNotificationAsRead(Long notificationId) {
     Notification notif = repository.findById(notificationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -50,31 +56,37 @@ public class NotificationService {
     repository.save(notif);
   }
 
-  //Create a new notification
-  public Notification createNotification(NotificationDto notificationDTO) {
-
-    User user = userRepository.findById(notificationDTO.getUserId())
+  /**
+   * Create a new notification.
+   *
+   * @param notificationDto the notification data
+   * @return the created notification
+   */
+  public Notification createNotification(NotificationDto notificationDto) {
+    User user = userRepository.findById(notificationDto.getUserId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
     Notification notif = new Notification();
     notif.setUser(user);
-    notif.setObject(notificationDTO.getObject());
-    notif.setMessage(notificationDTO.getMessage());
+    notif.setObject(notificationDto.getObject());
+    notif.setMessage(notificationDto.getMessage());
 
     return repository.save(notif);
   }
 
-  /** 
-   * Update notification. 
-   * */
-  public Notification updateNotification(Long id,
-      NotificationDto notificationDto) {
-
+  /**
+   * Update an existing notification.
+   *
+   * @param id              the notification ID
+   * @param notificationDto the updated data
+   * @return the updated notification
+   */
+  public Notification updateNotification(Long id, NotificationDto notificationDto) {
     Notification notif = repository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-    notif.setObject(notificationDTO.getObject());
-    notif.setMessage(notificationDTO.getMessage());
+    notif.setObject(notificationDto.getObject());
+    notif.setMessage(notificationDto.getMessage());
 
     return repository.save(notif);
   }
