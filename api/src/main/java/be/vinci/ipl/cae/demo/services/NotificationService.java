@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.services;
 
+<<<<<<< HEAD
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,8 @@ import be.vinci.ipl.cae.demo.repositories.UserRepository;
 =======
 =======
 
+=======
+>>>>>>> 010307b (fix: checkStyle Google version 5)
 import java.util.Optional;
 
 >>>>>>> 3b1a152 (fix: checkStyle Google version 4)
@@ -26,7 +29,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
+import be.vinci.ipl.cae.demo.repositories.UserRepository;
 
 /**
  * service qui va etre utilise pour request http.
@@ -46,8 +53,13 @@ public class NotificationService {
       UserRepository userRepository) {
 =======
   /** a normal constructeur. */
+<<<<<<< HEAD
   public NotificationService(NotificationRepository repository, UserRepository userRepository) {
 >>>>>>> 39d342a (fix: CheckStyle Google version 3)
+=======
+  public NotificationService(NotificationRepository repository,
+      UserRepository userRepository) {
+>>>>>>> 010307b (fix: checkStyle Google version 5)
     this.repository = repository;
     this.userRepository = userRepository;
   }
@@ -71,8 +83,13 @@ public class NotificationService {
       Long userId) {
 =======
   /** notification by id. */
+<<<<<<< HEAD
   public Optional<Notification> getNotificationById(Long notificationId, Long userId) {
 >>>>>>> 39d342a (fix: CheckStyle Google version 3)
+=======
+  public Optional<Notification> getNotificationById(Long notificationId,
+      Long userId) {
+>>>>>>> 010307b (fix: checkStyle Google version 5)
 
     return repository.findByNotificationIdAndUserId(notificationId, userId);
   }
@@ -103,9 +120,13 @@ public class NotificationService {
     return repository.save(notif);
   }
 
+<<<<<<< HEAD
   /** 
    * Update notification. 
    * */
+=======
+  /** Update notification. */
+>>>>>>> 010307b (fix: checkStyle Google version 5)
   public Notification updateNotification(Long id,
       NotificationDto notificationDto) {
 

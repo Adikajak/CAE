@@ -1,8 +1,13 @@
 package be.vinci.ipl.cae.demo.repositories;
 
+<<<<<<< HEAD
 
 import org.springframework.data.repository.CrudRepository;
+=======
+>>>>>>> 010307b (fix: checkStyle Google version 5)
 import java.util.Optional;
+
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 
