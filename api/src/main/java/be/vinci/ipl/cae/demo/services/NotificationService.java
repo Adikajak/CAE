@@ -1,6 +1,6 @@
 package be.vinci.ipl.cae.demo.services;
 
-import java.util.Optional;
+
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
