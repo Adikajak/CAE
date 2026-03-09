@@ -1,7 +1,9 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
+import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -17,8 +19,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-  private int unusedVariable = 0;
-
   private static final String jwtSecret = "ilovemypizza!";
   private static final long lifetimeJwt = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -26,16 +26,20 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final SpecialityRepository specialityRepository;
 
   /**
    * Constructor.
    *
    * @param passwordEncoder the password encoder
    * @param userRepository  the user repository
+   * @param specialityRepository the speciality repository
    */
-  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
+      SpecialityRepository specialityRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.specialityRepository = specialityRepository;
   }
 
   /**
@@ -100,15 +104,24 @@ public class UserService {
    *
    * @param email the email
    * @param password the password
+   * @param tag the user tag
+   * @param specialityName the speciality name
+   * @param profilePicture the profile picture URL
    * @return the authenticated user if the registration is successful, null otherwise
    */
-  public AuthenticatedUser register(String email, String password) {
+  public AuthenticatedUser register(String email, String password, String tag,
+      String specialityName, String profilePicture) {
     User user = userRepository.findByEmail(email);
     if (user != null) {
       return null;
     }
 
-    createOne(email, password);
+    Speciality speciality = specialityRepository.findByName(specialityName);
+    if (speciality == null) {
+      return null;
+    }
+
+    createOne(email, password, tag, profilePicture, speciality);
 
     return createJwtToken(email);
   }
@@ -128,13 +141,20 @@ public class UserService {
    *
    * @param email the email
    * @param password the password
+   * @param tag the tag
+   * @param profilePicture the profile picture
+   * @param speciality the speciality
    */
-  public void createOne(String email, String password) {
+  public void createOne(String email, String password, String tag,
+      String profilePicture, Speciality speciality) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();
     user.setEmail(email);
     user.setPassword(hashedPassword);
+    user.setTag(tag);
+    user.setProfilePicture(profilePicture);
+    user.setSpeciality(speciality);
 
     userRepository.save(user);
   }

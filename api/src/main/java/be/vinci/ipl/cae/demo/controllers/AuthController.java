@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.dtos.UserDTO;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -37,20 +38,38 @@ public class AuthController {
         || credentials.getPassword().isBlank();
   }
 
+  private boolean isInvalidRegisterRequest(UserDTO userDTO) {
+    return userDTO == null
+        || userDTO.getEmail() == null
+        || userDTO.getEmail().isBlank()
+        || userDTO.getPassword() == null
+        || userDTO.getPassword().isBlank()
+        || userDTO.getTag() == null
+        || userDTO.getTag().isBlank()
+        || userDTO.getSpeciality() == null
+        || userDTO.getSpeciality().isBlank()
+        || userDTO.getProfilePicture() == null
+        || userDTO.getProfilePicture().isBlank();
+  }
+
   /**
    * Register a new user.
    *
-   * @param credentials the user credentials from the request body.
+   * @param userDTO the user payload from the request body.
    * @return the authenticated user.
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@Valid @RequestBody Credentials credentials) {
-    if (isInvalidCredentials(credentials)) {
+  public AuthenticatedUser register(@Valid @RequestBody UserDTO userDTO) {
+    if (isInvalidRegisterRequest(userDTO)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.register(credentials.getEmail(),
-        credentials.getPassword());
+    AuthenticatedUser user = userService.register(
+        userDTO.getEmail(),
+        userDTO.getPassword(),
+        userDTO.getTag(),
+        userDTO.getSpeciality(),
+        userDTO.getProfilePicture());
 
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);

@@ -6,6 +6,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -27,6 +30,16 @@ public class User {
   @Column(nullable = false)
   private @NotBlank @Size(min = 8) String password;
 
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "speciality_id", nullable = false)
+  private Speciality speciality;
+
+  @Column(nullable = false)
+  private @NotBlank String tag;
+
+  @Column(nullable = false)
+  private @NotBlank String profilePicture;
+
   /**
    * constructor.
    * */
@@ -47,11 +60,35 @@ public class User {
     return password;
   }
 
+  public String getTag() {
+    return tag;
+  }
+
+  public Speciality getSpeciality() {
+    return speciality;
+  }
+
+  public String getProfilePicture() {
+    return profilePicture;
+  }
+
   public void setEmail(String email) {
     this.email = email;
   }
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public void setTag(String tag) {
+    this.tag = tag;
+  }
+
+  public void setSpeciality(Speciality speciality) {
+    this.speciality = speciality;
+  }
+
+  public void setProfilePicture(String profilePicture) {
+    this.profilePicture = profilePicture;
   }
 }
