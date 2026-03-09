@@ -152,6 +152,7 @@ public class UserService {
     User user = new User();
     user.setEmail(email);
     user.setPassword(hashedPassword);
+    user.setAdmin(isAdmin);
     user.setTag(tag);
     user.setProfilePicture(profilePicture);
     user.setSpeciality(speciality);
@@ -159,5 +160,4 @@ public class UserService {
 
     userRepository.save(user);
   }
-
 }
