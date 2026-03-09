@@ -39,6 +39,7 @@ public class User {
 
   @Column(nullable = false)
   private @NotBlank String profilePicture;
+  
   @Column(nullable = false)
   private boolean isAdmin;
 
