@@ -40,6 +40,9 @@ public class User {
   @Column(nullable = false)
   private @NotBlank String profilePicture;
 
+  @Column(nullable = false)
+  private boolean isAdmin;
+
   /**
    * constructor.
    * */
@@ -60,35 +63,11 @@ public class User {
     return password;
   }
 
-  public String getTag() {
-    return tag;
-  }
-
-  public Speciality getSpeciality() {
-    return speciality;
-  }
-
-  public String getProfilePicture() {
-    return profilePicture;
-  }
-
   public void setEmail(String email) {
     this.email = email;
   }
 
   public void setPassword(String password) {
     this.password = password;
-  }
-
-  public void setTag(String tag) {
-    this.tag = tag;
-  }
-
-  public void setSpeciality(Speciality speciality) {
-    this.speciality = speciality;
-  }
-
-  public void setProfilePicture(String profilePicture) {
-    this.profilePicture = profilePicture;
   }
 }

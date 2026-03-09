@@ -48,16 +48,18 @@ public class UserService {
    * @param email the email to included in the claim
    * @return the JWT token
    */
-  public AuthenticatedUser createJwtToken(String email) {
+  public AuthenticatedUser createJwtToken(String email, boolean isAdmin) {
     String token = JWT.create()
         .withIssuer("auth0")
         .withClaim("email", email)
+        .withClaim("isAdmin", isAdmin)
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
         .sign(algorithm);
 
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
     authenticatedUser.setEmail(email);
+    authenticatedUser.setAdmin(isAdmin);
     authenticatedUser.setToken(token);
 
     return authenticatedUser;
@@ -94,9 +96,9 @@ public class UserService {
       return null;
     }
 
-    System.out.println(createJwtToken(email));
+    System.out.println(createJwtToken(email, user.isAdmin()));
 
-    return createJwtToken(email);
+    return createJwtToken(email, user.isAdmin());
   }
 
   /**
@@ -121,9 +123,9 @@ public class UserService {
       return null;
     }
 
-    createOne(email, password, tag, profilePicture, speciality);
+    createOne(email, password, false, tag, profilePicture, speciality);
 
-    return createJwtToken(email);
+    return createJwtToken(email, false);
   }
 
   /**
@@ -145,18 +147,18 @@ public class UserService {
    * @param profilePicture the profile picture
    * @param speciality the speciality
    */
-  public void createOne(String email, String password, String tag,
-      String profilePicture, Speciality speciality) {
+  public void createOne(String email, String password, boolean isAdmin, String tag,
+    String profilePicture, Speciality speciality) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();
     user.setEmail(email);
     user.setPassword(hashedPassword);
+    user.setAdmin(isAdmin);
     user.setTag(tag);
     user.setProfilePicture(profilePicture);
     user.setSpeciality(speciality);
 
     userRepository.save(user);
   }
-
 }

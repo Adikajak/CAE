@@ -1,8 +1,9 @@
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
   registerUser: (newUser: UserRegister) => Promise<void>;
-  loginUser: (user: User) => Promise<void>;
+  loginUser: (user: User, rememberMe: boolean) => Promise<void>;
   clearUser: () => void;
+  jwtData: () => JwtPayload | null;
 }
 
 interface User {
@@ -23,6 +24,11 @@ interface AuthenticatedUser {
   token: string;
 }
 
+interface JwtPayload {
+  email: string;
+  admin: boolean;
+}
+
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
 export type {
@@ -31,4 +37,5 @@ export type {
   AuthenticatedUser,
   MaybeAuthenticatedUser,
   UserContextType,
+  JwtPayload,
 };

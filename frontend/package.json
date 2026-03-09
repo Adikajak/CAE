@@ -18,12 +18,14 @@
     "@fontsource/roboto": "^5.1.1",
     "@mui/icons-material": "^6.4.1",
     "@mui/material": "^6.4.1",
+    "jwt-decode": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
     "@testing-library/react": "^16.2.0",
+    "@types/jwt-decode": "^2.2.1",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",

@@ -1,11 +1,23 @@
 import { AuthenticatedUser, MaybeAuthenticatedUser } from '../types';
 
+let isSessionStorage = false;
+
+const setSessionStorage = (sessionStorageMode: boolean) => {
+  isSessionStorage = sessionStorageMode;
+};
+
 const storeAuthenticatedUser = (authenticatedUser: AuthenticatedUser) => {
-  localStorage.setItem('authenticatedUser', JSON.stringify(authenticatedUser));
+  const storage = isSessionStorage ? sessionStorage : localStorage;
+  const otherStorage = isSessionStorage ? localStorage : sessionStorage;
+
+  storage.setItem('authenticatedUser', JSON.stringify(authenticatedUser));
+  otherStorage.removeItem('authenticatedUser');
 };
 
 const getAuthenticatedUser = (): MaybeAuthenticatedUser => {
-  const authenticatedUser = localStorage.getItem('authenticatedUser');
+  const authenticatedUser =
+    localStorage.getItem('authenticatedUser') ||
+    sessionStorage.getItem('authenticatedUser');
 
   if (!authenticatedUser) return undefined;
 
@@ -14,6 +26,12 @@ const getAuthenticatedUser = (): MaybeAuthenticatedUser => {
 
 const clearAuthenticatedUser = () => {
   localStorage.removeItem('authenticatedUser');
+  sessionStorage.removeItem('authenticatedUser');
 };
 
-export { storeAuthenticatedUser, getAuthenticatedUser, clearAuthenticatedUser };
+export {
+  setSessionStorage,
+  storeAuthenticatedUser,
+  getAuthenticatedUser,
+  clearAuthenticatedUser,
+};

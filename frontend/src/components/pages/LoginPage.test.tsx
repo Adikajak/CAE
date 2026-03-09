@@ -21,9 +21,23 @@ describe('LoginPage', () => {
     );
     const usernameInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
+    const rememberMeCheckbox = screen.getByLabelText(/se souvenir de moi/i);
 
     expect(usernameInput).toBeTruthy();
     expect(passwordInput).toBeTruthy();
+    expect(rememberMeCheckbox).toBeTruthy();
+  });
+
+  test('remember me checkbox is unchecked by default', () => {
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>,
+    );
+
+    const rememberMeCheckbox = screen.getByLabelText(/se souvenir de moi/i);
+
+    expect((rememberMeCheckbox as HTMLInputElement).checked).toBe(false);
   });
 
   test('calls loginUser and navigates to HomePage when the form is submitted', async () => {
@@ -34,6 +48,7 @@ describe('LoginPage', () => {
       registerUser: vi.fn(),
       loginUser: loginUserMock,
       clearUser: vi.fn(),
+      jwtData: vi.fn().mockReturnValue(null),
     };
 
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
@@ -48,18 +63,23 @@ describe('LoginPage', () => {
 
     const usernameInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/password/i);
+    const rememberMeCheckbox = screen.getByLabelText(/se souvenir de moi/i);
     const submitButton = screen.getByRole('button', {
       name: /s'authentifier/i,
     });
 
     fireEvent.change(usernameInput, { target: { value: 'test@user.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password' } });
+    fireEvent.click(rememberMeCheckbox);
     fireEvent.click(submitButton);
 
-    expect(loginUserMock).toHaveBeenCalledWith({
-      email: 'test@user.com',
-      password: 'password',
-    });
+    expect(loginUserMock).toHaveBeenCalledWith(
+      {
+        email: 'test@user.com',
+        password: 'password',
+      },
+      true,
+    );
 
     await waitFor(() => {
       expect(navigateMock).toHaveBeenCalledWith('/');
@@ -78,6 +98,7 @@ describe('LoginPage', () => {
       registerUser: vi.fn(),
       loginUser: loginUserMock,
       clearUser: vi.fn(),
+      jwtData: vi.fn().mockReturnValue(null),
     };
 
     render(
@@ -98,10 +119,13 @@ describe('LoginPage', () => {
     fireEvent.change(passwordInput, { target: { value: 'password' } });
     fireEvent.click(submitButton);
 
-    expect(loginUserMock).toHaveBeenCalledWith({
-      email: 'test@user.com',
-      password: 'password',
-    });
+    expect(loginUserMock).toHaveBeenCalledWith(
+      {
+        email: 'test@user.com',
+        password: 'password',
+      },
+      false,
+    );
 
     // Verify that console.error was called
     await waitFor(() => {
