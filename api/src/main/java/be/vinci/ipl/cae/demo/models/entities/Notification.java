@@ -12,6 +12,10 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
+/**
+ * Notification entity pour tous notifications
+ * */
+
 @Entity
 @Table(name = "notifications")
 public class Notification {
@@ -46,7 +50,7 @@ public class Notification {
   }
 
   @Column(nullable = false)
-  private boolean is_read = false;
+  private boolean isRead = false;
 
 
   public Long getNotificationId() {
@@ -89,11 +93,11 @@ public class Notification {
     this.createdAt = createdAt;
   }
 
-  public boolean isIs_read() {
-    return is_read;
+  public boolean isIsRead() {
+    return isRead;
   }
 
-  public void setIs_read(boolean is_read) {
-    this.is_read = is_read;
+  public void setIsRead(boolean isRead) {
+    this.isRead = isRead;
   }
 }

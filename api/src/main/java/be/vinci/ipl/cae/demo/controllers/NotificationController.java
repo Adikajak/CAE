@@ -1,12 +1,10 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 
-import be.vinci.ipl.cae.demo.models.dtos.NotificationDTO;
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
-
 import be.vinci.ipl.cae.demo.services.NotificationService;
 import jakarta.validation.Valid;
-import org.aspectj.weaver.ast.Not;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +15,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-
-// I used RestControllerd bcs that's what we used in the exercises
+/**
+ * RestController pour /notifications/ et /notifications
+ * */
 @RestController
 @RequestMapping("/notifications")
 public class NotificationController {
@@ -30,7 +29,7 @@ public class NotificationController {
   }
 
   // GET all notifications for a user (it's the list)
-  @GetMapping({"/",""})
+  @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
     Long userId = 1L; // normally from logged-in user
     return service.getNotificationsForUser(userId);
@@ -43,12 +42,12 @@ public class NotificationController {
 
     Long userId = 1L;
 
-    return service.getNotificationById(notificationId,userId)
+    return service.getNotificationById(notificationId, userId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
 
-  // Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it
+  /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it */
   @PostMapping("/{id}/read")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void markAsRead(@PathVariable Long id) {
@@ -58,7 +57,7 @@ public class NotificationController {
   //CREATE notification /+_+/ \+_+\
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
-  public Notification createNotification(@Valid @RequestBody NotificationDTO notification){
+  public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
 
     return service.createNotification(notification);
   }

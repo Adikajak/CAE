@@ -1,23 +1,29 @@
+
 package be.vinci.ipl.cae.demo.models.dtos;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class NotificationDTO {
+/**
+ * Data Transfer Object for Notification entities
+ * Used to transfer notification data between layers without exposing the entity.
+ */
+
+public class NotificationDto {
 
   @NotNull
   private Long userId;
 
   @NotBlank
-  @Size(max=100)
+  @Size(max = 100)
   private String object;
 
   @NotBlank
-  @Size(max=500)
+  @Size(max = 500)
   private String message;
 
-  private boolean is_read;
+  private boolean isRead;
 
   public Long getUserId() {
     return userId;
@@ -43,11 +49,11 @@ public class NotificationDTO {
     this.message = message;
   }
 
-  public boolean isIs_read() {
-    return is_read;
+  public boolean isIsRead() {
+    return isRead;
   }
 
-  public void setIs_read(boolean is_read) {
-    this.is_read = is_read;
+  public void setIsRead(boolean isRead) {
+    this.isRead = isRead;
   }
 }
