@@ -1,6 +1,6 @@
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
-  registerUser: (newUser: User) => Promise<void>;
+  registerUser: (newUser: UserRegister) => Promise<void>;
   loginUser: (user: User) => Promise<void>;
   clearUser: () => void;
 }
@@ -8,6 +8,14 @@ interface UserContextType {
 interface User {
   email: string;
   password: string;
+}
+
+interface UserRegister {
+  email: string;
+  password: string;
+  tag: string;
+  speciality: string;
+  profile_picture: string;
 }
 
 interface AuthenticatedUser {
@@ -19,6 +27,7 @@ type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
 export type {
   User,
+  UserRegister,
   AuthenticatedUser,
   MaybeAuthenticatedUser,
   UserContextType,
