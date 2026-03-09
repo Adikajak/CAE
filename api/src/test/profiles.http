@@ -1,5 +1,49 @@
-### GET request to example server
-GET https://examples.http-client.intellij.net/get
-    ?generated-in=IntelliJ IDEA
+@baseUrl = http://localhost:3000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhdXRoMCIsImVtYWlsIjoiemF6YUBnbWFpbC5jb20iLCJpc0FkbWluIjpmYWxzZSwiaWF0IjoxNzczMDk0OTM0LCJleHAiOjE3NzMxODEzMzR9.68uT2LxgMWRXVKbuUxO97aQjhTuSX8xkbIgMwMnnY_w
 
-###
+### Get my profile
+GET {{baseUrl}}/users/me
+Authorization: {{token}}
+
+### Get my unavailabilities
+GET {{baseUrl}}/users/me/unavailabilities
+Authorization: {{token}}
+
+### Add an unavailability
+POST {{baseUrl}}/users/me/unavailabilities
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "startDate": "2026-03-10",
+  "endDate": "2026-03-15"
+}
+
+### Try to add an unavailability without token (should fail)
+POST {{baseUrl}}/users/me/unavailabilities
+Content-Type: application/json
+
+{
+  "startDate": "2026-03-10",
+  "endDate": "2026-03-15"
+}
+
+### Update password
+PATCH {{baseUrl}}/users/me/password
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "oldPassword": "zahratest",
+  "newPassword": "zahrateste"
+}
+
+### Try to update password with wrong old password (should fail)
+PATCH {{baseUrl}}/users/me/password
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "oldPassword": "wrongpassword",
+  "newPassword": "newpassword123"
+}
