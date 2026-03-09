@@ -7,9 +7,7 @@ import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-
 import java.util.Date;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -148,7 +146,7 @@ public class UserService {
    * @param speciality the speciality
    */
   public void createOne(String email, String password, boolean isAdmin, String tag,
-    String profilePicture, Speciality speciality) {
+      String profilePicture, Speciality speciality) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();
