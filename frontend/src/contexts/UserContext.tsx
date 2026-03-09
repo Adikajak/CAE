@@ -5,6 +5,7 @@ import {
   UserContextType,
   User,
   AuthenticatedUser,
+  UserRegister,
   JwtPayload,
 } from '../types';
 
@@ -31,7 +32,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUser] =
     useState<MaybeAuthenticatedUser>(() => getAuthenticatedUser());
 
-  const registerUser = async (newUser: User) => {
+  const registerUser = async (newUser: UserRegister) => {
     try {
       const options = {
         method: 'POST',
@@ -41,7 +42,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
         },
       };
 
-      const response = await fetch('api/auths/register', options);
+      const response = await fetch('/api/auths/register', options);
 
       if (!response.ok)
         throw new Error(
@@ -69,7 +70,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
         },
       };
 
-      const response = await fetch('api/auths/login', options);
+      const response = await fetch('/api/auths/login', options);
 
       if (!response.ok)
         throw new Error(

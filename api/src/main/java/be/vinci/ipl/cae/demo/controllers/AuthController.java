@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
+import be.vinci.ipl.cae.demo.models.dtos.UserDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -37,20 +38,43 @@ public class AuthController {
         || credentials.getPassword().isBlank();
   }
 
+  private boolean isInvalidRegisterRequest(UserDto userDto) {
+    return userDto == null
+        || userDto.getEmail() == null
+        || userDto.getEmail().isBlank()
+        || userDto.getPassword() == null
+        || userDto.getPassword().isBlank()
+        || userDto.getTag() == null
+        || userDto.getTag().isBlank()
+        || userDto.getSpeciality() == null
+        || userDto.getSpeciality().isBlank()
+        || userDto.getProfilePicture() == null
+        || userDto.getProfilePicture().isBlank();
+  }
+
   /**
    * Register a new user.
    *
-   * @param credentials the user credentials from the request body.
+  * @param userDto the user payload from the request body.
    * @return the authenticated user.
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@Valid @RequestBody Credentials credentials) {
-    if (isInvalidCredentials(credentials)) {
+  public AuthenticatedUser register(@Valid @RequestBody UserDto userDto) {
+    if (isInvalidRegisterRequest(userDto)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.register(credentials.getEmail(),
-        credentials.getPassword());
+    AuthenticatedUser user;
+    try {
+      user = userService.register(
+          userDto.getEmail(),
+          userDto.getPassword(),
+          userDto.getTag(),
+          userDto.getSpeciality(),
+          userDto.getProfilePicture());
+    } catch (IllegalArgumentException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
 
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);

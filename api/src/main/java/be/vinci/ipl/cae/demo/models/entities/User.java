@@ -1,10 +1,14 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -27,6 +31,17 @@ public class User {
   @Column(nullable = false)
   private @NotBlank @Size(min = 8) String password;
 
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "speciality_id", nullable = false)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+  private Speciality speciality;
+
+  @Column(nullable = false)
+  private @NotBlank String tag;
+
+  @Column(nullable = false)
+  private @NotBlank String profilePicture;
+  
   @Column(nullable = false)
   private boolean isAdmin;
 
@@ -42,16 +57,24 @@ public class User {
     return id;
   }
 
-  public String getEmail() {
-    return email;
-  }
-
   public String getPassword() {
     return password;
   }
 
-  public boolean isAdmin() {
-    return isAdmin;
+  public String getTag() {
+    return tag;
+  }
+
+  public Speciality getSpeciality() {
+    return speciality;
+  }
+
+  public String getProfilePicture() {
+    return profilePicture;
+  }
+
+  public String getEmail() {
+    return email;
   }
 
   public void setEmail(String email) {
@@ -62,7 +85,23 @@ public class User {
     this.password = password;
   }
 
-  public void setAdmin(boolean isAdmin) {
-    this.isAdmin = isAdmin;
+  public void setAdmin(boolean admin) {
+    isAdmin = admin;
+  }
+
+  public boolean isAdmin() {
+    return isAdmin;
+  }
+
+  public void setSpeciality(Speciality speciality) {
+    this.speciality = speciality;
+  }
+
+  public void setTag(String tag) {
+    this.tag = tag;
+  }
+
+  public void setProfilePicture(String profilePicture) {
+    this.profilePicture = profilePicture;
   }
 }
