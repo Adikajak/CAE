@@ -32,6 +32,7 @@ public class NotificationController {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   /** GET all notifications for a user (it's the list). */
 =======
   // GET all notifications for a user (it's the list)
@@ -39,6 +40,9 @@ public class NotificationController {
 =======
   /** GET all notifications for a user (it's the list) */
 >>>>>>> 39d342a (fix: CheckStyle Google version 3)
+=======
+  /** GET all notifications for a user (it's the list). */
+>>>>>>> 3b1a152 (fix: checkStyle Google version 4)
   @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
     Long userId = 1L; // normally from logged-in user
@@ -47,10 +51,14 @@ public class NotificationController {
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /** GET a single notification by idNotif (it's the detailed one). */
 =======
   /** GET a single notification by idNotif (it's the detailed one) */
 >>>>>>> 39d342a (fix: CheckStyle Google version 3)
+=======
+  /** GET a single notification by idNotif (it's the detailed one). */
+>>>>>>> 3b1a152 (fix: checkStyle Google version 4)
   @GetMapping("/{id}")
   public Notification getNotification(@PathVariable Long notificationId) {
 
@@ -62,10 +70,14 @@ public class NotificationController {
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it. */
 =======
   /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it */
 >>>>>>> 3c48d87 (fix: google StyleCheck)
+=======
+  /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it. */
+>>>>>>> 3b1a152 (fix: checkStyle Google version 4)
   @PostMapping("/{id}/read")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void markAsRead(@PathVariable Long id) {
@@ -73,10 +85,14 @@ public class NotificationController {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /** CREATE notification /+_+/ \+_+\ . */
 =======
   /** CREATE notification /+_+/ \+_+\ */
 >>>>>>> 39d342a (fix: CheckStyle Google version 3)
+=======
+  /** CREATE notification /+_+/ \+_+\ . */
+>>>>>>> 3b1a152 (fix: checkStyle Google version 4)
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
 <<<<<<< HEAD

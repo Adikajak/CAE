@@ -1,13 +1,10 @@
 package be.vinci.ipl.cae.demo.services;
 
-<<<<<<< HEAD
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-=======
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
@@ -15,14 +12,21 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 /**
  * Service qui va etre utilise pour request http.
 =======
+=======
+
+import java.util.Optional;
+
+>>>>>>> 3b1a152 (fix: checkStyle Google version 4)
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import java.util.Optional;
+
+
 
 /**
  * service qui va etre utilise pour request http.
