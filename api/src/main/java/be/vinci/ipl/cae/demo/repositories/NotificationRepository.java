@@ -1,8 +1,7 @@
 package be.vinci.ipl.cae.demo.repositories;
 
-import java.util.Optional;
-
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 
 

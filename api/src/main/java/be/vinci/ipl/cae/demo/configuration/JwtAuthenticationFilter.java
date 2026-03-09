@@ -1,5 +1,7 @@
 package be.vinci.ipl.cae.demo.configuration;
 
+import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,9 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
