@@ -38,40 +38,40 @@ public class AuthController {
         || credentials.getPassword().isBlank();
   }
 
-  private boolean isInvalidRegisterRequest(UserDto userDTO) {
-    return userDTO == null
-        || userDTO.getEmail() == null
-        || userDTO.getEmail().isBlank()
-        || userDTO.getPassword() == null
-        || userDTO.getPassword().isBlank()
-        || userDTO.getTag() == null
-        || userDTO.getTag().isBlank()
-        || userDTO.getSpeciality() == null
-        || userDTO.getSpeciality().isBlank()
-        || userDTO.getProfilePicture() == null
-        || userDTO.getProfilePicture().isBlank();
+  private boolean isInvalidRegisterRequest(UserDto userDto) {
+    return userDto == null
+        || userDto.getEmail() == null
+        || userDto.getEmail().isBlank()
+        || userDto.getPassword() == null
+        || userDto.getPassword().isBlank()
+        || userDto.getTag() == null
+        || userDto.getTag().isBlank()
+        || userDto.getSpeciality() == null
+        || userDto.getSpeciality().isBlank()
+        || userDto.getProfilePicture() == null
+        || userDto.getProfilePicture().isBlank();
   }
 
   /**
    * Register a new user.
    *
-   * @param userDTO the user payload from the request body.
+  * @param userDto the user payload from the request body.
    * @return the authenticated user.
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@Valid @RequestBody UserDto userDTO) {
-    if (isInvalidRegisterRequest(userDTO)) {
+  public AuthenticatedUser register(@Valid @RequestBody UserDto userDto) {
+    if (isInvalidRegisterRequest(userDto)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
     AuthenticatedUser user;
     try {
       user = userService.register(
-          userDTO.getEmail(),
-          userDTO.getPassword(),
-          userDTO.getTag(),
-          userDTO.getSpeciality(),
-          userDTO.getProfilePicture());
+          userDto.getEmail(),
+          userDto.getPassword(),
+          userDto.getTag(),
+          userDto.getSpeciality(),
+          userDto.getProfilePicture());
     } catch (IllegalArgumentException e) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
     }
