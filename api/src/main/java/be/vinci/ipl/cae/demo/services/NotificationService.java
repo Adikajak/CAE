@@ -41,9 +41,11 @@ public class NotificationService {
     return repository.findByNotificationIdAndUserId(notificationId, userId);
   }
 
-  /** 
-   * Mark notification as read - logic. 
-   * */
+  /**
+   * Mark notification as read - logic.
+   *
+   * @param notificationId the notification id
+   */
   public void markNotificationAsRead(Long notificationId) {
     Notification notif = repository.findById(notificationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -51,11 +53,13 @@ public class NotificationService {
     repository.save(notif);
   }
 
-  /** 
-   * Create a new notification. 
-   * */
+  /**
+   * Create a new notification.
+   *
+   * @param notificationDto the notification data
+   * @return the created Notification
+   */
   public Notification createNotification(NotificationDto notificationDto) {
-
     User user = userRepository.findById(notificationDto.getUserId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -72,7 +76,6 @@ public class NotificationService {
    * */
   public Notification updateNotification(Long id,
       NotificationDto notificationDto) {
-
     Notification notif = repository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 

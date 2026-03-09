@@ -1,4 +1,4 @@
-package be.vinci.ipl.cae.demo.services;
+﻿package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
@@ -51,6 +51,7 @@ public class UserService {
    * Create a JWT token.
    *
    * @param email the email to included in the claim
+   * @param isAdmin whether the user is admin
    * @return the JWT token
    */
   public AuthenticatedUser createJwtToken(String email, boolean isAdmin) {
@@ -101,8 +102,6 @@ public class UserService {
       return null;
     }
 
-    System.out.println(createJwtToken(email, user.isAdmin()));
-
     return createJwtToken(email, user.isAdmin());
   }
 
@@ -151,6 +150,7 @@ public class UserService {
    * @param tag the tag
    * @param profilePicture the profile picture
    * @param speciality the speciality
+   * @param isAdmin whether the user is admin
    */
   public void createOne(String email, String password, boolean isAdmin, String tag,
       String profilePicture, Speciality speciality) {

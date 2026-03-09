@@ -16,7 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * RestController pour /notifications/ et /notifications.
- * */
+ */
 @RestController
 @RequestMapping("/notifications")
 public class NotificationController {
