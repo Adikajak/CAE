@@ -63,12 +63,12 @@ const avatarOptions = [
 
 const getRegisterErrorMessage = (err: unknown): string => {
   if (err instanceof Error) {
-    if (err.message.includes('409')) {
-      return 'Cette adresse email existe deja. Veuillez en utiliser une autre.';
+    if (err.message.includes('400')) {
+      return "Echec d'inscription. Verifiez les champs et la specialite choisie.";
     }
 
-    if (err.message.includes('400')) {
-      return "Echec d'inscription. Verifiez le format de l'email et du mot de passe.";
+    if (err.message.includes('409')) {
+      return 'Cette adresse email existe deja. Veuillez en utiliser une autre.';
     }
   }
 
@@ -175,7 +175,7 @@ const RegisterPage = () => {
               fullWidth
               id="tag"
               name="tag"
-              label="Nom d'utilisateur"
+              label="tag"
               variant="outlined"
               value={tag}
               onChange={(e) => setTag(e.target.value)}
