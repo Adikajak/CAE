@@ -1,7 +1,5 @@
 package be.vinci.ipl.cae.demo.services;
 
-import java.util.Date;
-
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
@@ -12,6 +10,7 @@ import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import java.util.Date;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
