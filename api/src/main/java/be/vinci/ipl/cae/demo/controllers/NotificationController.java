@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * RestController pour /notifications/ et /notifications
+ * RestController pour /notifications/ et /notifications.
  * */
 @RestController
 @RequestMapping("/notifications")
@@ -28,7 +28,7 @@ public class NotificationController {
     this.service = service;
   }
 
-  // GET all notifications for a user (it's the list)
+  /** GET all notifications for a user (it's the list) */
   @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
     Long userId = 1L; // normally from logged-in user
@@ -36,7 +36,7 @@ public class NotificationController {
   }
 
 
-  // GET a single notification by idNotif (it's the detailed one)
+  /** GET a single notification by idNotif (it's the detailed one) */
   @GetMapping("/{id}")
   public Notification getNotification(@PathVariable Long notificationId) {
 
@@ -54,7 +54,7 @@ public class NotificationController {
     service.markNotificationAsRead(id);
   }
 
-  //CREATE notification /+_+/ \+_+\
+  /** CREATE notification /+_+/ \+_+\ */
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
   public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
