@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * Data Transfer Object for Notification entities
+ * Data Transfer Object for Notification entities.
  * Used to transfer notification data between layers without exposing the entity.
  */
 
@@ -33,6 +33,7 @@ public class NotificationDto {
     this.userId = userId;
   }
 
+  // CPD-OFF
   public String getObject() {
     return object;
   }
@@ -56,4 +57,5 @@ public class NotificationDto {
   public void setIsRead(boolean isRead) {
     this.isRead = isRead;
   }
+  // CPD-ON
 }
