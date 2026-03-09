@@ -1,10 +1,6 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 
-import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.Notification;
-import be.vinci.ipl.cae.demo.services.NotificationService;
-
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -16,6 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.services.NotificationService;
 
 /**
  * RestController pour /notifications/ et /notifications.
@@ -59,7 +59,8 @@ public class NotificationController {
   /** CREATE notification /+_+/ \+_+\ . */
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
-  public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
+  public Notification createNotification(@Valid @RequestBody
+  NotificationDto notification) {
 
     return service.createNotification(notification);
   }
