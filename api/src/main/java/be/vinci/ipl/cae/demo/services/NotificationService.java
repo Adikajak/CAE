@@ -34,7 +34,7 @@ public class NotificationService {
    * ALL notifications for a specific user. 
    * */
   public Iterable<Notification> getNotificationsForUser(Long userId) {
-    return repository.findByUser_IdOrderByCreatedAtDesc(userId);
+    return repository.findByUserIdOrderByCreatedAtDesc(userId);
   }
 
   /** 
