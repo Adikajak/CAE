@@ -81,10 +81,6 @@ public class User {
     this.password = password;
   }
 
-  public void setTag(String tag) {
-    this.tag = tag;
-  }
-  
   public void setAdmin(boolean admin) {
     isAdmin = admin;
   }
@@ -97,14 +93,6 @@ public class User {
     this.speciality = speciality;
   }
 
-  public void setProfilePicture(String profilePicture) {
-    this.profilePicture = profilePicture;
-  }
-  
-  public void setAdmin(boolean isAdmin) {
-    this.isAdmin = isAdmin;
-  }
-  
   public void setTag(String tag) {
     this.tag = tag;
   }
