@@ -1,13 +1,17 @@
 package be.vinci.ipl.cae.demo.services;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 import java.util.Optional;
 
+=======
+>>>>>>> 76249b4 (refactor: reorganize imports in Notification and User services, controller, and repository classes)
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -22,6 +26,9 @@ import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.util.Optional;
 
 >>>>>>> 3b1a152 (fix: checkStyle Google version 4)
+=======
+import java.util.Optional;
+>>>>>>> 76249b4 (refactor: reorganize imports in Notification and User services, controller, and repository classes)
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
