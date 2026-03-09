@@ -1,11 +1,13 @@
-﻿package be.vinci.ipl.cae.demo.services;
+package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+
 import java.util.Date;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +42,6 @@ public class UserService {
    * Create a JWT token.
    *
    * @param email the email to included in the claim
-   * @param isAdmin whether the user is admin
    * @return the JWT token
    */
   public AuthenticatedUser createJwtToken(String email, boolean isAdmin) {
@@ -91,6 +92,8 @@ public class UserService {
       return null;
     }
 
+    System.out.println(createJwtToken(email, user.isAdmin()));
+
     return createJwtToken(email, user.isAdmin());
   }
 
@@ -127,7 +130,6 @@ public class UserService {
    *
    * @param email the email
    * @param password the password
-   * @param isAdmin whether the user is admin
    */
   public void createOne(String email, String password, boolean isAdmin) {
     String hashedPassword = passwordEncoder.encode(password);
@@ -139,4 +141,5 @@ public class UserService {
 
     userRepository.save(user);
   }
+
 }
