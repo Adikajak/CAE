@@ -64,12 +64,17 @@ public class AuthController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.register(
-        userDTO.getEmail(),
-        userDTO.getPassword(),
-        userDTO.getTag(),
-        userDTO.getSpeciality(),
-        userDTO.getProfilePicture());
+    AuthenticatedUser user;
+    try {
+      user = userService.register(
+          userDTO.getEmail(),
+          userDTO.getPassword(),
+          userDTO.getTag(),
+          userDTO.getSpeciality(),
+          userDTO.getProfilePicture());
+    } catch (IllegalArgumentException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
 
     if (user == null) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);

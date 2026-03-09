@@ -122,7 +122,7 @@ public class UserService {
 
     Speciality speciality = specialityRepository.findByName(specialityName);
     if (speciality == null) {
-      return null;
+      throw new IllegalArgumentException("Invalid speciality");
     }
 
     createOne(email, password, false, tag, profilePicture, speciality);
