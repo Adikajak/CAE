@@ -20,7 +20,8 @@ public class Notification {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long notification_id;
+  @Column(name = "notification_id")
+  private Long notificationId;
 
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
@@ -48,12 +49,12 @@ public class Notification {
   private boolean is_read = false;
 
 
-  public Long getNotification_id() {
-    return notification_id;
+  public Long getNotificationId() {
+    return notificationId;
   }
 
-  public void setNotification_id(Long notification_id) {
-    this.notification_id = notification_id;
+  public void setNotificationId(Long notificationId) {
+    this.notificationId = notificationId;
   }
 
   public User getUser() {
