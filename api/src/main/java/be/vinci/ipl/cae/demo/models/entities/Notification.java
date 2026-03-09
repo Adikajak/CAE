@@ -13,16 +13,12 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 /**
- * Notification entity representing all user notifications.
+ * Notification entity representing all user notifications + everything is not null.
  */
 
 @Entity
 @Table(name = "notifications")
 public class Notification {
-
-  /**
-   * Everything is not null (not date_heure and id bcs it's always will be generated no matter what.
-   * */
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,6 +66,7 @@ public class Notification {
     this.user = user;
   }
 
+  // CPD-OFF
   public String getObject() {
     return object;
   }
@@ -101,4 +98,5 @@ public class Notification {
   public void setIsRead(boolean isRead) {
     this.isRead = isRead;
   }
+  // CPD-ON
 }
