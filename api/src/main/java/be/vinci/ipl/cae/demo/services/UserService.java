@@ -1,15 +1,14 @@
 package be.vinci.ipl.cae.demo.services;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import java.util.Date;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-
-import java.util.Date;
-
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
 
 /**
  * User service.
