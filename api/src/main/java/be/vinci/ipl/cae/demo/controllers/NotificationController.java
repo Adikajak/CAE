@@ -1,6 +1,5 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.services.NotificationService;
@@ -16,49 +15,67 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * RestController pour /notifications/ et /notifications
- * */
+ * RestController pour /notifications/ et /notifications.
+ */
 @RestController
 @RequestMapping("/notifications")
 public class NotificationController {
 
   private final NotificationService service;
 
+  /**
+   * Constructor for NotificationController.
+   *
+   * @param service the notification service
+   */
   public NotificationController(NotificationService service) {
     this.service = service;
   }
 
-  // GET all notifications for a user (it's the list)
+  /**
+   * Get all notifications for the current user.
+   *
+   * @return list of notifications
+   */
   @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
-    Long userId = 1L; // normally from logged-in user
+    Long userId = 1L;
     return service.getNotificationsForUser(userId);
   }
 
-
-  // GET a single notification by idNotif (it's the detailed one)
+  /**
+   * Get a single notification by its ID.
+   *
+   * @param id the notification ID
+   * @return the notification
+   */
   @GetMapping("/{id}")
-  public Notification getNotification(@PathVariable Long notificationId) {
-
+  public Notification getNotification(@PathVariable Long id) {
     Long userId = 1L;
-
-    return service.getNotificationById(notificationId, userId)
+    return service.getNotificationById(id, userId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
-
-  /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it */
+  /**
+   * Mark a notification as read.
+   *
+   * @param id the notification ID
+   */
   @PostMapping("/{id}/read")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void markAsRead(@PathVariable Long id) {
     service.markNotificationAsRead(id);
   }
 
-  //CREATE notification /+_+/ \+_+\
+  /**
+   * Create a new notification.
+   *
+   * @param notification the notification data
+   * @return the created notification
+   */
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
   public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
-
     return service.createNotification(notification);
   }
 }
