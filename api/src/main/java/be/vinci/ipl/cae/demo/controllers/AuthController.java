@@ -2,7 +2,7 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
-import be.vinci.ipl.cae.demo.models.dtos.UserDTO;
+import be.vinci.ipl.cae.demo.models.dtos.UserDto;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -38,7 +38,7 @@ public class AuthController {
         || credentials.getPassword().isBlank();
   }
 
-  private boolean isInvalidRegisterRequest(UserDTO userDTO) {
+  private boolean isInvalidRegisterRequest(UserDto userDTO) {
     return userDTO == null
         || userDTO.getEmail() == null
         || userDTO.getEmail().isBlank()
@@ -59,7 +59,7 @@ public class AuthController {
    * @return the authenticated user.
    */
   @PostMapping("/register")
-  public AuthenticatedUser register(@Valid @RequestBody UserDTO userDTO) {
+  public AuthenticatedUser register(@Valid @RequestBody UserDto userDTO) {
     if (isInvalidRegisterRequest(userDTO)) {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
