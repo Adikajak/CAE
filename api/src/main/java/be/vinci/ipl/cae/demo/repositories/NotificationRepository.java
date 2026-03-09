@@ -2,8 +2,11 @@ package be.vinci.ipl.cae.demo.repositories;
 
 
 import be.vinci.ipl.cae.demo.models.entities.Notification;
-import org.springframework.data.repository.CrudRepository;
+
 import java.util.Optional;
+
+import org.springframework.data.repository.CrudRepository;
+
 
 /**
  * Notification Repository.
