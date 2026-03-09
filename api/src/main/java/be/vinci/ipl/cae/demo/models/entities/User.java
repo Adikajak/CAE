@@ -69,6 +69,8 @@ public class User {
 
   public String getProfilePicture() {
     return profilePicture;
+  }
+
   public boolean isAdmin() {
     return isAdmin;
   }
@@ -83,10 +85,6 @@ public class User {
 
   public void setAdmin(boolean admin) {
     isAdmin = admin;
-  }
-
-  public boolean isAdmin() {
-    return isAdmin;
   }
 
   public void setSpeciality(Speciality speciality) {
