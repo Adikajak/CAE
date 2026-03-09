@@ -1,14 +1,16 @@
 package be.vinci.ipl.cae.demo.services;
 
+import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import java.util.Optional;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * service qui va etre utilise pour request http.
@@ -41,11 +43,7 @@ public class NotificationService {
     return repository.findByNotificationIdAndUserId(notificationId, userId);
   }
 
-  /**
-   * Mark notification as read - logic.
-   *
-   * @param notificationId the notification id
-   */
+  /** mark notification as read - logic. */
   public void markNotificationAsRead(Long notificationId) {
     Notification notif = repository.findById(notificationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -53,13 +51,9 @@ public class NotificationService {
     repository.save(notif);
   }
 
-  /**
-   * Create a new notification.
-   *
-   * @param notificationDto the notification data
-   * @return the created Notification
-   */
+  /** Create a new notification. */
   public Notification createNotification(NotificationDto notificationDto) {
+
     User user = userRepository.findById(notificationDto.getUserId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -76,6 +70,7 @@ public class NotificationService {
    * */
   public Notification updateNotification(Long id,
       NotificationDto notificationDto) {
+
     Notification notif = repository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
