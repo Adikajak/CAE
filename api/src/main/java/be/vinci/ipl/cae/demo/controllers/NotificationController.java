@@ -1,6 +1,10 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import jakarta.validation.Valid;
+
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.services.NotificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,10 +15,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.Notification;
-import be.vinci.ipl.cae.demo.services.NotificationService;
-
 /**
  * RestController pour /notifications/ et /notifications.
  * */
@@ -24,6 +24,11 @@ public class NotificationController {
 
   private final NotificationService service;
 
+  /**
+   * Constructor for NotificationController.
+   *
+   * @param service the NotificationService to inject
+   */
   public NotificationController(NotificationService service) {
     this.service = service;
   }
@@ -86,6 +91,7 @@ public class NotificationController {
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it. */
 =======
   /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it */
@@ -93,6 +99,13 @@ public class NotificationController {
 =======
   /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it. */
 >>>>>>> 3b1a152 (fix: checkStyle Google version 4)
+=======
+  /**
+   * Mark a notification as read.
+   *
+   * @param id the id of the notification to mark as read
+   */
+>>>>>>> 8d740ce (refactor: reorganize imports and enhance documentation in service and controller classes)
   @PostMapping("/{id}/read")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void markAsRead(@PathVariable Long id) {
