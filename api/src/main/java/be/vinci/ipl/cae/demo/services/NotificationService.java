@@ -1,19 +1,32 @@
 package be.vinci.ipl.cae.demo.services;
 
+<<<<<<< HEAD
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+=======
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+<<<<<<< HEAD
 
 /**
  * Service qui va etre utilise pour request http.
+=======
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import java.util.Optional;
+
+/**
+ * service qui va etre utilise pour request http.
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
  * */
 @Service
 public class NotificationService {
@@ -21,27 +34,41 @@ public class NotificationService {
   private final NotificationRepository repository;
   private final UserRepository userRepository;
 
+<<<<<<< HEAD
   /** 
    * A normal constructeur. 
    * */
   public NotificationService(NotificationRepository repository,
       UserRepository userRepository) {
+=======
+  /** a normal constructeur. */
+  public NotificationService(NotificationRepository repository, UserRepository userRepository) {
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
     this.repository = repository;
     this.userRepository = userRepository;
   }
 
+<<<<<<< HEAD
   /** 
    * ALL notifications for a specific user. 
    * */
+=======
+  /** ALL notifications for a specific user. */
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
   public Iterable<Notification> getNotificationsForUser(Long userId) {
     return repository.findByUserIdOrderByCreatedAtDesc(userId);
   }
 
+<<<<<<< HEAD
   /** 
    * Notification by id. 
    * */
   public Optional<Notification> getNotificationById(Long notificationId,
       Long userId) {
+=======
+  /** notification by id. */
+  public Optional<Notification> getNotificationById(Long notificationId, Long userId) {
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
 
     return repository.findByNotificationIdAndUserId(notificationId, userId);
   }

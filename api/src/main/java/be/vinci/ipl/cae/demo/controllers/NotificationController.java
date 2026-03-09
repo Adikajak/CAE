@@ -31,10 +31,14 @@ public class NotificationController {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   /** GET all notifications for a user (it's the list). */
 =======
   // GET all notifications for a user (it's the list)
 >>>>>>> 3c48d87 (fix: google StyleCheck)
+=======
+  /** GET all notifications for a user (it's the list) */
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
   @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
     Long userId = 1L; // normally from logged-in user
@@ -42,7 +46,11 @@ public class NotificationController {
   }
 
 
+<<<<<<< HEAD
   /** GET a single notification by idNotif (it's the detailed one). */
+=======
+  /** GET a single notification by idNotif (it's the detailed one) */
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
   @GetMapping("/{id}")
   public Notification getNotification(@PathVariable Long notificationId) {
 
@@ -64,7 +72,11 @@ public class NotificationController {
     service.markNotificationAsRead(id);
   }
 
+<<<<<<< HEAD
   /** CREATE notification /+_+/ \+_+\ . */
+=======
+  /** CREATE notification /+_+/ \+_+\ */
+>>>>>>> 39d342a (fix: CheckStyle Google version 3)
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
 <<<<<<< HEAD
