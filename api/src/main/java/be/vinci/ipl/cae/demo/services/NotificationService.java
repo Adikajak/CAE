@@ -1,121 +1,63 @@
 package be.vinci.ipl.cae.demo.services;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-import java.util.Optional;
-
-=======
->>>>>>> 76249b4 (refactor: reorganize imports in Notification and User services, controller, and repository classes)
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+import java.util.Optional;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Service qui va etre utilise pour request http.
-=======
-=======
-
-=======
->>>>>>> 010307b (fix: checkStyle Google version 5)
-import java.util.Optional;
-
->>>>>>> 3b1a152 (fix: checkStyle Google version 4)
-=======
-import java.util.Optional;
->>>>>>> 76249b4 (refactor: reorganize imports in Notification and User services, controller, and repository classes)
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-=======
->>>>>>> 76249b4110b16ebdb1c0e97dc71ccb983356e855
-import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.Notification;
-import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
-import be.vinci.ipl.cae.demo.repositories.UserRepository;
-<<<<<<< HEAD
-=======
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
->>>>>>> 8d740ce (refactor: reorganize imports and enhance documentation in service and controller classes)
-=======
-import java.util.Optional;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
->>>>>>> 76249b4110b16ebdb1c0e97dc71ccb983356e855
-
-/**
- * service qui va etre utilise pour request http.
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
- * */
+ * Service qui va eter utilise pour request http.
+ */
 @Service
 public class NotificationService {
 
   private final NotificationRepository repository;
   private final UserRepository userRepository;
 
-<<<<<<< HEAD
-  /** 
-   * A normal constructeur. 
-   * */
+  /**
+   * A normal constructeur.
+   *
+   * @param repository the NotificationRepository to inject
+   * @param userRepository the UserRepository to inject
+   */
   public NotificationService(NotificationRepository repository,
       UserRepository userRepository) {
-=======
-  /** a normal constructeur. */
-<<<<<<< HEAD
-  public NotificationService(NotificationRepository repository, UserRepository userRepository) {
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
-=======
-  public NotificationService(NotificationRepository repository,
-      UserRepository userRepository) {
->>>>>>> 010307b (fix: checkStyle Google version 5)
     this.repository = repository;
     this.userRepository = userRepository;
   }
 
-<<<<<<< HEAD
-  /** 
-   * ALL notifications for a specific user. 
-   * */
-=======
-  /** ALL notifications for a specific user. */
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
+  /**
+   * ALL notifications for a specific user.
+   *
+   * @param userId the user id
+   * @return Iterable of Notification objects for the user
+   */
   public Iterable<Notification> getNotificationsForUser(Long userId) {
     return repository.findByUserIdOrderByCreatedAtDesc(userId);
   }
 
-<<<<<<< HEAD
-  /** 
-   * Notification by id. 
-   * */
+  /**
+   * Notification by id.
+   *
+   * @param notificationId the notification id
+   * @param userId the user id
+   * @return Optional of Notification object
+   */
   public Optional<Notification> getNotificationById(Long notificationId,
       Long userId) {
-=======
-  /** notification by id. */
-<<<<<<< HEAD
-  public Optional<Notification> getNotificationById(Long notificationId, Long userId) {
->>>>>>> 39d342a (fix: CheckStyle Google version 3)
-=======
-  public Optional<Notification> getNotificationById(Long notificationId,
-      Long userId) {
->>>>>>> 010307b (fix: checkStyle Google version 5)
-
     return repository.findByNotificationIdAndUserId(notificationId, userId);
   }
 
-  /** 
-   * Mark notification as read - logic. 
-   * */
+  /**
+   * Mark notification as read - logic.
+   *
+   * @param notificationId the notification id
+   */
   public void markNotificationAsRead(Long notificationId) {
     Notification notif = repository.findById(notificationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -123,11 +65,13 @@ public class NotificationService {
     repository.save(notif);
   }
 
-  /** 
-   * Create a new notification. 
-   * */
+  /**
+   * Create a new notification.
+   *
+   * @param notificationDto the notification data
+   * @return the created Notification
+   */
   public Notification createNotification(NotificationDto notificationDto) {
-
     User user = userRepository.findById(notificationDto.getUserId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -139,16 +83,15 @@ public class NotificationService {
     return repository.save(notif);
   }
 
-<<<<<<< HEAD
-  /** 
-   * Update notification. 
-   * */
-=======
-  /** Update notification. */
->>>>>>> 010307b (fix: checkStyle Google version 5)
+  /**
+   * Update notification.
+   *
+   * @param id the notification id
+   * @param notificationDto the notification data
+   * @return the updated Notification
+   */
   public Notification updateNotification(Long id,
       NotificationDto notificationDto) {
-
     Notification notif = repository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
