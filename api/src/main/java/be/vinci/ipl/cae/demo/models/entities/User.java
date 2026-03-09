@@ -69,6 +69,8 @@ public class User {
 
   public String getProfilePicture() {
     return profilePicture;
+  }
+
   public boolean isAdmin() {
     return isAdmin;
   }
@@ -83,28 +85,14 @@ public class User {
 
   public void setTag(String tag) {
     this.tag = tag;
+  }
+
   public void setAdmin(boolean admin) {
     isAdmin = admin;
   }
 
-  public boolean isAdmin() {
-    return isAdmin;
-  }
-
   public void setSpeciality(Speciality speciality) {
     this.speciality = speciality;
-  }
-
-  public void setProfilePicture(String profilePicture) {
-    this.profilePicture = profilePicture;
-  }
-  
-  public void setAdmin(boolean isAdmin) {
-    this.isAdmin = isAdmin;
-  }
-  
-  public void setTag(String tag) {
-    this.tag = tag;
   }
 
   public void setProfilePicture(String profilePicture) {
