@@ -37,10 +37,13 @@ public class NotificationController {
   }
 
 
-  // GET a single notification by idUser (it's the detailed one)
+  // GET a single notification by idNotif (it's the detailed one)
   @GetMapping("/{id}")
-  public Notification getNotification(@PathVariable Long id) {
-    return service.getNotificationById(id)
+  public Notification getNotification(@PathVariable Long notificationId) {
+
+    Long userId = 1L;
+
+    return service.getNotificationById(notificationId,userId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 

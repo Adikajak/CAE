@@ -23,17 +23,18 @@ public class NotificationService {
 
   //ALL notifications for a specific user
   public Iterable<Notification> getNotificationsForUser(Long userId) {
-    return repository.findByUserIdOrderByCreatedAtDesc(userId);
+    return repository.findByUser_IdOrderByCreatedAtDesc(userId);
   }
 
   //notification by id
-  public Optional<Notification> getNotificationById(Long id) {
-    return repository.findById(id);
+  public Optional<Notification> getNotificationById(Long notificationId, Long userId) {
+
+    return repository.findByNotificationIdAndUser_Id(notificationId,userId);
   }
 
   //mark notification as read - logic
-  public void markNotificationAsRead(Long id) {
-    Notification notif = repository.findById(id)
+  public void markNotificationAsRead(Long notificationId) {
+    Notification notif = repository.findById(notificationId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     notif.setIs_read(true);
     repository.save(notif);
