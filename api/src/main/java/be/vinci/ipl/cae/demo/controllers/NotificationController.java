@@ -30,7 +30,11 @@ public class NotificationController {
     this.service = service;
   }
 
+<<<<<<< HEAD
   /** GET all notifications for a user (it's the list). */
+=======
+  // GET all notifications for a user (it's the list)
+>>>>>>> 3c48d87 (fix: google StyleCheck)
   @GetMapping({"/", ""})
   public Iterable<Notification> getNotifications() {
     Long userId = 1L; // normally from logged-in user
@@ -49,7 +53,11 @@ public class NotificationController {
   }
 
 
+<<<<<<< HEAD
   /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it. */
+=======
+  /**Optional: mark notification as read (like the button) idk if we want it to be like /read but idk how to do it */
+>>>>>>> 3c48d87 (fix: google StyleCheck)
   @PostMapping("/{id}/read")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void markAsRead(@PathVariable Long id) {
@@ -59,8 +67,12 @@ public class NotificationController {
   /** CREATE notification /+_+/ \+_+\ . */
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
+<<<<<<< HEAD
   public Notification createNotification(@Valid @RequestBody
   NotificationDto notification) {
+=======
+  public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
+>>>>>>> 3c48d87 (fix: google StyleCheck)
 
     return service.createNotification(notification);
   }
