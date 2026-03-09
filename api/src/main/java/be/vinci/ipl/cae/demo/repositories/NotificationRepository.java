@@ -3,7 +3,7 @@ package be.vinci.ipl.cae.demo.repositories;
 import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
-import org.springframework.data.repository.CrudRepository;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 
 
 /**
