@@ -10,7 +10,9 @@ import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+
 import java.util.Date;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -151,6 +153,7 @@ public class UserService {
    * @param tag the tag
    * @param profilePicture the profile picture
    * @param speciality the speciality
+   * @param isAdmin whether the user is admin
    */
   public void createOne(String email, String password, boolean isAdmin, String tag,
       String profilePicture, Speciality speciality) {
