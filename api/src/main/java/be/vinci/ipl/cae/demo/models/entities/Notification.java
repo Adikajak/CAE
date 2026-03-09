@@ -1,5 +1,7 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,7 +43,6 @@ public class Notification {
   @Column(nullable = false, length = 500)
   @NotBlank
   private String message;
-
 
   private  LocalDateTime createdAt;
 
