@@ -1,13 +1,14 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
+import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
+import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-
 import java.util.Date;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,16 +27,21 @@ public class UserService {
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
+  private final UnavailabilityRepository unavailabilityRepository;
 
   /**
    * Constructor.
    *
    * @param passwordEncoder the password encoder
    * @param userRepository  the user repository
+   * @param unavailabilityRepository the unavailability repository
    */
-  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+
+  public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
+                     UnavailabilityRepository unavailabilityRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
+    this.unavailabilityRepository = unavailabilityRepository;
   }
 
   /**
@@ -140,6 +146,53 @@ public class UserService {
     user.setAdmin(isAdmin);
 
     userRepository.save(user);
+  }
+
+  /**
+   * Updates the password of a user after verifying the old password.
+   * Returns false if the user does not exist or if the old password is incorrect.
+   *
+   * @param email the email of the user
+   * @param oldPassword the current password to verify
+   * @param newPassword the new password to set
+   * @return true if the password was updated, false otherwise
+   */
+  public boolean updatePassword(String email, String oldPassword, String newPassword) {
+    User user = userRepository.findByEmail(email);
+    if (user == null) {
+      return false;
+    }
+    if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+      return false;
+    }
+    user.setPassword(passwordEncoder.encode(newPassword));
+    userRepository.save(user);
+    return true;
+  }
+
+  /**
+   * Retrieves all unavailabilities for a given user.
+   *
+   * @param user the authenticated user
+   * @return the list of unavailabilities
+   */
+  public Iterable<Unavailability> getUnavailabilities(User user) {
+    return unavailabilityRepository.findByUser(user);
+  }
+
+  /**
+   * Creates and saves a new unavailability for a given user.
+   *
+   * @param user the authenticated user
+   * @param request the unavailability dates
+   * @return the saved unavailability
+   */
+  public Unavailability addUnavailability(User user, UnavailabilityRequest request) {
+    Unavailability unavailability = new Unavailability();
+    unavailability.setUser(user);
+    unavailability.setStartDate(request.startDate());
+    unavailability.setEndDate(request.endDate());
+    return unavailabilityRepository.save(unavailability);
   }
 
 }
