@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  MenuItem,
 } from '@mui/material';
 import { UserContextType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
@@ -19,6 +20,7 @@ interface Profile {
   speciality: string;
   // team: string;
   profilePicture: string;
+  date: string;
 }
 
 interface Unavailability {
@@ -26,6 +28,8 @@ interface Unavailability {
   startDate: string;
   endDate: string;
 }
+
+const specialties = ['Archer', 'Assassin', 'Mage', 'Guerrier', 'Clerc', 'Paladin', 'Rodeur'];
 
 const ProfilePage = () => {
   const { authenticatedUser } = useContext<UserContextType>(UserContext);
@@ -47,6 +51,10 @@ const ProfilePage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [unavailError, setUnavailError] = useState('');
+
+  const [openSpecialityModal, setOpenSpecialityModal] = useState(false);
+  const [newSpeciality, setNewSpeciality] = useState('');
+  const [specialityError, setSpecialityError] = useState('');
 
   useEffect(() => {
     if (!authenticatedUser) return;
@@ -155,6 +163,31 @@ const ProfilePage = () => {
     }
   };
 
+  const handleUpdateSpeciality = async () => {
+    setSpecialityError('');
+    if (!newSpeciality) {
+      setSpecialityError('Veuillez choisir une spécialité.');
+      return;
+    }
+    try {
+      const response = await fetch('/api/users/me/speciality', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authenticatedUser!.token,
+        },
+        body: JSON.stringify({ specialityName: newSpeciality }),
+      });
+      if (!response.ok) throw new Error('Erreur lors de la modification.');
+      setProfile(profile ? { ...profile, speciality: newSpeciality } : null);
+      setOpenSpecialityModal(false);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setSpecialityError(err.message);
+      }
+    }
+  };
+
   if (!authenticatedUser)
     return <p>Vous devez être connecté pour voir cette page.</p>;
   if (loading) return <p>Chargement...</p>;
@@ -181,13 +214,15 @@ const ProfilePage = () => {
           </p>
           <p>
             <strong>Spécialité :</strong> {profile?.speciality}
+            <Button size="small" variant="outlined" sx={{ marginLeft: 2 }} onClick={() => setOpenSpecialityModal(true)}>
+              Modifier
+            </Button>
           </p>
           <p>
             <strong>Team :</strong> - {/* À implémenter côté backend */}
           </p>
           <p>
-            <strong>Date de création :</strong> —{' '}
-            {/* À implémenter côté backend */}
+            <strong>Date de création :</strong> {profile?.date ? profile.date.split('-').reverse().join('/') : '—'}
           </p>
           <p>
             <strong>Photo de profil :</strong>{' '}
@@ -244,7 +279,7 @@ const ProfilePage = () => {
               <ul>
                 {unavailabilities.map((u) => (
                   <li key={u.id}>
-                    Du {u.startDate} au {u.endDate}
+                    {u.startDate.split('-').reverse().join('/')} - {u.endDate.split('-').reverse().join('/')}
                   </li>
                 ))}
               </ul>
@@ -320,6 +355,37 @@ const ProfilePage = () => {
           <Button onClick={() => setOpenUnavailModal(false)}>Annuler</Button>
           <Button variant="contained" onClick={handleAddUnavailability}>
             Ajouter
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Popup spécialité */}
+      <Dialog
+        open={openSpecialityModal}
+        onClose={() => setOpenSpecialityModal(false)}
+      >
+        <DialogTitle>Modifier la spécialité</DialogTitle>
+        <DialogContent>
+          {specialityError && <Alert severity="error">{specialityError}</Alert>}
+          <p></p>
+          <TextField
+            fullWidth
+            select
+            label="Spécialité"
+            value={newSpeciality}
+            onChange={(e) => setNewSpeciality(e.target.value)}
+          >
+            {specialties.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenSpecialityModal(false)}>Annuler</Button>
+          <Button variant="contained" onClick={handleUpdateSpeciality}>
+            Confirmer
           </Button>
         </DialogActions>
       </Dialog>
