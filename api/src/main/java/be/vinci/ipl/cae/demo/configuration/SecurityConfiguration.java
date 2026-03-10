@@ -46,6 +46,7 @@ public class SecurityConfiguration {
             .requestMatchers("/auths/**").permitAll()
           .requestMatchers("/profile-pictures/**").permitAll()
             .requestMatchers("/users/**").authenticated()
+            .requestMatchers("/teams/**").permitAll()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
