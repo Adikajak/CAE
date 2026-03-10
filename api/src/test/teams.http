@@ -1,0 +1,48 @@
+@baseUrl = http://localhost:3000
+
+###  Créer une nouvelle team (le créateur devient manager)
+POST {{baseUrl}}/teams
+Content-Type: application/json
+
+{
+  "name": "Team Gamma"
+}
+
+### Demander à rejoindre une team existante (teamId = 1)
+POST {{baseUrl}}/teams/1/membership
+Content-Type: application/json
+
+### Lister tous les membres d’une team (teamId = 1)
+GET {{baseUrl}}/teams/memberships/1/members
+Accept: application/json
+
+### Lister les demandes de membership en attente (teamId = 1)
+GET {{baseUrl}}/teams/memberships/1/requests
+Accept: application/json
+
+### Accepter une demande de membership (membershipId = 1)
+PATCH {{baseUrl}}/teams/memberships/1/accept
+
+###  Refuser une demande de membership (membershipId = 2)
+PATCH {{baseUrl}}/teams/memberships/2/refuse?reason=Pas%20de%20place
+
+###  Vérifier sa propre équipe (teamId = 2)
+GET {{baseUrl}}/teams/2
+Accept: application/json
+
+### Lister toutes les équipes
+GET {{baseUrl}}/teams
+Accept: application/json
+
+### Ajouter une notification de test pour l’utilisateur
+POST {{baseUrl}}/notifications/
+Content-Type: application/json
+
+{
+  "object": "New notification",
+  "message": "0.000000002% of Mazovian was build",
+  "userId": 1
+}
+
+###Lister toutes les notifications
+GET {{baseUrl}}/notifications/
