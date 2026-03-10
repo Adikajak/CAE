@@ -17,7 +17,7 @@ interface Profile {
   email: string;
   tag: string;
   speciality: string;
-  //team: string;
+  // team: string;
   profilePicture: string;
 }
 
@@ -161,7 +161,7 @@ const ProfilePage = () => {
   if (error) return <p>Erreur : {error}</p>;
 
   return (
-    <Box sx={{ margin: 2, padding: 3, textAlign: 'center'}}>
+    <Box sx={{ margin: 2, padding: 3, textAlign: 'center' }}>
       <h1>Mon Espace personnel</h1>
 
       <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
@@ -186,10 +186,20 @@ const ProfilePage = () => {
             <strong>Team :</strong> - {/* À implémenter côté backend */}
           </p>
           <p>
-            <strong>Date de création :</strong> — {/* À implémenter côté backend */}
+            <strong>Date de création :</strong> —{' '}
+            {/* À implémenter côté backend */}
           </p>
           <p>
-            <strong>Photo de profil :</strong> {profile?.profilePicture ? <img src={profile.profilePicture} alt="Profil" style={{ width: 100, height: 100, objectFit: 'cover' }} /> : 'Aucune photo'}
+            <strong>Photo de profil :</strong>{' '}
+            {profile?.profilePicture ? (
+              <img
+                src={profile.profilePicture}
+                alt="Profil"
+                style={{ width: 100, height: 100, objectFit: 'cover' }}
+              />
+            ) : (
+              'Aucune photo'
+            )}
           </p>
         </Box>
 
