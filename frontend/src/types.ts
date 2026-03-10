@@ -55,6 +55,7 @@ interface TeamMembership {
   status: 'PENDING' | 'ACCEPTED' | 'REFUSED';
   rejectionReason?: string;
 }
+
 export type {
   User,
   UserRegister,
