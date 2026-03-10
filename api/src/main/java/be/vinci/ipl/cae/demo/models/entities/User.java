@@ -14,6 +14,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDate;
+
 /**
  * User entity.
  */
@@ -44,6 +46,9 @@ public class User {
   
   @Column(nullable = false)
   private boolean isAdmin;
+
+  @Column(nullable = false)
+  private LocalDate date;
 
   /**
    * constructor.
@@ -77,6 +82,10 @@ public class User {
     return email;
   }
 
+  public LocalDate getDate() {
+    return date;
+  }
+
   public void setEmail(String email) {
     this.email = email;
   }
@@ -103,5 +112,9 @@ public class User {
 
   public void setProfilePicture(String profilePicture) {
     this.profilePicture = profilePicture;
+  }
+
+  public void setDate(LocalDate date) {
+    this.date = date;
   }
 }

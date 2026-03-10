@@ -11,6 +11,7 @@ import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -166,6 +167,7 @@ public class UserService {
     user.setProfilePicture(profilePicture);
     user.setSpeciality(speciality);
     user.setAdmin(isAdmin);
+    user.setDate(LocalDate.now());
 
     userRepository.save(user);
   }
