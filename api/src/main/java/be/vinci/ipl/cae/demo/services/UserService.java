@@ -218,9 +218,18 @@ public class UserService {
     return unavailabilityRepository.save(unavailability);
   }
 
+  /**
+   * Updates the speciality of a given user.
+   *
+   * @param user the authenticated user
+   * @param specialityName the new speciality name
+   * @return true if the speciality was updated, false otherwise
+   */
   public boolean updateSpeciality(User user, String specialityName) {
     Speciality speciality = specialityRepository.findByName(specialityName);
-    if (speciality == null) return false;
+    if (speciality == null) {
+      return false;
+    }
     user.setSpeciality(speciality);
     userRepository.save(user);
     return true;

@@ -29,7 +29,15 @@ interface Unavailability {
   endDate: string;
 }
 
-const specialties = ['Archer', 'Assassin', 'Mage', 'Guerrier', 'Clerc', 'Paladin', 'Rodeur'];
+const specialties = [
+  'Archer',
+  'Assassin',
+  'Mage',
+  'Guerrier',
+  'Clerc',
+  'Paladin',
+  'Rodeur',
+];
 
 const ProfilePage = () => {
   const { authenticatedUser } = useContext<UserContextType>(UserContext);
@@ -214,7 +222,12 @@ const ProfilePage = () => {
           </p>
           <p>
             <strong>Spécialité :</strong> {profile?.speciality}
-            <Button size="small" variant="outlined" sx={{ marginLeft: 2 }} onClick={() => setOpenSpecialityModal(true)}>
+            <Button
+              size="small"
+              variant="outlined"
+              sx={{ marginLeft: 2 }}
+              onClick={() => setOpenSpecialityModal(true)}
+            >
               Modifier
             </Button>
           </p>
@@ -222,7 +235,8 @@ const ProfilePage = () => {
             <strong>Team :</strong> - {/* À implémenter côté backend */}
           </p>
           <p>
-            <strong>Date de création :</strong> {profile?.date ? profile.date.split('-').reverse().join('/') : '—'}
+            <strong>Date de création :</strong>{' '}
+            {profile?.date ? profile.date.split('-').reverse().join('/') : '—'}
           </p>
           <p>
             <strong>Photo de profil :</strong>{' '}
@@ -279,7 +293,8 @@ const ProfilePage = () => {
               <ul>
                 {unavailabilities.map((u) => (
                   <li key={u.id}>
-                    {u.startDate.split('-').reverse().join('/')} - {u.endDate.split('-').reverse().join('/')}
+                    {u.startDate.split('-').reverse().join('/')} -{' '}
+                    {u.endDate.split('-').reverse().join('/')}
                   </li>
                 ))}
               </ul>
