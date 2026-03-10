@@ -89,11 +89,12 @@ const LoginPage = () => {
             id="password"
             name="password"
             label="Password"
+            variant="outlined"
             value={password}
             type={isPasswordVisible ? 'text' : 'password'}
             onChange={handlePasswordChange}
+            required
             color="primary"
-            variant="outlined"
             sx={{
               input: { color: theme.palette.primary.main },
             }}
