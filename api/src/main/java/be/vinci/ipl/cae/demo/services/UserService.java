@@ -2,17 +2,16 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
-import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
+import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-
+import java.time.LocalDate;
 import java.util.Date;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +41,8 @@ public class UserService {
    */
 
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
-      UnavailabilityRepository unavailabilityRepository, SpecialityRepository specialityRepository) {
+      UnavailabilityRepository unavailabilityRepository,
+      SpecialityRepository specialityRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.specialityRepository = specialityRepository;
@@ -166,6 +166,7 @@ public class UserService {
     user.setProfilePicture(profilePicture);
     user.setSpeciality(speciality);
     user.setAdmin(isAdmin);
+    user.setDate(LocalDate.now());
 
     userRepository.save(user);
   }

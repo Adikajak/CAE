@@ -49,7 +49,13 @@ public class UserController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
-    return new UserProfile(user.getId(), user.getEmail(),user.getTag(), user.getSpeciality().getName(), user.getProfilePicture());
+    return new UserProfile(
+      user.getId(),
+      user.getEmail(),
+      user.getTag(),
+      user.getSpeciality().getName(),
+      user.getProfilePicture()
+    );
   }
 
   /**
@@ -93,7 +99,10 @@ public class UserController {
    */
   @PostMapping("/me/unavailabilities")
   @ResponseStatus(HttpStatus.CREATED)
-  public Unavailability addUnavailability(Authentication authentication, @RequestBody UnavailabilityRequest request) {
+  public Unavailability addUnavailability(
+      Authentication authentication,
+      @RequestBody UnavailabilityRequest request
+  ) {
     User user = (User) authentication.getPrincipal();
     return userService.addUnavailability(user, request);
   }

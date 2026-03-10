@@ -62,9 +62,10 @@ const LoginPage = () => {
         padding: 3,
         borderRadius: 4,
         boxShadow: 2,
+        textAlign: 'center',
       }}
     >
-      <h1>Connectez un utilisateur</h1>
+      <h1>Connexion</h1>
       <form onSubmit={handleSubmit}>
         <Box sx={{ marginBottom: 2 }}>
           <TextField
