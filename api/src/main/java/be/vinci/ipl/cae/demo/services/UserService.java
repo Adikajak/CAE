@@ -2,9 +2,11 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
+import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -30,6 +32,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final UnavailabilityRepository unavailabilityRepository;
   private final SpecialityRepository specialityRepository;
+  private final ProfilePictureRepository profilePictureRepository;
 
   /**
    * Constructor.
@@ -37,16 +40,19 @@ public class UserService {
    * @param passwordEncoder the password encoder
    * @param userRepository  the user repository
    * @param specialityRepository the speciality repository
+   * @param profilePictureRepository the profile picture repository
    * @param unavailabilityRepository the unavailability repository
    */
 
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
       UnavailabilityRepository unavailabilityRepository,
-      SpecialityRepository specialityRepository) {
+      SpecialityRepository specialityRepository,
+      ProfilePictureRepository profilePictureRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.specialityRepository = specialityRepository;
     this.unavailabilityRepository = unavailabilityRepository;
+    this.profilePictureRepository = profilePictureRepository;
   }
 
   /**
@@ -130,7 +136,12 @@ public class UserService {
       throw new IllegalArgumentException("Invalid speciality");
     }
 
-    createOne(email, password, false, tag, profilePicture, speciality);
+    ProfilePicture profilePictureEntity = profilePictureRepository.findByUrl(profilePicture);
+    if (profilePictureEntity == null) {
+      throw new IllegalArgumentException("Invalid profile picture");
+    }
+
+    createOne(email, password, false, tag, profilePictureEntity, speciality);
 
     return createJwtToken(email, false);
   }
@@ -156,7 +167,7 @@ public class UserService {
    * @param isAdmin whether the user is admin
    */
   public void createOne(String email, String password, boolean isAdmin, String tag,
-      String profilePicture, Speciality speciality) {
+      ProfilePicture profilePicture, Speciality speciality) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();
