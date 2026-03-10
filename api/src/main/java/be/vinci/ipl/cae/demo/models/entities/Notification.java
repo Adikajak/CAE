@@ -41,6 +41,9 @@ public class Notification {
 
   private  LocalDateTime createdAt;
 
+  /**
+   * Sets creation date before first persistence.
+   */
   @PrePersist
   public void prePersist() {
     this.createdAt = LocalDateTime.now();
