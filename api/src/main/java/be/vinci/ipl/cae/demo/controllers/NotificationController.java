@@ -2,9 +2,11 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.NotificationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,9 +40,8 @@ public class NotificationController {
    * @return list of notifications
    */
   @GetMapping({"/", ""})
-  public Iterable<Notification> getNotifications() {
-    Long userId = 1L;
-    return service.getNotificationsForUser(userId);
+  public Iterable<Notification> getNotifications(@AuthenticationPrincipal User user) {
+    return service.getNotificationsForUser(user.getId());
   }
 
   /**
@@ -50,9 +51,8 @@ public class NotificationController {
    * @return the notification
    */
   @GetMapping("/{id}")
-  public Notification getNotification(@PathVariable Long id) {
-    Long userId = 1L;
-    return service.getNotificationById(id, userId)
+  public Notification getNotification(@PathVariable Long id, @AuthenticationPrincipal User user) {
+    return service.getNotificationById(id, user.getId())
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
   }
 
