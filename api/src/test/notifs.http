@@ -3,6 +3,7 @@
 ###
 GET {{baseUrl}}/notifications/
 
+
 ### POST notification for the test user
 
 POST {{baseUrl}}/notifications/
@@ -12,4 +13,25 @@ Content-Type: application/json
   "object": "New notification",
   "message": "0.000000002% of Mazovian was build",
   "userId": 1
+}
+###
+
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "admin@vinci.be",
+  "password": "$2y$10$EW75BdcbCfKEA3NbE7in4OiYYacfP3OY4Q2JsVzjxd3jNxxgAEZNu",
+  "tag": "admin",
+  "profile_picture": "https://robohash.org/admin?set=set2",
+  "speciality": "Assassin"
+}
+
+###
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "admin@vinci.be",
+  "password": "$2y$10$EW75BdcbCfKEA3NbE7in4OiYYacfP3OY4Q2JsVzjxd3jNxxgAEZNu"
 }

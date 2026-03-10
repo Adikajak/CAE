@@ -1,10 +1,12 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -31,6 +33,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final UnavailabilityRepository unavailabilityRepository;
   private final SpecialityRepository specialityRepository;
+  private final NotificationService notificationService;
 
   /**
    * Constructor.
@@ -42,11 +45,12 @@ public class UserService {
    */
 
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
-      UnavailabilityRepository unavailabilityRepository, SpecialityRepository specialityRepository) {
+      UnavailabilityRepository unavailabilityRepository, SpecialityRepository specialityRepository, NotificationService notificationService) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.specialityRepository = specialityRepository;
     this.unavailabilityRepository = unavailabilityRepository;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -130,7 +134,13 @@ public class UserService {
       throw new IllegalArgumentException("Invalid speciality");
     }
 
-    createOne(email, password, false, tag, profilePicture, speciality);
+    User newUser = createOne(email, password, false, tag, profilePicture, speciality); // ADD THIS
+
+    NotificationDto notificationDto = new NotificationDto();
+    notificationDto.setUserId(newUser.getId());
+    notificationDto.setObject("Bienvenue !");
+    notificationDto.setMessage("Votre compte a été créé avec succès.");
+    notificationService.createNotification(notificationDto);
 
     return createJwtToken(email, false);
   }
@@ -154,8 +164,9 @@ public class UserService {
    * @param profilePicture the profile picture
    * @param speciality the speciality
    * @param isAdmin whether the user is admin
+   * @return the created user
    */
-  public void createOne(String email, String password, boolean isAdmin, String tag,
+  public User createOne(String email, String password, boolean isAdmin, String tag,
       String profilePicture, Speciality speciality) {
     String hashedPassword = passwordEncoder.encode(password);
 
@@ -167,7 +178,7 @@ public class UserService {
     user.setSpeciality(speciality);
     user.setAdmin(isAdmin);
 
-    userRepository.save(user);
+    return userRepository.save(user);
   }
 
   /**

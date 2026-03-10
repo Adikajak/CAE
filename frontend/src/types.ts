@@ -31,6 +31,14 @@ interface JwtPayload {
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
+interface Notification {
+  notificationId: number;
+  object: string;
+  message: string;
+  createdAt: Date;
+  isRead: boolean;
+}
+
 export type {
   User,
   UserRegister,
@@ -38,4 +46,5 @@ export type {
   MaybeAuthenticatedUser,
   UserContextType,
   JwtPayload,
+  Notification,
 };
