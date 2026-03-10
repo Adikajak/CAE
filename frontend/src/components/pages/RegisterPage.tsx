@@ -113,7 +113,7 @@ const RegisterPage = () => {
       setSuccessMessage(
         'Compte cree avec succes. Redirection vers la connexion...',
       );
-      setTimeout(() => navigate('/login'), 1200);
+      setTimeout(() => navigate('/'), 1200);
     } catch (err) {
       console.error('RegisterPage::error: ', err);
       setErrorMessage(getRegisterErrorMessage(err));
