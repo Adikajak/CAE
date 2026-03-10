@@ -6,7 +6,6 @@ import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
