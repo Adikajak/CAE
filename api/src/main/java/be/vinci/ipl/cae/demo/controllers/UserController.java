@@ -49,7 +49,7 @@ public class UserController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
-    return new UserProfile(user.getId(), user.getEmail());
+    return new UserProfile(user.getId(), user.getEmail(),user.getTag(), user.getSpeciality().getName(), user.getProfilePicture());
   }
 
   /**

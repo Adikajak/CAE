@@ -15,6 +15,10 @@ import { UserContext } from '../../contexts/UserContext';
 interface Profile {
   id: number;
   email: string;
+  tag: string;
+  speciality: string;
+  //team: string;
+  profilePicture: string;
 }
 
 interface Unavailability {
@@ -79,7 +83,6 @@ const ProfilePage = () => {
         const data: Unavailability[] = await response.json();
         setUnavailabilities(data);
       } catch (err: unknown) {
-        // Silently handle error - unavailabilities are optional
         console.error('Erreur lors du chargement des indisponibilités:', err);
       }
     };
@@ -158,44 +161,46 @@ const ProfilePage = () => {
   if (error) return <p>Erreur : {error}</p>;
 
   return (
-    <Box sx={{ margin: 2, padding: 3 }}>
+    <Box sx={{ margin: 2, padding: 3, textAlign: 'center'}}>
       <h1>Mon Espace personnel</h1>
 
-      <Box sx={{ display: 'flex', gap: 3 }}>
+      <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
         {/* Mon Profil */}
         <Box
           sx={{
-            flex: 1,
+            width: 350,
             padding: 2,
             border: '1px solid grey',
             borderRadius: 2,
+            textAlign: 'center',
           }}
         >
           <h2>Mon Profil</h2>
           <p>
-            <strong>Tag :</strong> —
+            <strong>Tag :</strong> {profile?.tag}
           </p>
           <p>
-            <strong>Spécialité :</strong> —
+            <strong>Spécialité :</strong> {profile?.speciality}
           </p>
           <p>
-            <strong>Team :</strong> —
+            <strong>Team :</strong> - {/* À implémenter côté backend */}
           </p>
           <p>
-            <strong>Date de création :</strong> —
+            <strong>Date de création :</strong> — {/* À implémenter côté backend */}
           </p>
           <p>
-            <strong>Photo de profil :</strong> —
+            <strong>Photo de profil :</strong> {profile?.profilePicture ? <img src={profile.profilePicture} alt="Profil" style={{ width: 100, height: 100, objectFit: 'cover' }} /> : 'Aucune photo'}
           </p>
         </Box>
 
         {/* Mes Infos Privées */}
         <Box
           sx={{
-            flex: 1,
+            width: 350,
             padding: 2,
             border: '1px solid grey',
             borderRadius: 2,
+            textAlign: 'center',
           }}
         >
           <h2>Mes Informations Privées</h2>
