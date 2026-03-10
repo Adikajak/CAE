@@ -248,4 +248,12 @@ public class UserService {
     unavailability.setEndDate(request.endDate());
     return unavailabilityRepository.save(unavailability);
   }
+
+  public boolean updateSpeciality(User user, String specialityName) {
+    Speciality speciality = specialityRepository.findByName(specialityName);
+    if (speciality == null) return false;
+    user.setSpeciality(speciality);
+    userRepository.save(user);
+    return true;
+  }
 }

@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Map;
+
 /**
  * UserController to handle user profile.
  */
@@ -54,7 +56,8 @@ public class UserController {
       user.getEmail(),
       user.getTag(),
       user.getSpeciality().getName(),
-      user.getProfilePicture().getUrl()
+      user.getProfilePicture().getUrl(),
+      user.getDate()
     );
   }
 
@@ -105,5 +108,15 @@ public class UserController {
   ) {
     User user = (User) authentication.getPrincipal();
     return userService.addUnavailability(user, request);
+  }
+
+  @PatchMapping("/me/speciality")
+  public void updateSpeciality(Authentication authentication,
+                               @RequestBody Map<String, String> body) {
+    User user = (User) authentication.getPrincipal();
+    boolean success = userService.updateSpeciality(user, body.get("specialityName"));
+    if (!success) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
   }
 }
