@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
+import { beforeEach, describe, test, expect, vi } from 'vitest';
 import LoginPage from '../../components/pages/LoginPage';
 import { UserContext } from '../../contexts/UserContext';
 
@@ -13,14 +13,40 @@ vi.mock('react-router-dom', async () => {
 });
 
 describe('LoginPage', () => {
-  test('renders a form with email and password inputs', () => {
+  const createContextValue = () => ({
+    authenticatedUser: undefined,
+    registerUser: vi.fn(),
+    loginUser: vi.fn(),
+    clearUser: vi.fn(),
+    jwtData: vi.fn().mockReturnValue(null),
+  });
+
+  const renderLoginPage = (contextValue = createContextValue()) =>
     render(
       <MemoryRouter>
-        <LoginPage />
+        <UserContext.Provider value={contextValue}>
+          <LoginPage />
+        </UserContext.Provider>
       </MemoryRouter>,
     );
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const getPasswordInput = () => {
+    const passwordInput = document.querySelector('input#password');
+    if (!passwordInput) {
+      throw new Error('Password input not found');
+    }
+    return passwordInput as HTMLInputElement;
+  };
+
+  test('renders a form with email and password inputs', () => {
+    renderLoginPage();
+
     const usernameInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = getPasswordInput();
     const rememberMeCheckbox = screen.getByLabelText(/se souvenir de moi/i);
 
     expect(usernameInput).toBeTruthy();
@@ -29,11 +55,7 @@ describe('LoginPage', () => {
   });
 
   test('remember me checkbox is unchecked by default', () => {
-    render(
-      <MemoryRouter>
-        <LoginPage />
-      </MemoryRouter>,
-    );
+    renderLoginPage();
 
     const rememberMeCheckbox = screen.getByLabelText(/se souvenir de moi/i);
 
@@ -44,25 +66,16 @@ describe('LoginPage', () => {
     const loginUserMock = vi.fn();
     const navigateMock = vi.fn();
     const mockContextValue = {
-      authenticatedUser: undefined,
-      registerUser: vi.fn(),
+      ...createContextValue(),
       loginUser: loginUserMock,
-      clearUser: vi.fn(),
-      jwtData: vi.fn().mockReturnValue(null),
     };
 
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider value={mockContextValue}>
-          <LoginPage />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderLoginPage(mockContextValue);
 
     const usernameInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = getPasswordInput();
     const rememberMeCheckbox = screen.getByLabelText(/se souvenir de moi/i);
     const submitButton = screen.getByRole('button', {
       name: /s'authentifier/i,
@@ -94,23 +107,14 @@ describe('LoginPage', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
     const mockContextValue = {
-      authenticatedUser: undefined,
-      registerUser: vi.fn(),
+      ...createContextValue(),
       loginUser: loginUserMock,
-      clearUser: vi.fn(),
-      jwtData: vi.fn().mockReturnValue(null),
     };
 
-    render(
-      <MemoryRouter>
-        <UserContext.Provider value={mockContextValue}>
-          <LoginPage />
-        </UserContext.Provider>
-      </MemoryRouter>,
-    );
+    renderLoginPage(mockContextValue);
 
     const usernameInput = screen.getByLabelText(/email/i);
-    const passwordInput = screen.getByLabelText(/password/i);
+    const passwordInput = getPasswordInput();
     const submitButton = screen.getByRole('button', {
       name: /s'authentifier/i,
     });

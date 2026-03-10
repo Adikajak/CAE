@@ -6,12 +6,15 @@ import {
   Button,
   Checkbox,
   FormControlLabel,
+  IconButton,
+  InputAdornment,
   TextField,
   useTheme,
 } from '@mui/material';
 import { UserContextType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import './index.css';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const LoginPage = () => {
   const { loginUser }: UserContextType = useContext(UserContext);
@@ -19,6 +22,7 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const theme = useTheme();
 
@@ -87,11 +91,31 @@ const LoginPage = () => {
             label="Password"
             variant="outlined"
             value={password}
+            type={isPasswordVisible ? 'text' : 'password'}
             onChange={handlePasswordChange}
             required
             color="primary"
             sx={{
               input: { color: theme.palette.primary.main },
+            }}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label={
+                        isPasswordVisible
+                          ? 'hide the password'
+                          : 'display the password'
+                      }
+                      onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                      edge="end"
+                    >
+                      {isPasswordVisible ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
         </Box>

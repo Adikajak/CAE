@@ -202,22 +202,24 @@ const RegisterPage = () => {
               sx={{
                 input: { color: theme.palette.primary.main },
               }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label={
-                        isPasswordVisible
-                          ? 'Masquer le mot de passe'
-                          : 'Afficher le mot de passe'
-                      }
-                      onClick={() => setIsPasswordVisible((prev) => !prev)}
-                      edge="end"
-                    >
-                      {isPasswordVisible ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={
+                          isPasswordVisible
+                            ? 'Masquer le mot de passe'
+                            : 'Afficher le mot de passe'
+                        }
+                        onClick={() => setIsPasswordVisible((prev) => !prev)}
+                        edge="end"
+                      >
+                        {isPasswordVisible ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
               }}
             />
           </Box>
