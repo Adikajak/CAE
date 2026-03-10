@@ -1,15 +1,7 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -18,7 +10,10 @@ import jakarta.validation.constraints.Size;
  * User entity.
  */
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"team_id","tag"})
+)
 public class User {
 
   @Id
@@ -45,6 +40,11 @@ public class User {
   
   @Column(nullable = false)
   private boolean isAdmin;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "team_id", nullable = true)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+  private Team team;
 
   /**
    * constructor.
@@ -78,6 +78,10 @@ public class User {
     return email;
   }
 
+  public Team getTeam() {
+    return team;
+  }
+
   public void setEmail(String email) {
     this.email = email;
   }
@@ -104,5 +108,9 @@ public class User {
 
   public void setProfilePicture(String profilePicture) {
     this.profilePicture = profilePicture;
+  }
+
+  public void setTeam(Team team) {
+    this.team = team;
   }
 }
