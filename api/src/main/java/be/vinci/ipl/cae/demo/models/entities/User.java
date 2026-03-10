@@ -31,7 +31,8 @@ public class User {
   @Column(nullable = false)
   private @NotBlank @Size(min = 8) String password;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  //@ManyToOne(fetch = FetchType.LAZY, optional = false) Tiago check ?
+  @ManyToOne(fetch = FetchType.EAGER, optional = false)
   @JoinColumn(name = "speciality_id", nullable = false)
   @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private Speciality speciality;
