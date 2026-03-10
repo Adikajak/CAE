@@ -1,5 +1,6 @@
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
+  setAuthenticatedUser?: (user: AuthenticatedUser) => void;
   registerUser: (newUser: UserRegister) => Promise<void>;
   loginUser: (user: User, rememberMe: boolean) => Promise<void>;
   clearUser: () => void;
@@ -22,6 +23,7 @@ interface UserRegister {
 interface AuthenticatedUser {
   email: string;
   token: string;
+  teamId?: number;
 }
 
 interface JwtPayload {
@@ -31,6 +33,19 @@ interface JwtPayload {
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
+interface Team {
+  id: number;
+  name: string;
+  manager?: User | null;
+  secondManager?: User | null;
+}
+interface TeamMembership {
+  id: number;
+  member: User;
+  teamId: Team;
+  status: 'PENDING' | 'ACCEPTED' | 'REFUSED';
+  rejectionReason?: string;
+}
 export type {
   User,
   UserRegister,
@@ -38,4 +53,6 @@ export type {
   MaybeAuthenticatedUser,
   UserContextType,
   JwtPayload,
+  Team,
+  TeamMembership,
 };
