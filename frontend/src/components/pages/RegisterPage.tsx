@@ -1,4 +1,10 @@
-import { ChangeEvent, SyntheticEvent, useContext, useState } from 'react';
+import {
+  ChangeEvent,
+  SyntheticEvent,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -28,38 +34,27 @@ const specialties = [
   'Rodeur',
 ];
 
-const avatarOptions = [
-  {
-    id: 'knight',
-    label: 'Chevalier',
-    src: 'https://robohash.org/knight?set=set2',
-  },
-  {
-    id: 'wizard',
-    label: 'Mage',
-    src: 'https://robohash.org/wizard?set=set2',
-  },
-  {
-    id: 'archer',
-    label: 'Archer',
-    src: 'https://robohash.org/archer?set=set2',
-  },
-  {
-    id: 'orc',
-    label: 'Orc',
-    src: 'https://robohash.org/orc?set=set2',
-  },
-  {
-    id: 'elf',
-    label: 'Elfe',
-    src: 'https://robohash.org/elf?set=set2',
-  },
-  {
-    id: 'druid',
-    label: 'Druide',
-    src: 'https://robohash.org/druid?set=set2',
-  },
-];
+interface AvatarOption {
+  id: string;
+  label: string;
+  src: string;
+}
+
+const AVATAR_URLS_CACHE_KEY = 'register_avatar_urls';
+
+const mapUrlsToAvatarOptions = (urls: string[]): AvatarOption[] =>
+  urls.map((url, index) => ({
+    id: `avatar-${index + 1}`,
+    label: `Avatar ${index + 1}`,
+    src: url,
+  }));
+
+const preloadImages = (urls: string[]) => {
+  urls.forEach((url) => {
+    const image = new Image();
+    image.src = url;
+  });
+};
 
 const getRegisterErrorMessage = (err: unknown): string => {
   if (err instanceof Error) {
@@ -82,11 +77,63 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [tag, setTag] = useState('');
   const [specialty, setSpecialty] = useState('');
-  const [selectedAvatarId, setSelectedAvatarId] = useState(avatarOptions[0].id);
+  const [avatarOptions, setAvatarOptions] = useState<AvatarOption[]>([]);
+  const [selectedAvatarId, setSelectedAvatarId] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const theme = useTheme();
+
+  useEffect(() => {
+    const hydrateFromCache = () => {
+      try {
+        const cached = localStorage.getItem(AVATAR_URLS_CACHE_KEY);
+        if (cached == null) {
+          return;
+        }
+
+        const cachedUrls = JSON.parse(cached) as string[];
+        if (cachedUrls.length === 0) {
+          return;
+        }
+
+        const cachedOptions = mapUrlsToAvatarOptions(cachedUrls);
+        setAvatarOptions(cachedOptions);
+        setSelectedAvatarId(cachedOptions[0].id);
+      } catch (err) {
+        console.error('RegisterPage::hydrateFromCache::error: ', err);
+      }
+    };
+
+    const loadProfilePictures = async () => {
+      try {
+        const response = await fetch('/api/profile-pictures');
+        if (!response.ok) {
+          throw new Error(
+            `fetch error : ${response.status} : ${response.statusText}`,
+          );
+        }
+
+        const urls: string[] = await response.json();
+        const options = mapUrlsToAvatarOptions(urls);
+
+        setAvatarOptions(options);
+        if (options.length > 0) {
+          setSelectedAvatarId(options[0].id);
+          localStorage.setItem(AVATAR_URLS_CACHE_KEY, JSON.stringify(urls));
+          preloadImages(urls);
+        } else {
+          setErrorMessage('Aucune photo de profil configuree en base.');
+        }
+      } catch (err) {
+        console.error('RegisterPage::loadProfilePictures::error: ', err);
+        setErrorMessage('Impossible de charger les photos de profil.');
+      }
+    };
+
+    hydrateFromCache();
+    void loadProfilePictures();
+  }, []);
 
   const handleSubmit = async (e: SyntheticEvent) => {
     e.preventDefault();
@@ -95,6 +142,11 @@ const RegisterPage = () => {
 
     if (!specialty) {
       setErrorMessage('Veuillez choisir une specialite.');
+      return;
+    }
+
+    if (!selectedAvatarId) {
+      setErrorMessage('Aucune photo de profil disponible.');
       return;
     }
 
@@ -269,6 +321,7 @@ const RegisterPage = () => {
                   <Avatar
                     src={avatar.src}
                     alt={avatar.label}
+                    imgProps={{ loading: 'eager' }}
                     sx={{ width: 46, height: 46 }}
                   />
                 </IconButton>
