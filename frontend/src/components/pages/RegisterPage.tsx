@@ -139,10 +139,10 @@ const RegisterPage = () => {
       <Box
         sx={{
           width: '100%',
-          maxWidth: 560,
           padding: 3,
           borderRadius: 4,
           boxShadow: 4,
+          textAlign: 'center',
           backgroundColor: theme.palette.background.paper,
           border: `1px solid ${theme.palette.divider}`,
         }}
@@ -166,6 +166,7 @@ const RegisterPage = () => {
               color="primary"
               sx={{
                 input: { color: theme.palette.primary.main },
+                textAlign: 'center',
               }}
             />
           </Box>
