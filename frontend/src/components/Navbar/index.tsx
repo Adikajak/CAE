@@ -26,6 +26,9 @@ const NavBar = () => {
           Home
         </Button>
         <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Button color="inherit" onClick={() => navigate('/teams')}>
+            Teams
+          </Button>
           {isAdmin ? <Typography variant="h6">Hi Admin</Typography> : <></>}
           {authenticatedUser ? (
             <>
