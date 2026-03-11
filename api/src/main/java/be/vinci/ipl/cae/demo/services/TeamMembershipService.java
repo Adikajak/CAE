@@ -63,12 +63,17 @@ public class TeamMembershipService {
     TeamMembership save = teamMembershipRepository.save(membership);
 
     NotificationDto dto = new NotificationDto();
-    dto.setUserId(membership.getMember().getId());
+    dto.setUserId(team.getManager().getId());
     dto.setObject("Nouvelle demande d'adhésion");
     dto.setMessage(user.getTag() + " souhaite rejoindre l'équipe " + team.getName());
     dto.setType(NotificationType.TEAM_INVITATION);
     dto.setMembershipId(save.getId());
     notificationService.createNotification(dto);
+
+    if (team.getSecondManager() != null) {
+      dto.setUserId(team.getSecondManager().getId());
+      notificationService.createNotification(dto);
+    }
 
     return save;
   }
