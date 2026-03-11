@@ -50,14 +50,7 @@ public class UserController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
-    return new UserProfile(
-      user.getId(),
-      user.getEmail(),
-      user.getTag(),
-      user.getSpeciality().getName(),
-      user.getProfilePicture().getUrl(),
-      user.getDate()
-    );
+    return toUserProfile(user);
   }
 
   /**
@@ -123,5 +116,24 @@ public class UserController {
     if (!success) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
+  }
+
+  /**
+   * Converts a User to a UserProfile.
+   *
+   * @param user the user entity
+   * @return the user profile
+   */
+  private UserProfile toUserProfile(User user) {
+    //CPD-OFF
+    return new UserProfile(
+        user.getId(),
+        user.getEmail(),
+        user.getTag(),
+        user.getSpeciality() != null ? user.getSpeciality().getName() : null,
+        user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
+        user.getDate()
+    );
+    //CPD-ON
   }
 }
