@@ -10,24 +10,9 @@ import {
   Alert,
   MenuItem,
 } from '@mui/material';
-import { UserContextType } from '../../types';
+import { UserContextType, Profile, Unavailability } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 
-interface Profile {
-  id: number;
-  email: string;
-  tag: string;
-  speciality: string;
-  // team: string;
-  profilePicture: string;
-  date: string;
-}
-
-interface Unavailability {
-  id: number;
-  startDate: string;
-  endDate: string;
-}
 
 const specialties = [
   'Archer',
