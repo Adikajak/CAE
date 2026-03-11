@@ -1,6 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
-import { AppBar, Toolbar, Button, Typography, Box } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Button,
+  Typography,
+  Box,
+  IconButton,
+} from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+
 import { UserContext } from '../../contexts/UserContext';
 import { UserContextType } from '../../types';
 
@@ -20,6 +29,12 @@ const NavBar = () => {
           {isAdmin ? <Typography variant="h6">Hi Admin</Typography> : <></>}
           {authenticatedUser ? (
             <>
+              <IconButton
+                color="inherit"
+                onClick={() => navigate('/notifications')}
+              >
+                <NotificationsIcon />
+              </IconButton>
               <Button color="inherit" onClick={() => clearUser()}>
                 Se déconnecter
               </Button>
