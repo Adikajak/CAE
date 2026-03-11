@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
+import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
@@ -171,6 +172,7 @@ public class UserService {
     notificationDto.setUserId(newUser.getId());
     notificationDto.setObject("Bienvenue !");
     notificationDto.setMessage("Votre compte a été créé avec succès.");
+    notificationDto.setType(NotificationType.WELCOME);
     notificationService.createNotification(notificationDto);
 
     return createJwtToken(email, false);

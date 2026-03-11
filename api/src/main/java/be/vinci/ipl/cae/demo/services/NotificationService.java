@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
+import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -77,6 +78,11 @@ public class NotificationService {
     notif.setUser(user);
     notif.setObject(notificationDto.getObject());
     notif.setMessage(notificationDto.getMessage());
+    notif.setType(notificationDto.getType());
+
+    if(notificationDto.getType() == NotificationType.TEAM_INVITATION) {
+      notif.setMembershipId(notificationDto.getMembershipId());
+    }
 
     return repository.save(notif);
   }

@@ -38,6 +38,10 @@ public class TeamMembership {
   @Column(nullable = false)
   private MembershipStatus status = MembershipStatus.PENDING;
 
+  public Long getId() {
+    return id;
+  }
+
   public User getMember() {
     return member;
   }
@@ -52,6 +56,10 @@ public class TeamMembership {
 
   public MembershipStatus getStatus() {
     return status;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public void setMember(User member) {
