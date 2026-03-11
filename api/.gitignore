@@ -32,3 +32,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Private token
+/src/test/http-client.private.env.json

@@ -38,11 +38,13 @@ public class User {
   @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private Speciality speciality;
 
-  @Column(nullable = false)
-  private @NotBlank String tag;
+  @ManyToOne(fetch = FetchType.EAGER, optional = false)
+  @JoinColumn(name = "profile_picture_id", nullable = false)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+  private ProfilePicture profilePicture;
 
   @Column(nullable = false)
-  private @NotBlank String profilePicture;
+  private @NotBlank String tag;
   
   @Column(nullable = false)
   private boolean isAdmin;
@@ -74,7 +76,7 @@ public class User {
     return speciality;
   }
 
-  public String getProfilePicture() {
+  public ProfilePicture getProfilePicture() {
     return profilePicture;
   }
 
@@ -110,7 +112,7 @@ public class User {
     this.tag = tag;
   }
 
-  public void setProfilePicture(String profilePicture) {
+  public void setProfilePicture(ProfilePicture profilePicture) {
     this.profilePicture = profilePicture;
   }
 

@@ -2,9 +2,11 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
+import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -12,6 +14,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +34,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final UnavailabilityRepository unavailabilityRepository;
   private final SpecialityRepository specialityRepository;
+  private final ProfilePictureRepository profilePictureRepository;
 
   /**
    * Constructor.
@@ -37,16 +42,19 @@ public class UserService {
    * @param passwordEncoder the password encoder
    * @param userRepository  the user repository
    * @param specialityRepository the speciality repository
+   * @param profilePictureRepository the profile picture repository
    * @param unavailabilityRepository the unavailability repository
    */
 
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
       UnavailabilityRepository unavailabilityRepository,
-      SpecialityRepository specialityRepository) {
+      SpecialityRepository specialityRepository,
+      ProfilePictureRepository profilePictureRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.specialityRepository = specialityRepository;
     this.unavailabilityRepository = unavailabilityRepository;
+    this.profilePictureRepository = profilePictureRepository;
   }
 
   /**
@@ -83,6 +91,24 @@ public class UserService {
       return JWT.require(algorithm).build().verify(token).getClaim("email").asString();
     } catch (Exception e) {
       return null;
+    }
+  }
+
+  /**
+   * Get JWT claims (email and admin status) from token.
+   *
+   * @param token the JWT token
+   * @return a map with email and isAdmin, or null if invalid
+   */
+  public Map<String, Object> getJwtClaimsFromToken(String token) {
+    try {
+      var decodedJWT = JWT.require(algorithm).build().verify(token);
+      Map<String, Object> claims = new HashMap<>();
+      claims.put("email", decodedJWT.getClaim("email").asString());
+      claims.put("isAdmin", decodedJWT.getClaim("isAdmin").asBoolean());
+      return claims;
+    } catch (Exception e) {
+      return new HashMap<String, Object>();
     }
   }
 
@@ -130,7 +156,12 @@ public class UserService {
       throw new IllegalArgumentException("Invalid speciality");
     }
 
-    createOne(email, password, false, tag, profilePicture, speciality);
+    ProfilePicture profilePictureEntity = profilePictureRepository.findByUrl(profilePicture);
+    if (profilePictureEntity == null) {
+      throw new IllegalArgumentException("Invalid profile picture");
+    }
+
+    createOne(email, password, false, tag, profilePictureEntity, speciality);
 
     return createJwtToken(email, false);
   }
@@ -156,7 +187,7 @@ public class UserService {
    * @param isAdmin whether the user is admin
    */
   public void createOne(String email, String password, boolean isAdmin, String tag,
-      String profilePicture, Speciality speciality) {
+      ProfilePicture profilePicture, Speciality speciality) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();

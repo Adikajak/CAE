@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity()
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -44,6 +44,7 @@ public class SecurityConfiguration {
             sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/auths/**").permitAll()
+          .requestMatchers("/profile-pictures/**").permitAll()
             .requestMatchers("/users/**").authenticated()
             .anyRequest().authenticated()
         )

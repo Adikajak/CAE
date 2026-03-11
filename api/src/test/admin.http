@@ -1,0 +1,15 @@
+@baseUrl = http://localhost:3000
+
+### Login de l'admin seedé en base et récupération du token
+# @name loginAdmin
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "admin@admin.com",
+  "password": "password"
+}
+
+### Appel à l'endpoint admin avec le token renvoyé par le login
+GET {{baseUrl}}/admin/users
+Authorization: {{adminToken}}
