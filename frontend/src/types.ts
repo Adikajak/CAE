@@ -30,12 +30,14 @@ interface UserRegister {
 }
 
 interface AuthenticatedUser {
+  id: number;
   email: string;
   token: string;
   teamId?: number;
 }
 
 interface JwtPayload {
+  id: number;
   email: string;
   isAdmin: boolean;
 }
