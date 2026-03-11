@@ -99,13 +99,6 @@ const NavBar = () => {
           <Button sx={navButtonSx} onClick={() => navigate('/teams')}>
             Teams
           </Button>
-          {isAdmin ? (
-            <Button color="inherit" onClick={() => navigate('/administration')}>
-              Administration
-            </Button>
-          ) : (
-            <></>
-          )}
         </Box>
 
         <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -188,12 +181,13 @@ const NavBar = () => {
               </Menu>
 
               {isAdmin && (
-                <Typography
-                  variant="caption"
+                <Button
+                  color="inherit"
                   sx={{ color: '#FFD96A', fontWeight: 700, ml: 0.5 }}
+                  onClick={() => navigate('/administration')}
                 >
                   ADMIN
-                </Typography>
+                </Button>
               )}
             </>
           ) : (
