@@ -17,7 +17,7 @@ const NavBar = () => {
   const { authenticatedUser, clearUser, jwtData } =
     useContext<UserContextType>(UserContext);
   const navigate = useNavigate();
-  const isAdmin = jwtData()?.admin ?? false;
+  const isAdmin = jwtData()?.isAdmin ?? false;
 
   return (
     <AppBar position="static" className="primary-color">
@@ -29,7 +29,13 @@ const NavBar = () => {
           <Button color="inherit" onClick={() => navigate('/teams')}>
             Teams
           </Button>
-          {isAdmin ? <Typography variant="h6">Hi Admin</Typography> : <></>}
+          {isAdmin ? (
+            <Button color="inherit" onClick={() => navigate('/administration')}>
+              Administration
+            </Button>
+          ) : (
+            <></>
+          )}
           {authenticatedUser ? (
             <>
               <IconButton

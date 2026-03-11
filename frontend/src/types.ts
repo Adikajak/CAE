@@ -12,6 +12,15 @@ interface User {
   password: string;
 }
 
+interface UserProfile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  profilePicture: string;
+  date: string;
+}
+
 interface UserRegister {
   email: string;
   password: string;
@@ -28,7 +37,7 @@ interface AuthenticatedUser {
 
 interface JwtPayload {
   email: string;
-  admin: boolean;
+  isAdmin: boolean;
 }
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
@@ -58,6 +67,7 @@ interface TeamMembership {
 
 export type {
   User,
+  UserProfile,
   UserRegister,
   AuthenticatedUser,
   MaybeAuthenticatedUser,
