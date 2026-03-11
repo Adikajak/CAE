@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,10 +26,12 @@ public class TeamMembership {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "member_id", nullable = false)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private User member;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "team_id", nullable = false)
+  @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private Team team;
 
   @Column(nullable = true)
