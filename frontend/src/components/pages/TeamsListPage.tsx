@@ -108,8 +108,8 @@ const TeamsListPage = () => {
   };
 
   const sortedTeams = teams.slice().sort((a, b) => {
-    const isAUserTeam = a.manager?.email === authenticatedUser?.email;
-    const isBUserTeam = b.manager?.email === authenticatedUser?.email;
+    const isAUserTeam = a.manager?.id === authenticatedUser?.id;
+    const isBUserTeam = b.manager?.id === authenticatedUser?.id;
     if (isAUserTeam && !isBUserTeam) return -1;
     if (!isAUserTeam && isBUserTeam) return 1;
     return a.name.localeCompare(b.name);
@@ -265,8 +265,7 @@ const TeamsListPage = () => {
                 </TableRow>
               ) : (
                 sortedTeams.map((team) => {
-                  const isUserTeam =
-                    team.manager?.email === authenticatedUser?.email;
+                  const isUserTeam = team.manager?.id === authenticatedUser?.id;
                   return (
                     <TableRow
                       key={team.id}
