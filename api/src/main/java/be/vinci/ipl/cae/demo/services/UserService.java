@@ -67,9 +67,10 @@ public class UserService {
    * @param email the email to included in the claim
    * @return the JWT token
    */
-  public AuthenticatedUser createJwtToken(String email, boolean isAdmin) {
+  public AuthenticatedUser createJwtToken(Long id, String email, boolean isAdmin) {
     String token = JWT.create()
         .withIssuer("auth0")
+        .withClaim("id", id)
         .withClaim("email", email)
         .withClaim("isAdmin", isAdmin)
         .withIssuedAt(new Date())
@@ -77,6 +78,7 @@ public class UserService {
         .sign(algorithm);
 
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
+    authenticatedUser.setId(id);
     authenticatedUser.setEmail(email);
     authenticatedUser.setAdmin(isAdmin);
     authenticatedUser.setToken(token);
@@ -133,9 +135,7 @@ public class UserService {
       return null;
     }
 
-    System.out.println(createJwtToken(email, user.isAdmin()));
-
-    return createJwtToken(email, user.isAdmin());
+    return createJwtToken(user.getId(), email, user.isAdmin());
   }
 
   /**
@@ -175,7 +175,7 @@ public class UserService {
     notificationDto.setType(NotificationType.WELCOME);
     notificationService.createNotification(notificationDto);
 
-    return createJwtToken(email, false);
+    return createJwtToken(newUser.getId(), email, false);
   }
 
   /**
