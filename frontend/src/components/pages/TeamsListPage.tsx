@@ -111,7 +111,7 @@ const TeamsListPage = () => {
     const isBUserTeam = b.manager?.email === authenticatedUser?.email;
     if (isAUserTeam && !isBUserTeam) return -1;
     if (!isAUserTeam && isBUserTeam) return 1;
-    return 0;
+    return a.name.localeCompare(b.name);
   });
 
   return (
