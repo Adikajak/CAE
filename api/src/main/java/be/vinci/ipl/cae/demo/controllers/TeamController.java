@@ -1,9 +1,10 @@
 package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequest;
+import be.vinci.ipl.cae.demo.models.dtos.TeamResponse;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.services.TeamMembershipService;
 import be.vinci.ipl.cae.demo.services.TeamService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -24,17 +25,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class TeamController {
 
   private final TeamService teamService;
-  private final TeamMembershipService teamMembershipService;
 
   /**
    * Constructor for TeamController.
    *
    * @param teamService the injected TeamService
-   * @param teamMembershipService the injected TeamMembershipService
    */
-  public TeamController(TeamService teamService, TeamMembershipService teamMembershipService) {
+  public TeamController(TeamService teamService) {
     this.teamService = teamService;
-    this.teamMembershipService = teamMembershipService;
   }
 
   /**
@@ -43,8 +41,28 @@ public class TeamController {
    * @return list of all teams
    */
   @GetMapping({"", "/"})
-  public List<Team> getAllTeams() {
-    return teamService.getAllTeams();
+  public List<TeamResponse> getAllTeams() {
+    return teamService.getAllTeams().stream()
+        .map(team -> new TeamResponse(
+            team.getId(),
+            team.getName(),
+            team.getManager() != null
+              ? new UserProfile(
+                  team.getManager().getId(),
+                  team.getManager().getEmail(),
+                  team.getManager().getTag(),
+                  team.getManager().getSpeciality().getName(),
+                  team.getManager().getProfilePicture()
+              ) : null,
+            team.getSecondManager() != null
+                ? new UserProfile(
+                team.getSecondManager().getId(),
+                team.getSecondManager().getEmail(),
+                team.getSecondManager().getTag(),
+                team.getSecondManager().getSpeciality().getName(),
+                team.getSecondManager().getProfilePicture()
+            ) : null
+        )).toList();
   }
 
   /**
@@ -57,7 +75,10 @@ public class TeamController {
    */
   @PostMapping({"", "/"})
   @ResponseStatus(HttpStatus.CREATED)
-  public Team createTeam(Authentication authentication, @RequestBody TeamCreateRequest request) {
+  public TeamResponse createTeam(
+      Authentication authentication,
+      @RequestBody TeamCreateRequest request
+  ) {
     User user = (User) authentication.getPrincipal();
     if (user == null) {
       throw new ResponseStatusException(
@@ -69,9 +90,40 @@ public class TeamController {
     team.setName(request.getName());
 
     try {
-      return teamService.createTeam(team, user);
+      Team createdTeam = teamService.createTeam(team, user);
+      return new TeamResponse(
+          createdTeam.getId(),
+          createdTeam.getName(),
+          createdTeam.getManager() != null
+              ? new UserProfile(
+              createdTeam.getManager().getId(),
+              createdTeam.getManager().getEmail(),
+              createdTeam.getManager().getTag(),
+              createdTeam.getManager().getSpeciality().getName(),
+              createdTeam.getManager().getProfilePicture()
+          )
+              : null,
+          createdTeam.getSecondManager() != null
+              ? new UserProfile(
+              createdTeam.getSecondManager().getId(),
+              createdTeam.getSecondManager().getEmail(),
+              createdTeam.getSecondManager().getTag(),
+              createdTeam.getSecondManager().getSpeciality().getName(),
+              createdTeam.getSecondManager().getProfilePicture()
+          )
+              : null
+      );
     } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+      if (e.getMessage().contains("existe déjà")) {
+        throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            e.getMessage(), e
+        );
+      }
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          e.getMessage(), e
+      );
     }
   }
 }

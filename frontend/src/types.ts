@@ -33,11 +33,18 @@ interface JwtPayload {
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
 
+interface UserProfile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  profilePicture: string;
+}
 interface Team {
   id: number;
   name: string;
-  manager?: User | null;
-  secondManager?: User | null;
+  manager?: UserProfile | null;
+  secondManager?: UserProfile | null;
 }
 interface TeamMembership {
   id: number;
