@@ -102,10 +102,10 @@ public class UserService {
    */
   public Map<String, Object> getJwtClaimsFromToken(String token) {
     try {
-      var decodedJWT = JWT.require(algorithm).build().verify(token);
+      var decodedJwt = JWT.require(algorithm).build().verify(token);
       Map<String, Object> claims = new HashMap<>();
-      claims.put("email", decodedJWT.getClaim("email").asString());
-      claims.put("isAdmin", decodedJWT.getClaim("isAdmin").asBoolean());
+      claims.put("email", decodedJwt.getClaim("email").asString());
+      claims.put("isAdmin", decodedJwt.getClaim("isAdmin").asBoolean());
       return claims;
     } catch (Exception e) {
       return new HashMap<String, Object>();

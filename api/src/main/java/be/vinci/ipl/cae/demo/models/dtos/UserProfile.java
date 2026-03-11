@@ -24,7 +24,8 @@ public class UserProfile {
    * @param profilePicture the user profile picture.
    * @param date           the user date creation profil
    */
-  public UserProfile(Long id, String email, String tag, String speciality, String profilePicture, LocalDate date) {
+  public UserProfile(Long id, String email, String tag, String speciality,
+      String profilePicture, LocalDate date) {
     this.id = id;
     this.email = email;
     this.tag = tag;
