@@ -141,7 +141,7 @@ public class User {
   public boolean equals(Object o) {
     if (this == o) {
       return true;
-    };
+    }
     if (!(o instanceof User user)) {
       return false;
     }
