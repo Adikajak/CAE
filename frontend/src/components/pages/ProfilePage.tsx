@@ -13,7 +13,6 @@ import {
 import { UserContextType, Profile, Unavailability } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 
-
 const specialties = [
   'Archer',
   'Assassin',
