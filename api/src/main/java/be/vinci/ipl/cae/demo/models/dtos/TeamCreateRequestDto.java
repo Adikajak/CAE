@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 /**
  * Payload for creating a new team.
  */
-public class TeamCreateRequest {
+public class TeamCreateRequestDto {
 
   @NotBlank(message = "Le nom de l'équipe est obligatoire")
   private String name;
