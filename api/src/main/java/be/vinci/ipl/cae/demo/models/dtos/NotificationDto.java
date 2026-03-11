@@ -1,6 +1,7 @@
 
 package be.vinci.ipl.cae.demo.models.dtos;
 
+import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -24,6 +25,10 @@ public class NotificationDto {
   private String message;
 
   private boolean isRead;
+
+  private NotificationType type = NotificationType.GENERAL;
+
+  private Long membershipId;
 
   public Long getUserId() {
     return userId;
@@ -57,5 +62,22 @@ public class NotificationDto {
   public void setIsRead(boolean isRead) {
     this.isRead = isRead;
   }
+
+  public NotificationType getType() {
+    return type;
+  }
+
+  public void setType(NotificationType type) {
+    this.type = type;
+  }
+
+  public Long getMembershipId() {
+    return membershipId;
+  }
+
+  public void setMembershipId(Long membershipId) {
+    this.membershipId = membershipId;
+  }
+
   // CPD-ON
 }

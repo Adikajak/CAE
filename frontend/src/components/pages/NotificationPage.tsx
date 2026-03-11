@@ -1,39 +1,41 @@
 import { useContext, useEffect, useState } from 'react';
-import { Box, Button, Alert, Typography, Chip } from '@mui/material';
+import {
+  Box, Button, Alert, Typography, Chip,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { UserContextType, Notification } from '../../types';
+import { UserContextType, Notification as NotificationType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import './index.css';
 
 const NotificationPage = () => {
   const { authenticatedUser } = useContext<UserContextType>(UserContext);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [declineId, setDeclineId] = useState<number | null>(null);
+  const [reason, setReason] = useState('');
   const navigate = useNavigate();
+
+  const fetchNotifications = async () => {
+    if (!authenticatedUser) return;
+    try {
+      const response = await fetch('/api/notifications/', {
+        headers: { Authorization: authenticatedUser.token },
+      });
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      const data: NotificationType[] = await response.json();
+      setNotifications(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError('Une erreur inconnue est survenue');
+    }
+  };
 
   useEffect(() => {
     if (!authenticatedUser) {
       navigate('/login');
       return;
     }
-
-    const fetchNotifications = async () => {
-      try {
-        const response = await fetch('/api/notifications/', {
-          headers: { Authorization: authenticatedUser.token },
-        });
-        if (!response.ok) throw new Error(`Erreur ${response.status}`);
-        const data: Notification[] = await response.json();
-        setNotifications(data);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Une erreur inconnue est survenue');
-        }
-      }
-    };
-
     fetchNotifications();
   }, [authenticatedUser, navigate]);
 
@@ -48,11 +50,42 @@ const NotificationPage = () => {
         prev.map((n) => (n.notificationId === id ? { ...n, isRead: true } : n)),
       );
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Une erreur inconnue est survenue');
-      }
+      if (err instanceof Error) setError(err.message);
+      else setError('Une erreur inconnue est survenue');
+    }
+  };
+
+  const handleAccept = async (membershipId: number) => {
+    try {
+      const response = await fetch(`/api/teams/memberships/${membershipId}/accept`, {
+        method: 'PATCH',
+        headers: { Authorization: authenticatedUser!.token },
+      });
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      fetchNotifications();
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError('Une erreur inconnue est survenue');
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!declineId) return;
+    try {
+      const response = await fetch(
+        `/api/teams/memberships/${declineId}/refuse?reason=${encodeURIComponent(reason)}`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: authenticatedUser!.token },
+        },
+      );
+      if (!response.ok) throw new Error(`Erreur ${response.status}`);
+      setDeclineId(null);
+      setReason('');
+      fetchNotifications();
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError('Une erreur inconnue est survenue');
     }
   };
 
@@ -100,10 +133,51 @@ const NotificationPage = () => {
                   </Button>
                 </Box>
               )}
+              {n.type === 'TEAM_INVITATION' && !n.isRead && (
+                <Box sx={{ display: 'flex', gap: 1, marginTop: 1 }}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    onClick={() => handleAccept(n.membershipId!)}
+                  >
+                    Accepter
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    onClick={() => setDeclineId(n.membershipId!)}
+                  >
+                    Refuser
+                  </Button>
+                </Box>
+              )}
             </Box>
           ))}
         </Box>
       )}
+
+      <Dialog open={declineId !== null} onClose={() => setDeclineId(null)}>
+        <DialogTitle>Refuser la demande</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Raison du refus"
+            fullWidth
+            multiline
+            rows={3}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            sx={{ marginTop: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeclineId(null)}>Annuler</Button>
+          <Button variant="contained" color="error" onClick={handleDecline}>
+            Confirmer le refus
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
