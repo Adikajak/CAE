@@ -61,7 +61,6 @@ public class TeamMembershipService {
 
     userRepository.save(user);
     TeamMembership save = teamMembershipRepository.save(membership);
-
     NotificationDto dto = new NotificationDto();
     dto.setUserId(team.getManager().getId());
     dto.setObject("Nouvelle demande d'adhésion");
