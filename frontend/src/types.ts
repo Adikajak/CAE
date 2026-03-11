@@ -48,6 +48,8 @@ interface Notification {
   message: string;
   createdAt: Date;
   isRead: boolean;
+  type: 'WELCOME' | 'TEAM_INVITATION' | 'GENERAL';
+  membershipId?: number;
 }
 
 interface Team {

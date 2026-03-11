@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -46,7 +47,8 @@ public class SecurityConfiguration {
             .requestMatchers("/auths/**").permitAll()
           .requestMatchers("/profile-pictures/**").permitAll()
             .requestMatchers("/users/**").authenticated()
-            .requestMatchers("/teams/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/teams/**").permitAll()
+            .requestMatchers("/teams/**").authenticated()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
