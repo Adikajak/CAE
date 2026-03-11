@@ -65,6 +65,22 @@ interface TeamMembership {
   rejectionReason?: string;
 }
 
+interface Profile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  // team: string;
+  profilePicture: string;
+  date: string;
+}
+
+interface Unavailability {
+  id: number;
+  startDate: string;
+  endDate: string;
+}
+
 export type {
   User,
   UserProfile,
@@ -76,4 +92,6 @@ export type {
   Notification,
   Team,
   TeamMembership,
+  Profile,
+  Unavailability,
 };
