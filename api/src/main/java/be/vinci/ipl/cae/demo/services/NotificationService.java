@@ -80,7 +80,7 @@ public class NotificationService {
     notif.setMessage(notificationDto.getMessage());
     notif.setType(notificationDto.getType());
 
-    if(notificationDto.getType() == NotificationType.TEAM_INVITATION) {
+    if (notificationDto.getType() == NotificationType.TEAM_INVITATION) {
       notif.setMembershipId(notificationDto.getMembershipId());
     }
 
