@@ -3,11 +3,19 @@ import {
   Box,
   Button,
   TextField,
-  Card,
-  CardContent,
   Typography,
-  Stack,
   Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  CircularProgress,
+  Container,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
@@ -23,10 +31,12 @@ const TeamsListPage = () => {
 
   const [newTeamName, setNewTeamName] = useState('');
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const [acceptManagerRole, setAcceptManagerRole] = useState(false);
 
   const navigate = useNavigate();
 
-  // Récupération des teams depuis l'API
   useEffect(() => {
     const fetchTeams = async () => {
       setLoading(true);
@@ -40,8 +50,8 @@ const TeamsListPage = () => {
 
         const res = await fetch('/api/teams', { headers });
         if (!res.ok) throw new Error(`Erreur ${res.status}`);
-        const data: Team[] = await res.json();
-        setTeams(data);
+        const teamsData: Team[] = await res.json();
+        setTeams(teamsData);
       } catch (err: unknown) {
         if (err instanceof Error) setError(err.message);
         else setError('Erreur inconnue');
@@ -51,12 +61,13 @@ const TeamsListPage = () => {
     };
 
     fetchTeams();
-  }, [authenticatedUser?.token, authenticatedUser?.teamId]); // 🔑 dépendances importantes
+  }, [authenticatedUser?.token]);
 
-  // Création d'une nouvelle team
   const handleCreateTeam = async () => {
-    if (!authenticatedUser || !newTeamName.trim()) return;
+    if (!authenticatedUser || !newTeamName.trim() || !acceptManagerRole) return;
+
     setCreating(true);
+    setCreateError(null);
 
     try {
       const res = await fetch('/api/teams', {
@@ -67,114 +78,242 @@ const TeamsListPage = () => {
         },
         body: JSON.stringify({ name: newTeamName }),
       });
-      if (!res.ok) throw new Error(`Erreur ${res.status}`);
+
+      if (!res.ok) {
+        let errorMsg = '';
+        if (res.status === 409) {
+          errorMsg = 'Attention : Deux teams ne peuvent pas avoir le même nom.';
+        } else if (res.status === 403) {
+          errorMsg =
+            "Impossible de créer une nouvelle team : Des membres sont encore présents dans votre team et aucun autre responsable n'est désigné.";
+        } else {
+          const text = await res.text();
+          errorMsg = text || `Erreur ${res.status}`;
+        }
+        throw new Error(errorMsg);
+      }
 
       const createdTeam: Team = await res.json();
-
-      // Mettre à jour l'utilisateur avec la nouvelle team
       if (setAuthenticatedUser) {
         setAuthenticatedUser({ ...authenticatedUser, teamId: createdTeam.id });
       }
-
-      // Ajouter la team dans la liste
-      setTeams((prev) => [createdTeam, ...prev]);
+      setTeams((prev) => [...prev, createdTeam]);
       setNewTeamName('');
-
-      // Navigation après mise à jour de l'état
-      setTimeout(() => {
-        navigate(`/teams/${createdTeam.id}`);
-      }, 100);
+      setAcceptManagerRole(false);
     } catch (err: unknown) {
-      if (err instanceof Error)
-        alert(`Impossible de créer la team: ${err.message}`);
-      else alert('Erreur inconnue');
+      if (err instanceof Error) setCreateError(err.message);
+      else setCreateError('Impossible de créer la team');
     } finally {
       setCreating(false);
     }
   };
 
-  if (loading) return <p>Chargement...</p>;
-  if (error) return <Alert severity="error">{error}</Alert>;
-
-  // Séparer la team de l'utilisateur du reste
-  const userTeam = authenticatedUser
-    ? teams.find((t) => t.id === authenticatedUser.teamId)
-    : null;
-  const otherTeams = userTeam
-    ? teams.filter((t) => t.id !== userTeam.id)
-    : teams;
+  const sortedTeams = teams.slice().sort((a, b) => {
+    const isAUserTeam = a.manager?.email === authenticatedUser?.email;
+    const isBUserTeam = b.manager?.email === authenticatedUser?.email;
+    if (isAUserTeam && !isBUserTeam) return -1;
+    if (!isAUserTeam && isBUserTeam) return 1;
+    return 0;
+  });
 
   return (
-    <Box sx={{ margin: 2, padding: 3 }}>
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        Liste des Teams
-      </Typography>
+    <Container
+      component="main"
+      maxWidth="lg"
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        width: '100%',
+      }}
+    >
+      <Box
+        sx={{
+          padding: 3,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h4" sx={{ mb: 3, textAlign: 'center', mt: 2 }}>
+          Liste des Teams
+        </Typography>
 
-      {/* Formulaire création team uniquement si connecté et sans team */}
-      {authenticatedUser && !authenticatedUser.teamId && (
-        <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
-          <TextField
-            label="Nom de la team"
-            value={newTeamName}
-            onChange={(e) => setNewTeamName(e.target.value)}
-          />
-          <Button
-            variant="contained"
-            onClick={handleCreateTeam}
-            disabled={creating}
+        {authenticatedUser && !authenticatedUser.teamId && (
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 1.5,
+              width: '100%',
+              maxWidth: 500,
+            }}
           >
-            Créer une team
-          </Button>
-        </Box>
-      )}
-
-      <Stack spacing={2}>
-        {/* Team de l'utilisateur */}
-        {userTeam && (
-          <Card
-            sx={{ padding: 2, backgroundColor: '#cce0ff', cursor: 'pointer' }}
-            onClick={() => navigate(`/teams/${userTeam.id}`)}
-          >
-            <CardContent>
-              <Typography variant="h6">Ma team</Typography>
-              <Typography variant="subtitle1">{userTeam.name}</Typography>
-              <Typography variant="body2">
-                Manager : {userTeam.manager?.email ?? '—'}
-              </Typography>
-              <Typography variant="body2">
-                Second manager : {userTeam.secondManager?.email ?? '—'}
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Autres teams */}
-        {otherTeams.length === 0 && !userTeam ? (
-          <Typography>Aucune team disponible</Typography>
-        ) : (
-          otherTeams.map((team) => (
-            <Card
-              key={team.id}
-              sx={{
-                padding: 2,
-                cursor: authenticatedUser ? 'pointer' : 'default',
+            <TextField
+              fullWidth
+              label="Nom de la team"
+              value={newTeamName}
+              onChange={(e) => {
+                setNewTeamName(e.target.value);
+                setCreateError(null);
               }}
-              onClick={() => authenticatedUser && navigate(`/teams/${team.id}`)}
+              InputProps={{
+                sx: { fontSize: '0.9rem', color: 'text.primary' },
+              }}
+              InputLabelProps={{
+                sx: { fontSize: '0.8rem', color: 'text.disabled' },
+              }}
+            />
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={acceptManagerRole}
+                  onChange={(e) => setAcceptManagerRole(e.target.checked)}
+                />
+              }
+              label={
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '0.75rem',
+                    color: 'text.secondary',
+                    textAlign: 'left',
+                  }}
+                >
+                  En créant une team, vous acceptez d'être automatiquement
+                  désigné comme responsable et de participer activement à sa
+                  gestion.
+                </Typography>
+              }
+              sx={{ alignSelf: 'flex-start', mt: 1 }}
+            />
+
+            <Button
+              variant="contained"
+              onClick={handleCreateTeam}
+              disabled={creating || !acceptManagerRole}
+              sx={{
+                mt: 1,
+                width: '50%',
+                alignSelf: 'center',
+                backgroundColor: 'primary.light',
+                color: 'white',
+                fontWeight: 'bold',
+                '&:hover': {
+                  backgroundColor: 'primary.main',
+                },
+              }}
             >
-              <CardContent>
-                <Typography variant="h6">{team.name}</Typography>
-                <Typography variant="body2">
-                  Responsable : {team.manager?.email ?? ''}
-                </Typography>
-                <Typography variant="body2">
-                  Second Responsable : {team.secondManager?.email ?? ''}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))
+              {creating ? (
+                <CircularProgress size={24} sx={{ color: 'white' }} />
+              ) : (
+                'Créer une team'
+              )}
+            </Button>
+          </Box>
         )}
-      </Stack>
-    </Box>
+
+        {createError && (
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+            <Alert
+              severity="error"
+              sx={{ whiteSpace: 'pre-line' }}
+              onClose={() => setCreateError(null)}
+            >
+              {createError}
+            </Alert>
+          </Box>
+        )}
+        {error && (
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+            <Alert severity="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          </Box>
+        )}
+
+        <TableContainer
+          component={Paper}
+          sx={{
+            width: '100%',
+            flex: 1,
+            maxHeight: 450,
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': { width: 10 },
+            '&::-webkit-scrollbar-track': { backgroundColor: '#f1f1f1' },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: '#bdbdbd',
+              borderRadius: 5,
+            },
+          }}
+        >
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">Nom</TableCell>
+                <TableCell align="center">Nombre de membres</TableCell>
+                {authenticatedUser && (
+                  <TableCell align="center">Demande d'adhésion</TableCell>
+                )}
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    <CircularProgress />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                sortedTeams.map((team) => {
+                  const isUserTeam =
+                    team.manager?.email === authenticatedUser?.email;
+                  return (
+                    <TableRow
+                      key={team.id}
+                      sx={{
+                        backgroundColor: isUserTeam ? '#e3f2fd' : 'white',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => navigate(`/teams/${team.id}`)}
+                    >
+                      <TableCell align="center">{team.name}</TableCell>
+                      <TableCell align="center">1</TableCell>
+                      {authenticatedUser && (
+                        <TableCell align="center">
+                          {isUserTeam ? (
+                            'Ma team'
+                          ) : (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                alert(
+                                  `Demande d'adhésion à la team ${team.name}`,
+                                );
+                              }}
+                            >
+                              Rejoindre
+                            </Button>
+                          )}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </Container>
   );
 };
 
