@@ -81,9 +81,7 @@ const TeamsListPage = () => {
 
       if (!res.ok) {
         let errorMsg = '';
-        if (res.status === 409) {
-          errorMsg = 'Attention : Deux teams ne peuvent pas avoir le même nom.';
-        } else if (res.status === 403) {
+        if (res.status === 403) {
           errorMsg =
             "Impossible de créer une nouvelle team : Des membres sont encore présents dans votre team et aucun autre responsable n'est désigné.";
         } else {

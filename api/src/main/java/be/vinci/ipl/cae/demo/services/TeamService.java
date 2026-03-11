@@ -39,6 +39,9 @@ public class TeamService {
     if (existing.isPresent()) {
       throw new IllegalStateException("Le nom de cette team existe déjà");
     }
+    if (creator.getTeam() != null) {
+      throw new IllegalStateException("Cet utilisateur possède déjà une team");
+    }
     
     team.setManager(creator);
     creator.setTeam(team);

@@ -118,16 +118,20 @@ public class TeamController {
               : null
       );
     } catch (IllegalStateException e) {
-      if (e.getMessage().contains("existe déjà")) {
+      System.out.println();
+      System.out.println(e.getMessage());
+      System.out.println();
+      if (e.getMessage().contains("Le nom de cette team existe déjà")) {
         throw new ResponseStatusException(
             HttpStatus.CONFLICT,
             e.getMessage(), e
         );
+      }else {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            e.getMessage(), e
+        );
       }
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          e.getMessage(), e
-      );
     }
   }
 }
