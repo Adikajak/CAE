@@ -80,14 +80,15 @@ const TeamsListPage = () => {
       });
 
       if (!res.ok) {
-        let errorMsg = '';
+        let errorMsg = ``;
+
         if (res.status === 403) {
           errorMsg =
-            "Impossible de créer une nouvelle team : Des membres sont encore présents dans votre team et aucun autre responsable n'est désigné.";
-        } else {
-          const text = await res.text();
-          errorMsg = text || `Erreur ${res.status}`;
+            'Impossible de créer une nouvelle team (une ou plusieurs raisons) :\n' +
+            "• Vous êtes déjà le responsable d'une team\n" +
+            '• Le nom de la team que vous voulez créer existe déjà';
         }
+
         throw new Error(errorMsg);
       }
 
@@ -158,12 +159,6 @@ const TeamsListPage = () => {
                 setNewTeamName(e.target.value);
                 setCreateError(null);
               }}
-              InputProps={{
-                sx: { fontSize: '0.9rem', color: 'text.primary' },
-              }}
-              InputLabelProps={{
-                sx: { fontSize: '0.8rem', color: 'text.disabled' },
-              }}
             />
 
             <FormControlLabel
@@ -216,7 +211,7 @@ const TeamsListPage = () => {
           </Box>
         )}
 
-        {createError && (
+        {createError && authenticatedUser && (
           <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
             <Alert
               severity="error"
