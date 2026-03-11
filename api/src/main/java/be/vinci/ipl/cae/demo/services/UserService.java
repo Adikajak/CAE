@@ -102,10 +102,10 @@ public class UserService {
    */
   public Map<String, Object> getJwtClaimsFromToken(String token) {
     try {
-      var decodedJWT = JWT.require(algorithm).build().verify(token);
+      var decodedJwt = JWT.require(algorithm).build().verify(token);
       Map<String, Object> claims = new HashMap<>();
-      claims.put("email", decodedJWT.getClaim("email").asString());
-      claims.put("isAdmin", decodedJWT.getClaim("isAdmin").asBoolean());
+      claims.put("email", decodedJwt.getClaim("email").asString());
+      claims.put("isAdmin", decodedJwt.getClaim("isAdmin").asBoolean());
       return claims;
     } catch (Exception e) {
       return new HashMap<String, Object>();
@@ -247,5 +247,22 @@ public class UserService {
     unavailability.setStartDate(request.startDate());
     unavailability.setEndDate(request.endDate());
     return unavailabilityRepository.save(unavailability);
+  }
+
+  /**
+   * Updates the speciality of a given user.
+   *
+   * @param user the authenticated user
+   * @param specialityName the new speciality name
+   * @return true if the speciality was updated, false otherwise
+   */
+  public boolean updateSpeciality(User user, String specialityName) {
+    Speciality speciality = specialityRepository.findByName(specialityName);
+    if (speciality == null) {
+      return false;
+    }
+    user.setSpeciality(speciality);
+    userRepository.save(user);
+    return true;
   }
 }

@@ -6,6 +6,7 @@ import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.UserService;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +55,8 @@ public class UserController {
       user.getEmail(),
       user.getTag(),
       user.getSpeciality().getName(),
-      user.getProfilePicture().getUrl()
+      user.getProfilePicture().getUrl(),
+      user.getDate()
     );
   }
 
@@ -105,5 +107,21 @@ public class UserController {
   ) {
     User user = (User) authentication.getPrincipal();
     return userService.addUnavailability(user, request);
+  }
+
+  /**
+   * Updates the speciality of the authenticated user.
+   *
+   * @param authentication the Spring Security authentication object.
+   * @param body           the request body containing the speciality name.
+   */
+  @PatchMapping("/me/speciality")
+  public void updateSpeciality(Authentication authentication,
+                               @RequestBody Map<String, String> body) {
+    User user = (User) authentication.getPrincipal();
+    boolean success = userService.updateSpeciality(user, body.get("specialityName"));
+    if (!success) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
   }
 }
