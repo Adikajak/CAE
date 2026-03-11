@@ -15,6 +15,7 @@ import '@fontsource/roboto/700.css';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './themes.ts';
+import AdministrationPage from './components/pages/AdministrationPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: 'teams',
         element: <TeamsListPage />,
+      },
+      {
+        path: 'administration',
+        element: <AdministrationPage />,
       },
     ],
   },
