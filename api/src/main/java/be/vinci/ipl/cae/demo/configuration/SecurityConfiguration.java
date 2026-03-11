@@ -44,7 +44,8 @@ public class SecurityConfiguration {
             sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/auths/**").permitAll()
-          .requestMatchers("/profile-pictures/**").permitAll()
+            .requestMatchers("/profile-pictures/**").permitAll()
+            .requestMatchers("/specialities/**").permitAll()
             .requestMatchers("/users/**").authenticated()
             .requestMatchers("/teams/**").permitAll()
             .anyRequest().authenticated()
