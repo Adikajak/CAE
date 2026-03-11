@@ -1,7 +1,15 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useCallback } from 'react';
 import {
-  Box, Button, Alert, Typography, Chip,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField
+  Box,
+  Button,
+  Alert,
+  Typography,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { UserContextType, Notification as NotificationType } from '../../types';
@@ -15,7 +23,7 @@ const NotificationPage = () => {
   const [reason, setReason] = useState('');
   const navigate = useNavigate();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!authenticatedUser) return;
     try {
       const response = await fetch('/api/notifications/', {
@@ -28,7 +36,7 @@ const NotificationPage = () => {
       if (err instanceof Error) setError(err.message);
       else setError('Une erreur inconnue est survenue');
     }
-  };
+  }, [authenticatedUser]);
 
   useEffect(() => {
     if (!authenticatedUser) {
@@ -36,7 +44,7 @@ const NotificationPage = () => {
       return;
     }
     fetchNotifications();
-  }, [authenticatedUser, navigate]);
+  }, [authenticatedUser, navigate, fetchNotifications]);
 
   const markAsRead = async (id: number) => {
     try {
@@ -56,10 +64,13 @@ const NotificationPage = () => {
 
   const handleAccept = async (membershipId: number) => {
     try {
-      const response = await fetch(`/api/teams/memberships/${membershipId}/accept`, {
-        method: 'PATCH',
-        headers: { Authorization: authenticatedUser!.token },
-      });
+      const response = await fetch(
+        `/api/teams/memberships/${membershipId}/accept`,
+        {
+          method: 'PATCH',
+          headers: { Authorization: authenticatedUser!.token },
+        },
+      );
       if (!response.ok) throw new Error(`Erreur ${response.status}`);
       fetchNotifications();
     } catch (err: unknown) {
