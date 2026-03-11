@@ -126,7 +126,7 @@ public class TeamController {
             HttpStatus.CONFLICT,
             e.getMessage(), e
         );
-      }else {
+      } else {
         throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
             e.getMessage(), e

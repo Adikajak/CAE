@@ -22,6 +22,7 @@ public class AdminController {
 
   /**
    * Administration controller ctor.
+   *
    * @param administrationService the administration service
    */
   public AdminController(AdministrationService administrationService) {

@@ -14,7 +14,8 @@ public class AdministrationService {
 
   /**
    * Administration Service ctor.
-   * @param userRepository
+   *
+   * @param userRepository the user repository
    */
   public AdministrationService(UserRepository userRepository) {
     this.userRepository = userRepository;

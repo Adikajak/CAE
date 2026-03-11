@@ -60,7 +60,6 @@ public class TeamMembershipService {
     membership.setStatus(MembershipStatus.PENDING);
 
     userRepository.save(user);
-
     TeamMembership save = teamMembershipRepository.save(membership);
 
     NotificationDto dto = new NotificationDto();
@@ -103,7 +102,7 @@ public class TeamMembershipService {
   @Transactional
   public TeamMembership acceptMembership(TeamMembership membership) {
     membership.setStatus(MembershipStatus.ACCEPTED);
-    TeamMembership save = teamMembershipRepository.save(membership);
+    final TeamMembership save = teamMembershipRepository.save(membership);
 
     NotificationDto dto = new NotificationDto();
     dto.setUserId(membership.getMember().getId());
@@ -127,7 +126,7 @@ public class TeamMembershipService {
   public TeamMembership refuseMembership(TeamMembership membership, String reason) {
     membership.setStatus(MembershipStatus.REFUSED);
     membership.setRejectionReason(reason);
-    TeamMembership save = teamMembershipRepository.save(membership);
+    final TeamMembership save = teamMembershipRepository.save(membership);
 
     NotificationDto dto = new NotificationDto();
     dto.setUserId(membership.getMember().getId());
