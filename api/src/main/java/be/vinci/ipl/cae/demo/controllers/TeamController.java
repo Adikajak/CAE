@@ -52,7 +52,8 @@ public class TeamController {
                   team.getManager().getEmail(),
                   team.getManager().getTag(),
                   team.getManager().getSpeciality().getName(),
-                  team.getManager().getProfilePicture()
+                  team.getManager().getProfilePicture().getUrl(),
+                  team.getManager().getDate()
               ) : null,
             team.getSecondManager() != null
                 ? new UserProfile(
@@ -60,7 +61,8 @@ public class TeamController {
                 team.getSecondManager().getEmail(),
                 team.getSecondManager().getTag(),
                 team.getSecondManager().getSpeciality().getName(),
-                team.getSecondManager().getProfilePicture()
+                team.getSecondManager().getProfilePicture().getUrl(),
+                team.getSecondManager().getDate()
             ) : null
         )).toList();
   }
@@ -100,7 +102,8 @@ public class TeamController {
               createdTeam.getManager().getEmail(),
               createdTeam.getManager().getTag(),
               createdTeam.getManager().getSpeciality().getName(),
-              createdTeam.getManager().getProfilePicture()
+              createdTeam.getManager().getProfilePicture().getUrl(),
+              createdTeam.getManager().getDate()
           )
               : null,
           createdTeam.getSecondManager() != null
@@ -109,7 +112,8 @@ public class TeamController {
               createdTeam.getSecondManager().getEmail(),
               createdTeam.getSecondManager().getTag(),
               createdTeam.getSecondManager().getSpeciality().getName(),
-              createdTeam.getSecondManager().getProfilePicture()
+              createdTeam.getSecondManager().getProfilePicture().getUrl(),
+              createdTeam.getSecondManager().getDate()
           )
               : null
       );
