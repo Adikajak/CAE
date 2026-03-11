@@ -54,7 +54,7 @@ public class UserController {
       user.getEmail(),
       user.getTag(),
       user.getSpeciality().getName(),
-      user.getProfilePicture()
+      user.getProfilePicture().getUrl()
     );
   }
 
