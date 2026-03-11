@@ -29,7 +29,7 @@ public class DemoApplication {
   CommandLineRunner seedSpecialities(SpecialityRepository specialityRepository) {
     return args -> {
       String[] names = {
-          "Archer", "Assassin", "Mage", "Guerrier", "Clerc", "Paladin", "Rodeur"
+          "Architecte", "Executeur", "Tacticien", "Gardien", "Catalyseur", "Perturbateur", "Guerrisseur"
       };
 
       for (String name : names) {
