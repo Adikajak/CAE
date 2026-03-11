@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import { UserContextType, Notification as NotificationType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import './index.css';
-
 const NotificationPage = () => {
   const { authenticatedUser } = useContext<UserContextType>(UserContext);
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
