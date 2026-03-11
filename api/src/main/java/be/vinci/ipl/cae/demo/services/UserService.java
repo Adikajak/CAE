@@ -8,7 +8,6 @@ import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
-import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -106,10 +105,10 @@ public class UserService {
    */
   public Map<String, Object> getJwtClaimsFromToken(String token) {
     try {
-      var decodedJWT = JWT.require(algorithm).build().verify(token);
+      var decodedJwt = JWT.require(algorithm).build().verify(token);
       Map<String, Object> claims = new HashMap<>();
-      claims.put("email", decodedJWT.getClaim("email").asString());
-      claims.put("isAdmin", decodedJWT.getClaim("isAdmin").asBoolean());
+      claims.put("email", decodedJwt.getClaim("email").asString());
+      claims.put("isAdmin", decodedJwt.getClaim("isAdmin").asBoolean());
       return claims;
     } catch (Exception e) {
       return new HashMap<String, Object>();
@@ -165,7 +164,8 @@ public class UserService {
       throw new IllegalArgumentException("Invalid profile picture");
     }
 
-    User newUser = createOne(email, password, false, tag, profilePictureEntity, speciality); // ADD THIS
+    User newUser = createOne(email, password, false, tag, profilePictureEntity,
+        speciality);
 
     NotificationDto notificationDto = new NotificationDto();
     notificationDto.setUserId(newUser.getId());
