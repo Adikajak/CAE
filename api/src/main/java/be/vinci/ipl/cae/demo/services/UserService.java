@@ -12,6 +12,8 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -81,6 +83,24 @@ public class UserService {
   public String verifyJwtToken(String token) {
     try {
       return JWT.require(algorithm).build().verify(token).getClaim("email").asString();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * Get JWT claims (email and admin status) from token.
+   *
+   * @param token the JWT token
+   * @return a map with email and isAdmin, or null if invalid
+   */
+  public Map<String, Object> getJwtClaimsFromToken(String token) {
+    try {
+      var decodedJWT = JWT.require(algorithm).build().verify(token);
+      Map<String, Object> claims = new HashMap<>();
+      claims.put("email", decodedJWT.getClaim("email").asString());
+      claims.put("isAdmin", decodedJWT.getClaim("isAdmin").asBoolean());
+      return claims;
     } catch (Exception e) {
       return null;
     }
