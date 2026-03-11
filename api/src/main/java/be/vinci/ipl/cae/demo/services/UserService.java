@@ -108,7 +108,7 @@ public class UserService {
       claims.put("isAdmin", decodedJWT.getClaim("isAdmin").asBoolean());
       return claims;
     } catch (Exception e) {
-      return null;
+      return new HashMap<String, Object>();
     }
   }
 
