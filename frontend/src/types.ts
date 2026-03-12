@@ -41,17 +41,26 @@ interface Notification {
   isRead: boolean;
 }
 
+interface TeamUserProfile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  profilePicture: string;
+  date: string;
+}
+
 interface Team {
   id: number;
   name: string;
-  manager?: User | null;
-  secondManager?: User | null;
+  manager?: TeamUserProfile | null;
+  secondManager?: TeamUserProfile | null;
 }
 
 interface TeamMembership {
   id: number;
-  member: User;
-  teamId: Team;
+  member: TeamUserProfile;
+  team: Team;
   status: 'PENDING' | 'ACCEPTED' | 'REFUSED';
   rejectionReason?: string;
 }
@@ -64,6 +73,7 @@ export type {
   UserContextType,
   JwtPayload,
   Notification,
+  TeamUserProfile,
   Team,
   TeamMembership,
 };

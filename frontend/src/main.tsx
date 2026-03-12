@@ -10,6 +10,7 @@ import LoginPage from './components/pages/LoginPage.tsx';
 import ProfilePage from './components/pages/ProfilePage.tsx';
 import NotificationPage from './components/pages/NotificationPage.tsx';
 import TeamsListPage from './components/pages/TeamsListPage.tsx';
+import TeamDetailsPage from './components/pages/TeamDetailsPage.tsx';
 import { UserContextProvider } from './contexts/UserContext.tsx';
 import '@fontsource/roboto/700.css';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: 'teams',
         element: <TeamsListPage />,
+      },
+      {
+        path: 'teams/:teamId',
+        element: <TeamDetailsPage />,
       },
     ],
   },
