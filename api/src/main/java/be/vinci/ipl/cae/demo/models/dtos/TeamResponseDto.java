@@ -7,8 +7,8 @@ public class TeamResponseDto {
 
   private Long id;
   private String name;
-  private UserProfile manager;
-  private UserProfile secondManager;
+  private UserProfileDto manager;
+  private UserProfileDto secondManager;
 
   /**
    * Constructor for TeamCreateResponse.
@@ -18,7 +18,7 @@ public class TeamResponseDto {
    * @param manager the manager
    * @param secondManager the second manager
    */
-  public TeamResponseDto(Long id, String name, UserProfile manager, UserProfile secondManager) {
+  public TeamResponseDto(Long id, String name, UserProfileDto manager, UserProfileDto secondManager) {
     this.id = id;
     this.name = name;
     this.manager = manager;
@@ -33,11 +33,11 @@ public class TeamResponseDto {
     return name;
   }
 
-  public UserProfile getManager() {
+  public UserProfileDto getManager() {
     return manager;
   }
 
-  public UserProfile getSecondManager() {
+  public UserProfileDto getSecondManager() {
     return secondManager;
   }
 }

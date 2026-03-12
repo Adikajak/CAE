@@ -24,7 +24,8 @@ const specialties = [
 ];
 
 const ProfilePage = () => {
-  const { authenticatedUser } = useContext<UserContextType>(UserContext);
+  const { authenticatedUser, jwtData } =
+    useContext<UserContextType>(UserContext);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +63,7 @@ const ProfilePage = () => {
         });
         if (!response.ok) throw new Error(`Erreur ${response.status}`);
         const data: Profile = await response.json();
+        console.log('profile data =', data);
         setProfile(data);
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -216,7 +218,7 @@ const ProfilePage = () => {
             </Button>
           </p>
           <p>
-            <strong>Team :</strong> - {/* À implémenter côté backend */}
+            <strong>Team :</strong> {profile?.teamName || 'Aucune team'}
           </p>
           <p>
             <strong>Date de création :</strong>{' '}
@@ -249,6 +251,14 @@ const ProfilePage = () => {
           <h2>Mes Informations Privées</h2>
           <p>
             <strong>Email :</strong> {profile?.email}
+          </p>
+          <p>
+            <strong>Responsable d'une team :</strong>{' '}
+            {profile?.isManager ? 'Oui' : 'Non'}
+          </p>
+          <p>
+            <strong>Administrateur :</strong>{' '}
+            {jwtData()?.isAdmin ? 'Oui' : 'Non'}
           </p>
           <p>
             <strong>Mot de passe :</strong> ••••••••
