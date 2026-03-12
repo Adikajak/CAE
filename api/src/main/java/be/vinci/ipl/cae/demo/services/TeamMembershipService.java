@@ -1,6 +1,8 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class TeamMembershipService {
 
+  private final NotificationService notificationService;
   private final UserRepository userRepository;
   private final TeamMembershipRepository teamMembershipRepository;
 
@@ -28,10 +31,12 @@ public class TeamMembershipService {
    */
   public TeamMembershipService(
       UserRepository userRepository,
-      TeamMembershipRepository teamMembershipRepository
+      TeamMembershipRepository teamMembershipRepository,
+      NotificationService notificationService
   ) {
     this.userRepository = userRepository;
     this.teamMembershipRepository = teamMembershipRepository;
+    this.notificationService = notificationService;
   }
 
   /**
@@ -55,8 +60,21 @@ public class TeamMembershipService {
     membership.setStatus(MembershipStatus.PENDING);
 
     userRepository.save(user);
+    TeamMembership save = teamMembershipRepository.save(membership);
+    NotificationDto dto = new NotificationDto();
+    dto.setUserId(team.getManager().getId());
+    dto.setObject("Nouvelle demande d'adhésion");
+    dto.setMessage(user.getTag() + " souhaite rejoindre l'équipe " + team.getName());
+    dto.setType(NotificationType.TEAM_INVITATION);
+    dto.setMembershipId(save.getId());
+    notificationService.createNotification(dto);
 
-    return teamMembershipRepository.save(membership);
+    if (team.getSecondManager() != null) {
+      dto.setUserId(team.getSecondManager().getId());
+      notificationService.createNotification(dto);
+    }
+
+    return save;
   }
 
   /**
@@ -88,7 +106,17 @@ public class TeamMembershipService {
   @Transactional
   public TeamMembership acceptMembership(TeamMembership membership) {
     membership.setStatus(MembershipStatus.ACCEPTED);
-    return teamMembershipRepository.save(membership);
+    final TeamMembership save = teamMembershipRepository.save(membership);
+
+    NotificationDto dto = new NotificationDto();
+    dto.setUserId(membership.getMember().getId());
+    dto.setObject("Demande acceptée");
+    dto.setMessage("Votre demande pour rejoinder l'équipe "
+        + membership.getTeam().getName() + "a été acceptée!");
+    dto.setType(NotificationType.GENERAL);
+    notificationService.createNotification(dto);
+
+    return save;
   }
 
   /**
@@ -102,7 +130,17 @@ public class TeamMembershipService {
   public TeamMembership refuseMembership(TeamMembership membership, String reason) {
     membership.setStatus(MembershipStatus.REFUSED);
     membership.setRejectionReason(reason);
-    return teamMembershipRepository.save(membership);
+    final TeamMembership save = teamMembershipRepository.save(membership);
+
+    NotificationDto dto = new NotificationDto();
+    dto.setUserId(membership.getMember().getId());
+    dto.setObject("Demande refusée");
+    dto.setMessage("Votre demande pour rejoindre l'équipe "
+        + membership.getTeam().getName() + " a été refusée. Raison : " + reason);
+    dto.setType(NotificationType.GENERAL);
+    notificationService.createNotification(dto);
+
+    return save;
   }
 
   /**

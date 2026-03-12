@@ -20,6 +20,13 @@ public interface UserRepository extends CrudRepository<User, Long> {
   User findByEmail(String email);
 
   /**
+   * Finds all admin users.
+   *
+   * @return all admin users
+   */
+  Iterable<User> findAllByIsAdminTrue();
+
+  /**
    * Checks if a user with the given tag already exists in the specified team.
    *
    * @param team the team to check

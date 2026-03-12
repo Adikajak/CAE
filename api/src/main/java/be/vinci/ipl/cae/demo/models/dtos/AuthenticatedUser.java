@@ -5,9 +5,18 @@ package be.vinci.ipl.cae.demo.models.dtos;
  */
 public class AuthenticatedUser {
 
+  private Long id;
   private String email;
   private boolean isAdmin;
   private String token;
+
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
 
   public String getEmail() {
     return email;
