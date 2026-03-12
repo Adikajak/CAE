@@ -20,7 +20,8 @@ public class AdministrationService {
    *
    * @param userRepository the user repository
    */
-  public AdministrationService(UserRepository userRepository, NotificationService notificationService) {
+  public AdministrationService(UserRepository userRepository,
+                               NotificationService notificationService) {
     this.userRepository = userRepository;
     this.notificationService = notificationService;
   }
@@ -59,7 +60,8 @@ public class AdministrationService {
     NotificationDto notificationDto = new NotificationDto();
     notificationDto.setUserId(userEntity.getId());
     notificationDto.setObject("Vous avez été promu administrateur !");
-    notificationDto.setMessage("Votre compte a été promu au rang d'administrateur. Un grand pouvoir implique de grandes responsabilités :)");
+    notificationDto.setMessage("Votre compte a été promu au rang d'administrateur. " +
+        "Un grand pouvoir implique de grandes responsabilités :)");
     notificationDto.setType(NotificationType.GENERAL);
     notificationService.createNotification(notificationDto);
     return true;
