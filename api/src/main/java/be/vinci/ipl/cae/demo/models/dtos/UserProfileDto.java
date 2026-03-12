@@ -5,7 +5,7 @@ import java.time.LocalDate;
 /**
  * UserProfile DTO.
  */
-public class UserProfile {
+public class UserProfileDto {
 
   private Long id;
   private String email;
@@ -28,8 +28,8 @@ public class UserProfile {
    * @param teamName       the user team
    * @param isManager      the user manager
    */
-  public UserProfile(Long id, String email, String tag, String speciality,
-      String profilePicture, LocalDate date, String teamName,  boolean isManager) {
+  public UserProfileDto(Long id, String email, String tag, String speciality,
+                        String profilePicture, LocalDate date, String teamName, boolean isManager) {
     this.id = id;
     this.email = email;
     this.tag = tag;

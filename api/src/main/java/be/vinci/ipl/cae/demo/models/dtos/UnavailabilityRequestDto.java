@@ -8,4 +8,4 @@ import java.time.LocalDate;
  * @param startDate the start date of the unavailability
  * @param endDate   the end date of the unavailability
  */
-public record UnavailabilityRequest(LocalDate startDate, LocalDate endDate) {}
+public record UnavailabilityRequestDto(LocalDate startDate, LocalDate endDate) {}

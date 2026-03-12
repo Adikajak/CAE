@@ -6,4 +6,4 @@ package be.vinci.ipl.cae.demo.models.dtos;
  * @param oldPassword the current password to verify
  * @param newPassword the new password to set
  */
-public record PasswordUpdate(String oldPassword, String newPassword) {}
+public record PasswordUpdateDto(String oldPassword, String newPassword) {}

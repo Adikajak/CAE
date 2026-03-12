@@ -1,6 +1,6 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.AdministrationService;
 import java.util.List;
@@ -40,7 +40,7 @@ public class AdminController {
    * @return the list of admin profiles
    */
   @GetMapping({"", "/"})
-  public List<UserProfile> getAllAdmins() {
+  public List<UserProfileDto> getAllAdmins() {
     return StreamSupport.stream(administrationService.getAllAdmins().spliterator(), false)
         .map(this::toUserProfile)
         .toList();
@@ -52,7 +52,7 @@ public class AdminController {
    * @return the list of non-admin user profiles
    */
   @GetMapping("/non-admins")
-  public List<UserProfile> getAllNonAdmins() {
+  public List<UserProfileDto> getAllNonAdmins() {
     return StreamSupport.stream(administrationService.getAllNonAdmins().spliterator(), false)
         .map(this::toUserProfile)
         .toList();
@@ -78,15 +78,23 @@ public class AdminController {
    * @param user the user entity
    * @return the user profile
    */
-  private UserProfile toUserProfile(User user) {
+  private UserProfileDto toUserProfile(User user) {
     //CPD-OFF
-    return new UserProfile(
+    var team = user.getTeam();
+    boolean isManager = team != null && (
+        (team.getManager() != null && team.getManager().getId().equals(user.getId())) ||
+            (team.getSecondManager() != null && team.getSecondManager().getId().equals(user.getId()))
+    );
+
+    return new UserProfileDto(
         user.getId(),
         user.getEmail(),
         user.getTag(),
         user.getSpeciality() != null ? user.getSpeciality().getName() : null,
         user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
-        user.getDate()
+        user.getDate(),
+        user.getTeam() != null ? user.getTeam().getName() : null,
+        isManager
     );
     //CPD-ON
   }
