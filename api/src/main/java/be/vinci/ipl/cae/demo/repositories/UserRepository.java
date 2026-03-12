@@ -34,4 +34,11 @@ public interface UserRepository extends CrudRepository<User, Long> {
    * @return true if a user with the given tag exists in the team, false otherwise
    */
   boolean existsByTeamAndTag(Team team, String tag);
+
+  /**
+   * Finds all non-admin users.
+   *
+   * @return all non-admin users
+   */
+  Iterable<User> findAllByIsAdminFalse();
 }

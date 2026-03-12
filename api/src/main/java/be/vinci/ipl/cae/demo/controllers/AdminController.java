@@ -5,10 +5,15 @@ import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.AdministrationService;
 import java.util.List;
 import java.util.stream.StreamSupport;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * RestController pour /administrators.
@@ -39,6 +44,32 @@ public class AdminController {
     return StreamSupport.stream(administrationService.getAllAdmins().spliterator(), false)
         .map(this::toUserProfile)
         .toList();
+  }
+
+  /**
+   * Returns all non-admin user profiles.
+   *
+   * @return the list of non-admin user profiles
+   */
+  @GetMapping("/non-admins")
+  public List<UserProfile> getAllNonAdmins() {
+    return StreamSupport.stream(administrationService.getAllNonAdmins().spliterator(), false)
+        .map(this::toUserProfile)
+        .toList();
+  }
+
+  /**
+   * Promotes a user to admin.
+   *
+   * @param userId the user id to promote
+   */
+  @PostMapping("/{userId}")
+  @ResponseStatus(HttpStatus.OK)
+  public void promoteToAdmin(@PathVariable Long userId) {
+    boolean promoted = administrationService.promoteToAdmin(userId);
+    if (!promoted) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or already admin");
+    }
   }
 
   /**
