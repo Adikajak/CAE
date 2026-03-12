@@ -3,7 +3,7 @@ package be.vinci.ipl.cae.demo.models.dtos;
 /**
  * DTO returned when a team is created.
  */
-public class TeamResponse {
+public class TeamResponseDto {
 
   private Long id;
   private String name;
@@ -18,7 +18,7 @@ public class TeamResponse {
    * @param manager the manager
    * @param secondManager the second manager
    */
-  public TeamResponse(Long id, String name, UserProfile manager, UserProfile secondManager) {
+  public TeamResponseDto(Long id, String name, UserProfile manager, UserProfile secondManager) {
     this.id = id;
     this.name = name;
     this.manager = manager;

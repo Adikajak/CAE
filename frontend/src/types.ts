@@ -36,6 +36,9 @@ interface AuthenticatedUser {
   teamId?: number;
 }
 
+interface TeamUser {
+  id: number;
+}
 interface JwtPayload {
   id: number;
   email: string;
@@ -57,8 +60,8 @@ interface Notification {
 interface Team {
   id: number;
   name: string;
-  manager?: User | null;
-  secondManager?: User | null;
+  manager?: TeamUser | null;
+  secondManager?: TeamUser | null;
 }
 
 interface TeamMembership {
@@ -95,6 +98,7 @@ export type {
   JwtPayload,
   Notification,
   Team,
+  TeamUser,
   TeamMembership,
   Profile,
   Unavailability,

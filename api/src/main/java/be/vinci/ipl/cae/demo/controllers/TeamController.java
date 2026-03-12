@@ -1,7 +1,7 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequest;
-import be.vinci.ipl.cae.demo.models.dtos.TeamResponse;
+import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequestDto;
+import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -41,9 +41,9 @@ public class TeamController {
    * @return list of all teams
    */
   @GetMapping({"", "/"})
-  public List<TeamResponse> getAllTeams() {
+  public List<TeamResponseDto> getAllTeams() {
     return teamService.getAllTeams().stream()
-        .map(team -> new TeamResponse(
+        .map(team -> new TeamResponseDto(
             team.getId(),
             team.getName(),
             team.getManager() != null
@@ -77,9 +77,9 @@ public class TeamController {
    */
   @PostMapping({"", "/"})
   @ResponseStatus(HttpStatus.CREATED)
-  public TeamResponse createTeam(
+  public TeamResponseDto createTeam(
       Authentication authentication,
-      @RequestBody TeamCreateRequest request
+      @RequestBody TeamCreateRequestDto request
   ) {
     User user = (User) authentication.getPrincipal();
     if (user == null) {
@@ -93,7 +93,7 @@ public class TeamController {
 
     try {
       Team createdTeam = teamService.createTeam(team, user);
-      return new TeamResponse(
+      return new TeamResponseDto(
           createdTeam.getId(),
           createdTeam.getName(),
           createdTeam.getManager() != null
@@ -118,20 +118,10 @@ public class TeamController {
               : null
       );
     } catch (IllegalStateException e) {
-      System.out.println();
-      System.out.println(e.getMessage());
-      System.out.println();
-      if (e.getMessage().contains("Le nom de cette team existe déjà")) {
-        throw new ResponseStatusException(
-            HttpStatus.CONFLICT,
-            e.getMessage(), e
-        );
-      } else {
         throw new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
             e.getMessage(), e
         );
-      }
     }
   }
 }

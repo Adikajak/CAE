@@ -80,14 +80,15 @@ const TeamsListPage = () => {
       });
 
       if (!res.ok) {
-        let errorMsg = '';
+        let errorMsg = ``;
+
         if (res.status === 403) {
           errorMsg =
-            "Impossible de créer une nouvelle team : Des membres sont encore présents dans votre team et aucun autre responsable n'est désigné.";
-        } else {
-          const text = await res.text();
-          errorMsg = text || `Erreur ${res.status}`;
+            'Impossible de créer une nouvelle team (une ou plusieurs raisons) :\n' +
+            "• Vous êtes déjà le responsable d'une team\n" +
+            '• Le nom de la team que vous voulez créer existe déjà';
         }
+
         throw new Error(errorMsg);
       }
 
@@ -106,12 +107,21 @@ const TeamsListPage = () => {
     }
   };
 
+  const getTeamMemberCount = (team: Team) => {
+    let count = 0;
+    if (team.manager) {
+      count += 1;
+      if (team.secondManager) count += 1;
+    }
+    return count;
+  };
+
   const sortedTeams = teams.slice().sort((a, b) => {
-    const isAUserTeam = a.manager?.email === authenticatedUser?.email;
-    const isBUserTeam = b.manager?.email === authenticatedUser?.email;
+    const isAUserTeam = a.manager?.id === authenticatedUser?.id;
+    const isBUserTeam = b.manager?.id === authenticatedUser?.id;
     if (isAUserTeam && !isBUserTeam) return -1;
     if (!isAUserTeam && isBUserTeam) return 1;
-    return 0;
+    return a.name.localeCompare(b.name);
   });
 
   return (
@@ -157,12 +167,6 @@ const TeamsListPage = () => {
               onChange={(e) => {
                 setNewTeamName(e.target.value);
                 setCreateError(null);
-              }}
-              InputProps={{
-                sx: { fontSize: '0.9rem', color: 'text.primary' },
-              }}
-              InputLabelProps={{
-                sx: { fontSize: '0.8rem', color: 'text.disabled' },
               }}
             />
 
@@ -216,7 +220,7 @@ const TeamsListPage = () => {
           </Box>
         )}
 
-        {createError && (
+        {createError && authenticatedUser && (
           <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
             <Alert
               severity="error"
@@ -270,8 +274,7 @@ const TeamsListPage = () => {
                 </TableRow>
               ) : (
                 sortedTeams.map((team) => {
-                  const isUserTeam =
-                    team.manager?.email === authenticatedUser?.email;
+                  const isUserTeam = team.manager?.id === authenticatedUser?.id;
                   return (
                     <TableRow
                       key={team.id}
@@ -282,7 +285,9 @@ const TeamsListPage = () => {
                       onClick={() => navigate(`/teams/${team.id}`)}
                     >
                       <TableCell align="center">{team.name}</TableCell>
-                      <TableCell align="center">1</TableCell>
+                      <TableCell align="center">
+                        {getTeamMemberCount(team)}
+                      </TableCell>
                       {authenticatedUser && (
                         <TableCell align="center">
                           {isUserTeam ? (

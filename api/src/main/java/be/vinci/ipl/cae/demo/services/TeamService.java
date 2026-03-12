@@ -3,6 +3,7 @@ package be.vinci.ipl.cae.demo.services;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
+import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -15,14 +16,16 @@ import org.springframework.stereotype.Service;
 public class TeamService {
 
   private final TeamRepository teamRepository;
+  private final UserRepository userRepository;
 
   /**
    * Constructor for TeamService.
    *
    * @param teamRepository the team repository
    */
-  public TeamService(TeamRepository teamRepository) {
+  public TeamService(TeamRepository teamRepository, UserRepository userRepository) {
     this.teamRepository = teamRepository;
+    this.userRepository = userRepository;
   }
 
   /**
@@ -44,8 +47,12 @@ public class TeamService {
     }
     
     team.setManager(creator);
+    Team savedTeam = teamRepository.save(team);
+
     creator.setTeam(team);
-    return teamRepository.save(team);
+    userRepository.save(creator);
+
+    return savedTeam;
   }
 
   /**
