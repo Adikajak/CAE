@@ -1,5 +1,7 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
+import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import org.springframework.stereotype.Service;
@@ -11,14 +13,16 @@ import org.springframework.stereotype.Service;
 public class AdministrationService {
 
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
 
   /**
    * Administration Service ctor.
    *
    * @param userRepository the user repository
    */
-  public AdministrationService(UserRepository userRepository) {
+  public AdministrationService(UserRepository userRepository, NotificationService notificationService) {
     this.userRepository = userRepository;
+    this.notificationService = notificationService;
   }
 
   public Iterable<User> getAllAdmins() {
@@ -51,6 +55,13 @@ public class AdministrationService {
     }
     userEntity.setAdmin(true);
     userRepository.save(userEntity);
+
+    NotificationDto notificationDto = new NotificationDto();
+    notificationDto.setUserId(userEntity.getId());
+    notificationDto.setObject("Vous avez été promu administrateur !");
+    notificationDto.setMessage("Votre compte a été promu au rang d'administrateur. Un grand pouvoir implique de grandes responsabilités :)");
+    notificationDto.setType(NotificationType.GENERAL);
+    notificationService.createNotification(notificationDto);
     return true;
   }
 }
