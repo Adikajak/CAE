@@ -77,9 +77,11 @@ interface Profile {
   email: string;
   tag: string;
   speciality: string;
-  // team: string;
+  teamName?: string;
   profilePicture: string;
   date: string;
+  isManager?: boolean;
+  isAdmin: boolean;
 }
 
 interface Unavailability {

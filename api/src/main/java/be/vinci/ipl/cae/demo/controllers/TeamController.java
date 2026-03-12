@@ -2,7 +2,7 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequestDto;
 import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
-import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamService;
@@ -47,22 +47,27 @@ public class TeamController {
             team.getId(),
             team.getName(),
             team.getManager() != null
-              ? new UserProfile(
+              ? new UserProfileDto(
                   team.getManager().getId(),
                   team.getManager().getEmail(),
                   team.getManager().getTag(),
                   team.getManager().getSpeciality().getName(),
                   team.getManager().getProfilePicture().getUrl(),
-                  team.getManager().getDate()
+                  team.getManager().getDate(),
+                  team.getManager().getTeam().getName(),
+                  true
+
               ) : null,
             team.getSecondManager() != null
-                ? new UserProfile(
+                ? new UserProfileDto(
                 team.getSecondManager().getId(),
                 team.getSecondManager().getEmail(),
                 team.getSecondManager().getTag(),
                 team.getSecondManager().getSpeciality().getName(),
                 team.getSecondManager().getProfilePicture().getUrl(),
-                team.getSecondManager().getDate()
+                team.getSecondManager().getDate(),
+                team.getSecondManager().getTeam().getName(),
+                true
             ) : null
         )).toList();
   }
@@ -97,23 +102,27 @@ public class TeamController {
           createdTeam.getId(),
           createdTeam.getName(),
           createdTeam.getManager() != null
-              ? new UserProfile(
+              ? new UserProfileDto(
               createdTeam.getManager().getId(),
               createdTeam.getManager().getEmail(),
               createdTeam.getManager().getTag(),
               createdTeam.getManager().getSpeciality().getName(),
               createdTeam.getManager().getProfilePicture().getUrl(),
-              createdTeam.getManager().getDate()
+              createdTeam.getManager().getDate(),
+              createdTeam.getManager().getTeam().getName(),
+              true
           )
               : null,
           createdTeam.getSecondManager() != null
-              ? new UserProfile(
+              ? new UserProfileDto(
               createdTeam.getSecondManager().getId(),
               createdTeam.getSecondManager().getEmail(),
               createdTeam.getSecondManager().getTag(),
               createdTeam.getSecondManager().getSpeciality().getName(),
               createdTeam.getSecondManager().getProfilePicture().getUrl(),
-              createdTeam.getSecondManager().getDate()
+              createdTeam.getSecondManager().getDate(),
+              createdTeam.getSecondManager().getTeam().getName(),
+              true
           )
               : null
       );
