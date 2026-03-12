@@ -10,6 +10,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,28 +45,21 @@ public class TeamController {
   @GetMapping({"", "/"})
   public List<TeamResponse> getAllTeams() {
     return teamService.getAllTeams().stream()
-        .map(team -> new TeamResponse(
-            team.getId(),
-            team.getName(),
-            team.getManager() != null
-              ? new UserProfile(
-                  team.getManager().getId(),
-                  team.getManager().getEmail(),
-                  team.getManager().getTag(),
-                  team.getManager().getSpeciality().getName(),
-                  team.getManager().getProfilePicture().getUrl(),
-                  team.getManager().getDate()
-              ) : null,
-            team.getSecondManager() != null
-                ? new UserProfile(
-                team.getSecondManager().getId(),
-                team.getSecondManager().getEmail(),
-                team.getSecondManager().getTag(),
-                team.getSecondManager().getSpeciality().getName(),
-                team.getSecondManager().getProfilePicture().getUrl(),
-                team.getSecondManager().getDate()
-            ) : null
-        )).toList();
+        .map(this::toResponse)
+        .toList();
+  }
+
+  /**
+   * Get a team by its id.
+   *
+   * @param teamId the team id
+   * @return the team
+   */
+  @GetMapping("/{teamId}")
+  public TeamResponse getTeamById(@PathVariable Long teamId) {
+    Team team = teamService.getTeamById(teamId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
+    return toResponse(team);
   }
 
   /**
@@ -93,30 +88,7 @@ public class TeamController {
 
     try {
       Team createdTeam = teamService.createTeam(team, user);
-      return new TeamResponse(
-          createdTeam.getId(),
-          createdTeam.getName(),
-          createdTeam.getManager() != null
-              ? new UserProfile(
-              createdTeam.getManager().getId(),
-              createdTeam.getManager().getEmail(),
-              createdTeam.getManager().getTag(),
-              createdTeam.getManager().getSpeciality().getName(),
-              createdTeam.getManager().getProfilePicture().getUrl(),
-              createdTeam.getManager().getDate()
-          )
-              : null,
-          createdTeam.getSecondManager() != null
-              ? new UserProfile(
-              createdTeam.getSecondManager().getId(),
-              createdTeam.getSecondManager().getEmail(),
-              createdTeam.getSecondManager().getTag(),
-              createdTeam.getSecondManager().getSpeciality().getName(),
-              createdTeam.getSecondManager().getProfilePicture().getUrl(),
-              createdTeam.getSecondManager().getDate()
-          )
-              : null
-      );
+      return toResponse(createdTeam);
     } catch (IllegalStateException e) {
       if (e.getMessage().contains("existe déjà")) {
         throw new ResponseStatusException(
@@ -129,5 +101,70 @@ public class TeamController {
           e.getMessage(), e
       );
     }
+  }
+
+  /**
+   * Designate a second manager for a team.
+   *
+   * @param authentication authenticated user
+   * @param teamId the team id
+   * @param memberId the member id to promote
+   * @return updated team
+   */
+  @PatchMapping("/{teamId}/second-manager/{memberId}")
+  public TeamResponse designateSecondManager(
+      Authentication authentication,
+      @PathVariable Long teamId,
+      @PathVariable Long memberId
+  ) {
+    User currentUser = (User) authentication.getPrincipal();
+    try {
+      return toResponse(teamService.designateSecondManager(currentUser, teamId, memberId));
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Renounce the primary manager role.
+   *
+   * @param authentication authenticated user
+   * @param teamId the team id
+   * @return updated team
+   */
+  @PatchMapping("/{teamId}/manager/renounce")
+  public TeamResponse renounceManagerRole(
+      Authentication authentication,
+      @PathVariable Long teamId
+  ) {
+    User currentUser = (User) authentication.getPrincipal();
+    try {
+      return toResponse(teamService.renounceManagerRole(currentUser, teamId));
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
+  }
+
+  private TeamResponse toResponse(Team team) {
+    return new TeamResponse(
+        team.getId(),
+        team.getName(),
+        toUserProfile(team.getManager()),
+        toUserProfile(team.getSecondManager())
+    );
+  }
+
+  private UserProfile toUserProfile(User user) {
+    if (user == null) {
+      return null;
+    }
+    return new UserProfile(
+        user.getId(),
+        user.getEmail(),
+        user.getTag(),
+        user.getSpeciality().getName(),
+        user.getProfilePicture().getUrl(),
+        user.getDate()
+    );
   }
 }
