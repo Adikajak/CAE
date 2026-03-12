@@ -21,3 +21,12 @@ Authorization: {{adminToken}}
 POST {{baseUrl}}/administrators/2
 Authorization: {{adminToken}}
 Content-Type: application/json
+
+### Rétrograder un administrateur (remplacer {userId} par un ID réel, ≠ du sien)
+# Exemple: DELETE {{baseUrl}}/administrators/2
+DELETE {{baseUrl}}/administrators/2
+Authorization: {{adminToken}}
+
+### Tentative de rétrogradation de soi-même (doit retourner 403 Forbidden)
+DELETE {{baseUrl}}/administrators/1
+Authorization: {{adminToken}}

@@ -66,4 +66,31 @@ public class AdministrationService {
     notificationService.createNotification(notificationDto);
     return true;
   }
+
+  /**
+   * Demote an admin user to regular member.
+   *
+   * @param userId the user id
+   * @return true if the user was demoted, false if the user does not exist or is not admin
+   */
+  public boolean demoteFromAdmin(Long userId) {
+    var user = userRepository.findById(userId);
+    if (user.isEmpty()) {
+      return false;
+    }
+    User userEntity = user.get();
+    if (!userEntity.isAdmin()) {
+      return false;
+    }
+    userEntity.setAdmin(false);
+    userRepository.save(userEntity);
+
+    NotificationDto notificationDto = new NotificationDto();
+    notificationDto.setUserId(userEntity.getId());
+    notificationDto.setObject("Vous avez été rétrogradé.");
+    notificationDto.setMessage("Votre statut d'administrateur a été révoqué.");
+    notificationDto.setType(NotificationType.GENERAL);
+    notificationService.createNotification(notificationDto);
+    return true;
+  }
 }
