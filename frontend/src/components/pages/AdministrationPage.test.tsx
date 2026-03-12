@@ -35,6 +35,15 @@ describe('AdministrationPage', () => {
     },
   ];
 
+  const mockOtherAdmin: UserProfile = {
+    id: 2,
+    email: 'admin2@admin.com',
+    tag: 'admin2',
+    speciality: 'Mage',
+    profilePicture: 'url4',
+    date: '2024-01-04',
+  };
+
   const createContextValue = () => ({
     authenticatedUser: {
       id: 1,
@@ -308,5 +317,60 @@ describe('AdministrationPage', () => {
     renderAdministrationPage(contextValue);
 
     expect(screen.getByText(/vous devez être administrateur/i)).toBeTruthy();
+  });
+
+  test('does not show demote button for the current user', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(mockAdmins),
+    });
+
+    renderAdministrationPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('admin@admin.com')).toBeTruthy();
+    });
+
+    expect(screen.queryByRole('button', { name: /rétrograder/i })).toBeNull();
+  });
+
+  test('shows demote button for other admins', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([...mockAdmins, mockOtherAdmin]),
+    });
+
+    renderAdministrationPage();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /rétrograder/i })).toBeTruthy();
+    });
+  });
+
+  test('calls DELETE when demote button is clicked', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve([...mockAdmins, mockOtherAdmin]),
+      })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockAdmins),
+      });
+
+    renderAdministrationPage();
+
+    const demoteButton = await screen.findByRole('button', {
+      name: /rétrograder/i,
+    });
+    fireEvent.click(demoteButton);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/administrators/2'),
+        expect.objectContaining({ method: 'DELETE' }),
+      );
+    });
   });
 });

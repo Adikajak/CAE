@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -69,6 +71,24 @@ public class AdminController {
     boolean promoted = administrationService.promoteToAdmin(userId);
     if (!promoted) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or already admin");
+    }
+  }
+
+  /**
+   * Demotes an admin user to regular member.
+   *
+   * @param userId the user id to demote
+   * @param caller the authenticated admin user
+   */
+  @DeleteMapping("/{userId}")
+  @ResponseStatus(HttpStatus.OK)
+  public void demoteFromAdmin(@PathVariable Long userId, @AuthenticationPrincipal User caller) {
+    if (caller.getId().equals(userId)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot demote yourself");
+    }
+    boolean demoted = administrationService.demoteFromAdmin(userId);
+    if (!demoted) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or not admin");
     }
   }
 

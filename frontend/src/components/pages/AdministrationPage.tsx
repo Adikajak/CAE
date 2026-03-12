@@ -37,6 +37,8 @@ const AdministrationPage = () => {
   const [nonAdmins, setNonAdmins] = useState<UserProfile[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<number | ''>('');
   const [promoteError, setPromoteError] = useState('');
+  const [demoteError, setDemoteError] = useState('');
+  const currentUserId = jwtData()?.id;
 
   const handleFetchAdministrators = useCallback(async () => {
     if (!authenticatedUser) return;
@@ -123,6 +125,33 @@ const AdministrationPage = () => {
     }
   };
 
+  const handleDemote = async (userId: number) => {
+    if (!authenticatedUser) return;
+    try {
+      const response = await fetch(`/api/administrators/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authenticatedUser.token,
+        },
+      });
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Vous ne pouvez pas vous rétrograder vous-même');
+        }
+        throw new Error(`Erreur ${response.status}`);
+      }
+      setDemoteError('');
+      await handleFetchAdministrators();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setDemoteError(err.message);
+      } else {
+        setDemoteError('Une erreur inconnue est survenue');
+      }
+    }
+  };
+
   if (!authenticatedUser || !jwtData()?.isAdmin)
     return <p>Vous devez être administrateur pour voir cette page.</p>;
   if (loading) return <p>Chargement...</p>;
@@ -141,26 +170,42 @@ const AdministrationPage = () => {
           <p>Aucun administrateur actuellement.</p>
         </Box>
       ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>email</TableCell>
-              <TableCell>tag</TableCell>
-              <TableCell>spécialité</TableCell>
-              <TableCell>date</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {administrationList?.map((admin) => (
-              <TableRow key={admin.id}>
-                <TableCell>{admin.email}</TableCell>
-                <TableCell>{admin.tag}</TableCell>
-                <TableCell>{admin.speciality}</TableCell>
-                <TableCell>{admin.date}</TableCell>
+        <>
+          {demoteError && <Alert severity="error">{demoteError}</Alert>}
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>email</TableCell>
+                <TableCell>tag</TableCell>
+                <TableCell>spécialité</TableCell>
+                <TableCell>date</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {administrationList?.map((admin) => (
+                <TableRow key={admin.id}>
+                  <TableCell>{admin.email}</TableCell>
+                  <TableCell>{admin.tag}</TableCell>
+                  <TableCell>{admin.speciality}</TableCell>
+                  <TableCell>{admin.date}</TableCell>
+                  <TableCell>
+                    {admin.id !== currentUserId && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={() => handleDemote(admin.id)}
+                      >
+                        Rétrograder
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </>
       )}
 
       <Dialog open={openPromoteModal} onClose={handleClosePromoteModal}>
