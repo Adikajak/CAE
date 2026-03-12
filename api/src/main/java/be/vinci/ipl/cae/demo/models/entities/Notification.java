@@ -2,6 +2,8 @@ package be.vinci.ipl.cae.demo.models.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -52,6 +54,12 @@ public class Notification {
   @Column(nullable = false)
   private boolean isRead = false;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private NotificationType type = NotificationType.GENERAL;
+
+  @Column(nullable = true)
+  private Long membershipId;
 
   public Long getNotificationId() {
     return notificationId;
@@ -101,5 +109,22 @@ public class Notification {
   public void setIsRead(boolean isRead) {
     this.isRead = isRead;
   }
+
+  public NotificationType getType() {
+    return type;
+  }
+
+  public void setType(NotificationType type) {
+    this.type = type;
+  }
+
+  public Long getMembershipId() {
+    return membershipId;
+  }
+
+  public void setMembershipId(Long membershipId) {
+    this.membershipId = membershipId;
+  }
+
   // CPD-ON
 }

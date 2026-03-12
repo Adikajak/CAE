@@ -24,16 +24,6 @@ import { UserContextType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import './index.css';
 
-const specialties = [
-  'Archer',
-  'Assassin',
-  'Mage',
-  'Guerrier',
-  'Clerc',
-  'Paladin',
-  'Rodeur',
-];
-
 interface AvatarOption {
   id: string;
   label: string;
@@ -77,6 +67,7 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [tag, setTag] = useState('');
   const [specialty, setSpecialty] = useState('');
+  const [specialties, setSpecialties] = useState<string[]>([]);
   const [avatarOptions, setAvatarOptions] = useState<AvatarOption[]>([]);
   const [selectedAvatarId, setSelectedAvatarId] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -131,8 +122,26 @@ const RegisterPage = () => {
       }
     };
 
+    const loadSpecialties = async () => {
+      try {
+        const response = await fetch('/api/specialities');
+        if (!response.ok) {
+          throw new Error(
+            `fetch error : ${response.status} : ${response.statusText}`,
+          );
+        }
+
+        const specialtiesList: string[] = await response.json();
+        setSpecialties(specialtiesList);
+      } catch (err) {
+        console.error('RegisterPage::loadSpecialties::error: ', err);
+        setErrorMessage('Impossible de charger les specialites.');
+      }
+    };
+
     hydrateFromCache();
     void loadProfilePictures();
+    void loadSpecialties();
   }, []);
 
   const handleSubmit = async (e: SyntheticEvent) => {

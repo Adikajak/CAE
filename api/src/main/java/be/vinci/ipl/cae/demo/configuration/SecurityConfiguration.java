@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -44,9 +45,12 @@ public class SecurityConfiguration {
             sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/auths/**").permitAll()
-          .requestMatchers("/profile-pictures/**").permitAll()
+            .requestMatchers("/profile-pictures/**").permitAll()
+            .requestMatchers("/specialities/**").permitAll()
             .requestMatchers("/users/**").authenticated()
-            .requestMatchers("/teams/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/teams/**").permitAll()
+            .requestMatchers("/teams/**").authenticated()
+            .requestMatchers("/notifications/**").authenticated()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

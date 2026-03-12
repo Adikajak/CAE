@@ -1,7 +1,7 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequest;
-import be.vinci.ipl.cae.demo.models.dtos.TeamResponse;
+import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequestDto;
+import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -43,8 +43,30 @@ public class TeamController {
    * @return list of all teams
    */
   @GetMapping({"", "/"})
-  public List<TeamResponse> getAllTeams() {
+  public List<TeamResponseDto> getAllTeams() {
     return teamService.getAllTeams().stream()
+        .map(team -> new TeamResponseDto(
+            team.getId(),
+            team.getName(),
+            team.getManager() != null
+              ? new UserProfile(
+                  team.getManager().getId(),
+                  team.getManager().getEmail(),
+                  team.getManager().getTag(),
+                  team.getManager().getSpeciality().getName(),
+                  team.getManager().getProfilePicture().getUrl(),
+                  team.getManager().getDate()
+              ) : null,
+            team.getSecondManager() != null
+                ? new UserProfile(
+                team.getSecondManager().getId(),
+                team.getSecondManager().getEmail(),
+                team.getSecondManager().getTag(),
+                team.getSecondManager().getSpeciality().getName(),
+                team.getSecondManager().getProfilePicture().getUrl(),
+                team.getSecondManager().getDate()
+            ) : null
+        )).toList();
         .map(this::toResponse)
         .toList();
   }
@@ -72,9 +94,9 @@ public class TeamController {
    */
   @PostMapping({"", "/"})
   @ResponseStatus(HttpStatus.CREATED)
-  public TeamResponse createTeam(
+  public TeamResponseDto createTeam(
       Authentication authentication,
-      @RequestBody TeamCreateRequest request
+      @RequestBody TeamCreateRequestDto request
   ) {
     User user = (User) authentication.getPrincipal();
     if (user == null) {
@@ -88,9 +110,32 @@ public class TeamController {
 
     try {
       Team createdTeam = teamService.createTeam(team, user);
+      return new TeamResponseDto(
+          createdTeam.getId(),
+          createdTeam.getName(),
+          createdTeam.getManager() != null
+              ? new UserProfile(
+              createdTeam.getManager().getId(),
+              createdTeam.getManager().getEmail(),
+              createdTeam.getManager().getTag(),
+              createdTeam.getManager().getSpeciality().getName(),
+              createdTeam.getManager().getProfilePicture().getUrl(),
+              createdTeam.getManager().getDate()
+          )
+              : null,
+          createdTeam.getSecondManager() != null
+              ? new UserProfile(
+              createdTeam.getSecondManager().getId(),
+              createdTeam.getSecondManager().getEmail(),
+              createdTeam.getSecondManager().getTag(),
+              createdTeam.getSecondManager().getSpeciality().getName(),
+              createdTeam.getSecondManager().getProfilePicture().getUrl(),
+              createdTeam.getSecondManager().getDate()
+          )
+              : null
+      );
       return toResponse(createdTeam);
     } catch (IllegalStateException e) {
-      if (e.getMessage().contains("existe déjà")) {
         throw new ResponseStatusException(
             HttpStatus.CONFLICT,
             e.getMessage(), e
@@ -101,6 +146,14 @@ public class TeamController {
           e.getMessage(), e
       );
     }
+    return new UserProfile(
+        user.getId(),
+        user.getEmail(),
+        user.getTag(),
+        user.getSpeciality().getName(),
+        user.getProfilePicture().getUrl(),
+        user.getDate()
+    );
   }
 
   /**

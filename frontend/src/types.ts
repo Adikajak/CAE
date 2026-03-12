@@ -12,6 +12,15 @@ interface User {
   password: string;
 }
 
+interface UserProfile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  profilePicture: string;
+  date: string;
+}
+
 interface UserRegister {
   email: string;
   password: string;
@@ -21,14 +30,19 @@ interface UserRegister {
 }
 
 interface AuthenticatedUser {
+  id: number;
   email: string;
   token: string;
   teamId?: number;
 }
 
+interface TeamUser {
+  id: number;
+}
 interface JwtPayload {
+  id: number;
   email: string;
-  admin: boolean;
+  isAdmin: boolean;
 }
 
 type MaybeAuthenticatedUser = AuthenticatedUser | undefined;
@@ -39,6 +53,8 @@ interface Notification {
   message: string;
   createdAt: Date;
   isRead: boolean;
+  type: 'WELCOME' | 'TEAM_INVITATION' | 'GENERAL';
+  membershipId?: number;
 }
 
 interface TeamUserProfile {
@@ -53,8 +69,8 @@ interface TeamUserProfile {
 interface Team {
   id: number;
   name: string;
-  manager?: TeamUserProfile | null;
-  secondManager?: TeamUserProfile | null;
+  manager?: TeamTeamUserProfile | null;
+  secondManager?: TeamTeamUserProfile | null;
 }
 
 interface TeamMembership {
@@ -65,8 +81,25 @@ interface TeamMembership {
   rejectionReason?: string;
 }
 
+interface Profile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  // team: string;
+  profilePicture: string;
+  date: string;
+}
+
+interface Unavailability {
+  id: number;
+  startDate: string;
+  endDate: string;
+}
+
 export type {
   User,
+  UserProfile,
   UserRegister,
   AuthenticatedUser,
   MaybeAuthenticatedUser,
@@ -75,5 +108,8 @@ export type {
   Notification,
   TeamUserProfile,
   Team,
+  TeamUser,
   TeamMembership,
+  Profile,
+  Unavailability,
 };
