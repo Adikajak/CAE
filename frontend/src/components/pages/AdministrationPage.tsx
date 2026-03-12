@@ -136,52 +136,64 @@ const AdministrationPage = () => {
           Nommer un nouvel administrateur
         </Button>
       </Box>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>email</TableCell>
-            <TableCell>tag</TableCell>
-            <TableCell>spécialité</TableCell>
-            <TableCell>date</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {administrationList?.map((admin) => (
-            <TableRow key={admin.id}>
-              <TableCell>{admin.email}</TableCell>
-              <TableCell>{admin.tag}</TableCell>
-              <TableCell>{admin.speciality}</TableCell>
-              <TableCell>{admin.date}</TableCell>
+      {administrationList && administrationList.length === 0 ? (
+        <Box sx={{ padding: 2, textAlign: 'center' }}>
+          <p>Aucun administrateur actuellement.</p>
+        </Box>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>email</TableCell>
+              <TableCell>tag</TableCell>
+              <TableCell>spécialité</TableCell>
+              <TableCell>date</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHead>
+          <TableBody>
+            {administrationList?.map((admin) => (
+              <TableRow key={admin.id}>
+                <TableCell>{admin.email}</TableCell>
+                <TableCell>{admin.tag}</TableCell>
+                <TableCell>{admin.speciality}</TableCell>
+                <TableCell>{admin.date}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
       <Dialog open={openPromoteModal} onClose={handleClosePromoteModal}>
         <DialogTitle>Nommer un administrateur</DialogTitle>
         <DialogContent>
           {promoteError && <Alert severity="error">{promoteError}</Alert>}
-          <TextField
-            select
-            label="Utilisateur"
-            value={selectedUserId}
-            onChange={handleUserSelectChange}
-            fullWidth
-            margin="normal"
-          >
-            {nonAdmins.map((user) => (
-              <MenuItem key={user.id} value={user.id}>
-                {user.email} ({user.tag})
-              </MenuItem>
-            ))}
-          </TextField>
+          {nonAdmins.length === 0 ? (
+            <Box sx={{ padding: 2, textAlign: 'center' }}>
+              <p>Aucun utilisateur non-administrateur disponible.</p>
+            </Box>
+          ) : (
+            <TextField
+              select
+              label="Utilisateur"
+              value={selectedUserId}
+              onChange={handleUserSelectChange}
+              fullWidth
+              margin="normal"
+            >
+              {nonAdmins.map((user) => (
+                <MenuItem key={user.id} value={user.id}>
+                  {user.email} ({user.tag})
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClosePromoteModal}>Annuler</Button>
           <Button
             variant="contained"
             onClick={handlePromote}
-            disabled={selectedUserId === ''}
+            disabled={selectedUserId === '' || nonAdmins.length === 0}
           >
             Confirmer
           </Button>
