@@ -50,6 +50,7 @@ public class SecurityConfiguration {
             .requestMatchers("/users/**").authenticated()
             .requestMatchers(HttpMethod.GET, "/teams/**").permitAll()
             .requestMatchers("/teams/**").authenticated()
+            .requestMatchers("/notifications/**").authenticated()
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

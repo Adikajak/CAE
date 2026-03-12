@@ -296,11 +296,30 @@ const TeamsListPage = () => {
                             <Button
                               variant="outlined"
                               size="small"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                alert(
-                                  `Demande d'adhésion à la team ${team.name}`,
-                                );
+                                try {
+                                  const response = await fetch(
+                                    `/api/teams/memberships/${team.id}/membership`,
+                                    {
+                                      method: 'POST',
+                                      headers: {
+                                        Authorization: authenticatedUser!.token,
+                                      },
+                                    },
+                                  );
+                                  if (!response.ok)
+                                    throw new Error(
+                                      `Erreur ${response.status}`,
+                                    );
+                                  alert(
+                                    `Demande d'adhésion à la team ${team.name}`,
+                                  );
+                                } catch (err: unknown) {
+                                  if (err instanceof Error) alert(err.message);
+                                  else
+                                    alert('Une erreur inconnue est survenue');
+                                }
                               }}
                             >
                               Rejoindre
