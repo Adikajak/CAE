@@ -90,6 +90,7 @@ public class TeamService {
   public List<Team> getAllTeams() {
     return (List<Team>) teamRepository.findAll();
   }
+
   /**
    * Counts the number of managers.
    *
