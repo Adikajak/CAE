@@ -20,7 +20,11 @@ public class TeamResponseDto {
    * @param manager the manager
    * @param secondManager the second manager
    */
-  public TeamResponseDto(Long id, String name, UserProfileDto manager, UserProfileDto secondManager, 
+  public TeamResponseDto(
+      Long id,
+      String name,
+      UserProfileDto manager,
+      UserProfileDto secondManager,
       int managersCount,
       int membersCount) {
     this.id = id;

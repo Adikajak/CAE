@@ -26,7 +26,10 @@ public class TeamService {
    *
    * @param teamRepository the team repository
    */
-  public TeamService(TeamRepository teamRepository, UserRepository userRepository, TeamMembershipRepository teamMembershipRepository) {
+  public TeamService(
+      TeamRepository teamRepository,
+      UserRepository userRepository,
+      TeamMembershipRepository teamMembershipRepository) {
     this.teamRepository = teamRepository;
     this.userRepository = userRepository;
     this.teamMembershipRepository = teamMembershipRepository;
