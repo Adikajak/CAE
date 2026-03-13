@@ -85,7 +85,7 @@ const TeamsListPage = () => {
         if (res.status === 403) {
           errorMsg =
             'Impossible de créer une nouvelle team (une ou plusieurs raisons) :\n' +
-            "• Vous êtes déjà le responsable d'une team\n" +
+            "• Vous faites déjà d'une team\n" +
             '• Le nom de la team que vous voulez créer existe déjà';
         }
 
@@ -106,10 +106,15 @@ const TeamsListPage = () => {
       setCreating(false);
     }
   };
-  console.log(teams);
+  console.log(authenticatedUser);
   const sortedTeams = teams.slice().sort((a, b) => {
-    const isAUserTeam = a.manager?.id === authenticatedUser?.id;
-    const isBUserTeam = b.manager?.id === authenticatedUser?.id;
+    console.log('auth user', authenticatedUser);
+    console.log('auth user teamid', authenticatedUser?.teamId);
+    console.log(a.id, '', b.id);
+    const isAUserTeam = a.id === authenticatedUser?.teamId;
+    console.log(isAUserTeam);
+    const isBUserTeam = b.id === authenticatedUser?.teamId;
+    console.log(isBUserTeam);
     if (isAUserTeam && !isBUserTeam) return -1;
     if (!isAUserTeam && isBUserTeam) return 1;
     return a.name.localeCompare(b.name);
@@ -139,7 +144,7 @@ const TeamsListPage = () => {
           Liste des Teams
         </Typography>
 
-        {authenticatedUser && !authenticatedUser.teamId && (
+        {authenticatedUser && (
           <Box
             sx={{
               mb: 3,
@@ -265,7 +270,7 @@ const TeamsListPage = () => {
                 </TableRow>
               ) : (
                 sortedTeams.map((team) => {
-                  const isUserTeam = team.manager?.id === authenticatedUser?.id;
+                  const isUserTeam = team.id === authenticatedUser?.teamId;
                   return (
                     <TableRow
                       key={team.id}
