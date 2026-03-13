@@ -32,6 +32,7 @@ interface UserRegister {
 interface AuthenticatedUser {
   id: number;
   email: string;
+  tag: string;
   token: string;
   teamId?: number;
 }
