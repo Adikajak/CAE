@@ -1,11 +1,14 @@
 package be.vinci.ipl.cae.demo;
 
+import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
 import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.Team;
+import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
@@ -100,7 +103,8 @@ public class DemoApplication {
       UserRepository userRepository,
       ProfilePictureRepository profilePictureRepository,
       SpecialityRepository specialityRepository,
-      TeamRepository teamRepository) {
+      TeamRepository teamRepository,
+      TeamMembershipRepository teamMembershipRepository) {
     return args -> {
       if (userRepository.findByEmail("lea@mail.com") != null) {
         return;
@@ -169,6 +173,18 @@ public class DemoApplication {
       teamOmega.setManager(tibo);
       teamOmega.setSecondManager(null);
       teamRepository.save(teamOmega);
+
+      TeamMembership tomMembership = new TeamMembership();
+      tomMembership.setMember(tom);
+      tomMembership.setTeam(teamAlpha);
+      tomMembership.setStatus(MembershipStatus.ACCEPTED);
+      teamMembershipRepository.save(tomMembership);
+
+      TeamMembership inesMembership = new TeamMembership();
+      inesMembership.setMember(ines);
+      inesMembership.setTeam(teamAlpha);
+      inesMembership.setStatus(MembershipStatus.ACCEPTED);
+      teamMembershipRepository.save(inesMembership);
     };
   }
 
