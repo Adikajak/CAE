@@ -29,8 +29,19 @@ const defaultUserContext: UserContextType = {
 const UserContext = createContext<UserContextType>(defaultUserContext);
 
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
-  const [authenticatedUser, setAuthenticatedUser] =
+  const [authenticatedUser, setAuthenticatedUserState] =
     useState<MaybeAuthenticatedUser>(() => getAuthenticatedUser());
+
+  const setAuthenticatedUser = (user: MaybeAuthenticatedUser) => {
+    setAuthenticatedUserState(user);
+
+    if (user) {
+      storeAuthenticatedUser(user);
+      return;
+    }
+
+    clearAuthenticatedUser();
+  };
 
   const registerUser = async (newUser: UserRegister) => {
     try {
@@ -52,7 +63,6 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       const createdUser: AuthenticatedUser = await response.json();
 
       setAuthenticatedUser(createdUser);
-      storeAuthenticatedUser(createdUser);
       console.log('createdUser: ', createdUser);
     } catch (err) {
       console.error('registerUser::error: ', err);
@@ -80,9 +90,8 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
       const authenticatedUser: AuthenticatedUser = await response.json();
       console.log('authenticatedUser: ', authenticatedUser);
 
-      setAuthenticatedUser(authenticatedUser);
       setSessionStorage(!rememberMe);
-      storeAuthenticatedUser(authenticatedUser);
+      setAuthenticatedUser(authenticatedUser);
     } catch (err) {
       console.error('loginUser::error: ', err);
       throw err;
@@ -90,7 +99,6 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clearUser = () => {
-    clearAuthenticatedUser();
     setAuthenticatedUser(undefined);
   };
 
@@ -110,6 +118,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
   const myContext: UserContextType = {
     authenticatedUser,
+    setAuthenticatedUser,
     registerUser,
     loginUser,
     clearUser,

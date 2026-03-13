@@ -1,6 +1,6 @@
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
-  setAuthenticatedUser?: (user: AuthenticatedUser) => void;
+  setAuthenticatedUser?: (user: MaybeAuthenticatedUser) => void;
   registerUser: (newUser: UserRegister) => Promise<void>;
   loginUser: (user: User, rememberMe: boolean) => Promise<void>;
   clearUser: () => void;
@@ -69,8 +69,8 @@ interface TeamUserProfile {
 interface Team {
   id: number;
   name: string;
-  manager?: TeamTeamUserProfile | null;
-  secondManager?: TeamTeamUserProfile | null;
+  manager?: TeamUserProfile | null;
+  secondManager?: TeamUserProfile | null;
 }
 
 interface TeamMembership {
