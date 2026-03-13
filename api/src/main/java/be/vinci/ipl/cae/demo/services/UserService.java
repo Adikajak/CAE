@@ -174,13 +174,6 @@ public class UserService {
     User newUser = createOne(email, password, false, tag, profilePictureEntity,
         speciality);
 
-    NotificationDto notificationDto = new NotificationDto();
-    notificationDto.setUserId(newUser.getId());
-    notificationDto.setObject("Bienvenue !");
-    notificationDto.setMessage("Votre compte a été créé avec succès.");
-    notificationDto.setType(NotificationType.WELCOME);
-    notificationService.createNotification(notificationDto);
-
     return createJwtToken(newUser.getId(), email, false, null);
   }
 
@@ -218,7 +211,18 @@ public class UserService {
     user.setAdmin(isAdmin);
     user.setDate(LocalDate.now());
 
-    return userRepository.save(user);
+    User savedUser = userRepository.save(user);
+    sendWelcomeNotification(savedUser);
+    return savedUser;
+  }
+
+  private void sendWelcomeNotification(User user) {
+    NotificationDto notificationDto = new NotificationDto();
+    notificationDto.setUserId(user.getId());
+    notificationDto.setObject("Bienvenue !");
+    notificationDto.setMessage("Votre compte a ete cree avec succes.");
+    notificationDto.setType(NotificationType.WELCOME);
+    notificationService.createNotification(notificationDto);
   }
 
   /**
