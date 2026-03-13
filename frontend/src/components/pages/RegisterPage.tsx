@@ -292,7 +292,7 @@ const RegisterPage = () => {
               id="specialty"
               name="specialty"
               select
-              label="Specialité"
+              label="Specialite"
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value)}
               required
