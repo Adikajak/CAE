@@ -237,7 +237,7 @@ const RegisterPage = () => {
               fullWidth
               id="tag"
               name="tag"
-              label="tag"
+              label="Tag"
               variant="outlined"
               value={tag}
               onChange={(e) => setTag(e.target.value)}
@@ -292,7 +292,7 @@ const RegisterPage = () => {
               id="specialty"
               name="specialty"
               select
-              label="Specialite"
+              label="Specialité"
               value={specialty}
               onChange={(e) => setSpecialty(e.target.value)}
               required
@@ -343,7 +343,7 @@ const RegisterPage = () => {
           </Button>
 
           <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
-            Vous avez deja un compte ? <Link to="/login">Connectez-vous</Link>
+            Vous avez déjà un compte ? <Link to="/login">Connectez-vous</Link>
           </Typography>
 
           {errorMessage && (

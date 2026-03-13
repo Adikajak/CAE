@@ -37,6 +37,8 @@ const TeamsListPage = () => {
 
   const [acceptManagerRole, setAcceptManagerRole] = useState(false);
 
+  const [joinError, setJoinError] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -270,6 +272,13 @@ const TeamsListPage = () => {
             </Alert>
           </Box>
         )}
+        {joinError && (
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+            <Alert severity="error" onClose={() => setJoinError(null)}>
+              {joinError}
+            </Alert>
+          </Box>
+        )}
 
         <TableContainer
           component={Paper}
@@ -351,10 +360,17 @@ const TeamsListPage = () => {
                                       },
                                     },
                                   );
-                                  if (!response.ok)
+                                  if (!response.ok) {
+                                    if (response.status === 403) {
+                                      throw new Error(
+                                        'Impossible de rejoindre la team :\n un membre possède déjà le même tag',
+                                      );
+                                    }
                                     throw new Error(
                                       `Erreur ${response.status}`,
                                     );
+                                  }
+
                                   const membershipResponse = await fetch(
                                     '/api/teams/memberships/me',
                                     {
@@ -371,13 +387,10 @@ const TeamsListPage = () => {
                                       await membershipResponse.json();
                                     setCurrentMembership(membershipData);
                                   }
-                                  alert(
-                                    `Demande d'adhésion à la team ${team.name}`,
-                                  );
                                 } catch (err: unknown) {
-                                  if (err instanceof Error) alert(err.message);
-                                  else
-                                    alert('Une erreur inconnue est survenue');
+                                  if (err instanceof Error)
+                                    setJoinError(err.message);
+                                  else setJoinError('Erreur inconnue');
                                 }
                               }}
                             >
