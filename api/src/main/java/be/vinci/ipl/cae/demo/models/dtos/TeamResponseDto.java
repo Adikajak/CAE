@@ -7,8 +7,8 @@ public class TeamResponseDto {
 
   private Long id;
   private String name;
-  private UserProfile manager;
-  private UserProfile secondManager;
+  private UserProfileDto manager;
+  private UserProfileDto secondManager;
   private int managersCount;
   private int membersCount;
 
