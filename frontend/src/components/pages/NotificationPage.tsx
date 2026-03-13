@@ -112,7 +112,15 @@ const NotificationPage = () => {
     return <p>Vous devez être connecté pour voir cette page.</p>;
 
   return (
-    <Box sx={{ margin: 2, padding: 3 }}>
+    <Box
+      sx={{
+        margin: 2,
+        padding: 3,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <h1>Notifications</h1>
 
       {error && <Alert severity="error">{error}</Alert>}
@@ -120,7 +128,7 @@ const NotificationPage = () => {
       {notifications.length === 0 ? (
         <p>Aucune notification</p>
       ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
           {notifications.map((n) => (
             <Box
               key={n.notificationId}

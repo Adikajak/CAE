@@ -89,7 +89,7 @@ const LoginPage = () => {
             fullWidth
             id="password"
             name="password"
-            label="Password"
+            label="Mot de passe"
             variant="outlined"
             value={password}
             type={isPasswordVisible ? 'text' : 'password'}

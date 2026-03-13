@@ -199,7 +199,7 @@ const NavBar = () => {
                     <LogoutIcon fontSize="small" color="error" />
                   </ListItemIcon>
                   <ListItemText sx={{ color: 'error.main' }}>
-                    Deconnexion
+                    Déconnexion
                   </ListItemText>
                 </MenuItem>
               </Menu>
