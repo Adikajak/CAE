@@ -28,6 +28,7 @@ const NavBar = () => {
     useContext<UserContextType>(UserContext);
   const navigate = useNavigate();
   const isAdmin = jwtData()?.isAdmin ?? false;
+  const displayName = authenticatedUser?.tag ?? '';
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
 
   const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -138,10 +139,10 @@ const NavBar = () => {
                   sx={{ fontWeight: 700, maxWidth: 140 }}
                   noWrap
                 >
-                  {authenticatedUser.email}
+                  {displayName}
                 </Typography>
                 <Avatar sx={{ width: 30, height: 30, bgcolor: '#7DBB6D' }}>
-                  {authenticatedUser.email.slice(0, 1).toUpperCase()}
+                  {displayName.slice(0, 1).toUpperCase()}
                 </Avatar>
               </Button>
 

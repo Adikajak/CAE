@@ -67,11 +67,18 @@ public class UserService {
    * @param email the email to included in the claim
    * @return the JWT token
    */
-  public AuthenticatedUser createJwtToken(Long id, String email, boolean isAdmin, Long teamId) {
+  public AuthenticatedUser createJwtToken(
+      Long id,
+      String email,
+      String tag,
+      boolean isAdmin,
+      Long teamId
+  ) {
     String token = JWT.create()
         .withIssuer("auth0")
         .withClaim("id", id)
         .withClaim("email", email)
+        .withClaim("tag", tag)
         .withClaim("isAdmin", isAdmin)
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
@@ -80,6 +87,7 @@ public class UserService {
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
     authenticatedUser.setId(id);
     authenticatedUser.setEmail(email);
+    authenticatedUser.setTag(tag);
     authenticatedUser.setAdmin(isAdmin);
     authenticatedUser.setTeamId(teamId);
     authenticatedUser.setToken(token);
@@ -139,6 +147,7 @@ public class UserService {
     return createJwtToken(
       user.getId(),
       email,
+      user.getTag(),
       user.isAdmin(),
       user.getTeam() == null ? null : user.getTeam().getId()
     );
@@ -181,7 +190,7 @@ public class UserService {
     notificationDto.setType(NotificationType.WELCOME);
     notificationService.createNotification(notificationDto);
 
-    return createJwtToken(newUser.getId(), email, false, null);
+    return createJwtToken(newUser.getId(), email, newUser.getTag(), false, null);
   }
 
   /**
