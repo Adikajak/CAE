@@ -120,6 +120,22 @@ public class UserController {
   }
 
   /**
+   * Updates the profile picture of the authenticated user.
+   *
+   * @param authentication the Spring Security authentication object.
+   * @param body the request body containing the profile picture URL.
+   */
+  @PatchMapping("/me/profile-picture")
+  public void updateProfilePicture(Authentication authentication,
+                                   @RequestBody Map<String, String> body) {
+    User user = (User) authentication.getPrincipal();
+    boolean success = userService.updateProfilePicture(user, body.get("profilePictureUrl"));
+    if (!success) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+  }
+
+  /**
    * Converts a User to a UserProfile.
    *
    * @param user the user entity

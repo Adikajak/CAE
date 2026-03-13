@@ -278,4 +278,21 @@ public class UserService {
     userRepository.save(user);
     return true;
   }
+
+  /**
+   * Updates the profile picture of a given user.
+   *
+   * @param user the authenticated user
+   * @param profilePictureUrl the URL of the new profile picture
+   * @return true if the picture was updated, false if the URL does not match any existing picture
+   */
+  public boolean updateProfilePicture(User user, String profilePictureUrl) {
+    ProfilePicture picture = profilePictureRepository.findByUrl(profilePictureUrl);
+    if (picture == null) {
+      return false;
+    }
+    user.setProfilePicture(picture);
+    userRepository.save(user);
+    return true;
+  }
 }
