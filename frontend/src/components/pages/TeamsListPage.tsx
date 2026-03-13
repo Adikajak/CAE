@@ -371,9 +371,6 @@ const TeamsListPage = () => {
                                       await membershipResponse.json();
                                     setCurrentMembership(membershipData);
                                   }
-                                  alert(
-                                    `Demande d'adhésion à la team ${team.name}`,
-                                  );
                                 } catch (err: unknown) {
                                   if (err instanceof Error) alert(err.message);
                                   else
