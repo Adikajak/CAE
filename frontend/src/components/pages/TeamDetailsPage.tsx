@@ -21,9 +21,9 @@ import {
   Typography,
 } from '@mui/material';
 // import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
-// import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
 import {
   Team,
@@ -32,7 +32,7 @@ import {
   UserContextType,
 } from '../../types';
 
-type ConfirmAction = 'exclude' | 'designate' | 'renounce' | null;
+type ConfirmAction = 'exclude' | 'designate' | 'leave' | 'renounce' | null;
 
 interface TeamRosterRow {
   membershipId?: number;
@@ -42,7 +42,9 @@ interface TeamRosterRow {
 
 const TeamDetailsPage = () => {
   const { teamId } = useParams();
-  const { authenticatedUser } = useContext<UserContextType>(UserContext);
+  const { authenticatedUser, setAuthenticatedUser, jwtData } =
+    useContext<UserContextType>(UserContext);
+  const navigate = useNavigate();
 
   const [team, setTeam] = useState<Team | null>(null);
   const [memberships, setMemberships] = useState<TeamMembership[]>([]);
@@ -154,6 +156,10 @@ const TeamDetailsPage = () => {
   }, [acceptedMemberships, team]);
 
   const isPrimaryManager = authenticatedUser?.id === team?.manager?.id;
+  const isSecondManager = authenticatedUser?.id === team?.secondManager?.id;
+  const isAdmin = Boolean(jwtData()?.isAdmin);
+  const canViewMemberEmail = isAdmin || isPrimaryManager || isSecondManager;
+
   const handleRefresh = () => {
     setRefreshKey((current) => current + 1);
   };
@@ -209,6 +215,31 @@ const TeamDetailsPage = () => {
         );
       }
 
+      if (confirmAction === 'leave') {
+        setActionLoading('leave');
+        const response = await fetch(`/api/teams/${team.id}/leave`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: authenticatedUser.token,
+          },
+        });
+
+        if (!response.ok) {
+          const message = await response.text();
+          throw new Error(message || `Erreur ${response.status}`);
+        }
+
+        if (authenticatedUser && setAuthenticatedUser) {
+          setAuthenticatedUser({ ...authenticatedUser, teamId: undefined });
+        }
+
+        setSuccess('Vous avez quitté la team.');
+        setConfirmAction(null);
+        setSelectedMember(null);
+        navigate('/teams');
+        return;
+      }
+
       // if (confirmAction === 'renounce') {
       //   setActionLoading('renounce');
       //   const response = await fetch(`/api/teams/${team.id}/manager/renounce`, {
@@ -241,7 +272,7 @@ const TeamDetailsPage = () => {
   };
 
   const openMemberAction = (
-    action: Exclude<ConfirmAction, 'renounce' | null>,
+    action: Exclude<ConfirmAction, null>,
     member: TeamRosterRow,
   ) => {
     setSelectedMember(member);
@@ -268,15 +299,13 @@ const TeamDetailsPage = () => {
           <Alert severity="warning">Team introuvable.</Alert>
         ) : (
           <>
-            {/*
             {isPrimaryManager && !team.secondManager && (
               <Alert severity="warning">
-                Vous êtes actuellement le seul responsable. Pour renoncer à
-                votre rôle, vous devez d'abord désigner un autre membre comme
-                responsable.
+                Vous êtes actuellement le seul responsable. Pour quitter la
+                team, vous devez d'abord désigner un autre membre comme
+                co-responsable.
               </Alert>
             )}
-            */}
 
             <Paper sx={{ borderRadius: 3, overflow: 'hidden' }}>
               <Box
@@ -315,12 +344,11 @@ const TeamDetailsPage = () => {
                         isPrimaryManager &&
                         entry.roleLabel === 'Membre' &&
                         !team.secondManager;
-                      // const canSeeRenounceAction =
-                      //   entry.member.email === authenticatedUser?.email &&
-                      //   (entry.roleLabel === 'Responsable' ||
-                      //     entry.roleLabel === 'Co-responsable');
-                      // const canUseRenounceAction =
-                      //   isPrimaryManager && Boolean(team.secondManager);
+                      const canSeeLeaveAction =
+                        entry.member.id === authenticatedUser?.id;
+                      const canUseLeaveAction =
+                        entry.roleLabel !== 'Responsable' ||
+                        Boolean(team.secondManager);
 
                       return (
                         <TableRow
@@ -334,9 +362,14 @@ const TeamDetailsPage = () => {
                             <Typography sx={{ fontWeight: 700 }}>
                               {entry.member.tag}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {entry.member.email}
-                            </Typography>
+                            {canViewMemberEmail && (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
+                                {entry.member.email}
+                              </Typography>
+                            )}
                           </TableCell>
                           <TableCell>{entry.member.speciality}</TableCell>
                           <TableCell>
@@ -381,18 +414,20 @@ const TeamDetailsPage = () => {
                                   Désigner responsable
                                 </Button>
                               )}
-                              {/* {canSeeRenounceAction && (
+                              {canSeeLeaveAction && (
                                 <Button
                                   color="warning"
                                   variant="contained"
                                   startIcon={<LogoutOutlinedIcon />}
-                                  disabled={!canUseRenounceAction}
-                                  onClick={() => setConfirmAction('renounce')}
+                                  disabled={!canUseLeaveAction}
+                                  onClick={() =>
+                                    openMemberAction('leave', entry)
+                                  }
                                 >
-                                  Renoncer à mon rôle
+                                  Quitter la team
                                 </Button>
-                              )} */}
-                              {!canDesignate && (
+                              )}
+                              {!canDesignate && !canSeeLeaveAction && (
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"
@@ -426,6 +461,7 @@ const TeamDetailsPage = () => {
         <DialogTitle>
           {/* {confirmAction === 'exclude' && 'Confirmer l’exclusion'} */}
           {confirmAction === 'designate' && 'Confirmer la désignation'}
+          {confirmAction === 'leave' && 'Confirmer le départ'}
           {/* {confirmAction === 'renounce' && 'Confirmer le renoncement'} */}
         </DialogTitle>
         <DialogContent>
@@ -440,6 +476,14 @@ const TeamDetailsPage = () => {
               {selectedMember.member.tag} deviendra co-responsable de la team.
               Cette action est uniquement possible tant qu'aucun autre
               co-responsable n'est déjà désigné.
+            </Typography>
+          )}
+          {confirmAction === 'leave' && selectedMember && (
+            <Typography>
+              {selectedMember.member.tag} va quitter la team.
+              {selectedMember.roleLabel === 'Responsable'
+                ? ' Le co-responsable deviendra automatiquement responsable principal.'
+                : ''}
             </Typography>
           )}
           {/* {confirmAction === 'renounce' && (
