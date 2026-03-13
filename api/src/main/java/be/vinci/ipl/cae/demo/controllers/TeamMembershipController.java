@@ -181,7 +181,7 @@ public class TeamMembershipController {
     Team team = membership.getTeam();
     int managersCount = (team.getManager() != null ? 1 : 0)
         + (team.getSecondManager() != null ? 1 : 0);
-    int membersCount = teamMembershipService.getAllMembers(team).size();
+    int membersCount = teamService.getAcceptedMembersCount(team);
 
     TeamResponseDto teamDto = new TeamResponseDto(
         team.getId(),
