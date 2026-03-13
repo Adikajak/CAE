@@ -1,7 +1,9 @@
 package be.vinci.ipl.cae.demo.services;
 
+import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
@@ -17,15 +19,20 @@ public class TeamService {
 
   private final TeamRepository teamRepository;
   private final UserRepository userRepository;
+  private final TeamMembershipRepository teamMembershipRepository;
 
   /**
    * Constructor for TeamService.
    *
    * @param teamRepository the team repository
    */
-  public TeamService(TeamRepository teamRepository, UserRepository userRepository) {
+  public TeamService(
+      TeamRepository teamRepository,
+      UserRepository userRepository,
+      TeamMembershipRepository teamMembershipRepository) {
     this.teamRepository = teamRepository;
     this.userRepository = userRepository;
+    this.teamMembershipRepository = teamMembershipRepository;
   }
 
   /**
@@ -82,5 +89,36 @@ public class TeamService {
    */
   public List<Team> getAllTeams() {
     return (List<Team>) teamRepository.findAll();
+  }
+
+  /**
+   * Counts the number of managers.
+   *
+   * @param team the team
+   * @return the number of managers
+   */
+  public int getManagersCount(Team team) {
+    int count = 0;
+
+    if (team.getManager() != null) {
+      count++;
+    }
+    if (team.getSecondManager() != null) {
+      count++;
+    }
+
+    return count;
+  }
+
+  /**
+   * Counts the number of accepted members.
+   *
+   * @param team the team
+   * @return the number of accepted members
+   */
+  public int getAcceptedMembersCount(Team team) {
+    return teamMembershipRepository
+        .findByTeamAndStatus(team, MembershipStatus.ACCEPTED)
+        .size();
   }
 }
