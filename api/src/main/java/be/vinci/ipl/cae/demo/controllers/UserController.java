@@ -1,8 +1,9 @@
 package be.vinci.ipl.cae.demo.controllers;
 
-import be.vinci.ipl.cae.demo.models.dtos.PasswordUpdate;
-import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
-import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
+import be.vinci.ipl.cae.demo.models.dtos.PasswordUpdateDto;
+import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.UserService;
@@ -43,7 +44,7 @@ public class UserController {
    * @return the user profile.
    */
   @GetMapping("/me")
-  public UserProfile getMyProfile(Authentication authentication) {
+  public UserProfileDto getMyProfile(Authentication authentication) {
     User user = (User) authentication.getPrincipal();
 
     if (user == null) {
@@ -61,7 +62,7 @@ public class UserController {
    */
   @PatchMapping("/me/password")
   public void updatePassword(Authentication authentication,
-                             @RequestBody PasswordUpdate passwordUpdate) {
+                             @RequestBody PasswordUpdateDto passwordUpdate) {
     User user = (User) authentication.getPrincipal();
     boolean success = userService.updatePassword(
         user.getEmail(),
@@ -96,7 +97,7 @@ public class UserController {
   @ResponseStatus(HttpStatus.CREATED)
   public Unavailability addUnavailability(
       Authentication authentication,
-      @RequestBody UnavailabilityRequest request
+      @RequestBody UnavailabilityRequestDto request
   ) {
     User user = (User) authentication.getPrincipal();
     return userService.addUnavailability(user, request);
@@ -119,20 +120,44 @@ public class UserController {
   }
 
   /**
+   * Updates the profile picture of the authenticated user.
+   *
+   * @param authentication the Spring Security authentication object.
+   * @param body the request body containing the profile picture URL.
+   */
+  @PatchMapping("/me/profile-picture")
+  public void updateProfilePicture(Authentication authentication,
+                                   @RequestBody Map<String, String> body) {
+    User user = (User) authentication.getPrincipal();
+    boolean success = userService.updateProfilePicture(user, body.get("profilePictureUrl"));
+    if (!success) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+  }
+
+  /**
    * Converts a User to a UserProfile.
    *
    * @param user the user entity
    * @return the user profile
    */
-  private UserProfile toUserProfile(User user) {
+  private UserProfileDto toUserProfile(User user) {
     //CPD-OFF
-    return new UserProfile(
+    Team team = user.getTeam();
+    boolean isManager = team != null && (
+        (team.getManager() != null && team.getManager().getId().equals(user.getId()))
+            || (team.getSecondManager() != null
+            && team.getSecondManager().getId().equals(user.getId()))
+    );
+    return new UserProfileDto(
         user.getId(),
         user.getEmail(),
         user.getTag(),
         user.getSpeciality() != null ? user.getSpeciality().getName() : null,
         user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
-        user.getDate()
+        user.getDate(),
+        team != null ? team.getName() : null,
+        isManager
     );
     //CPD-ON
   }

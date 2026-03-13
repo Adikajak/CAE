@@ -1,6 +1,6 @@
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
-  setAuthenticatedUser?: (user: AuthenticatedUser) => void;
+  setAuthenticatedUser?: (user: MaybeAuthenticatedUser) => void;
   registerUser: (newUser: UserRegister) => Promise<void>;
   loginUser: (user: User, rememberMe: boolean) => Promise<void>;
   clearUser: () => void;
@@ -32,6 +32,7 @@ interface UserRegister {
 interface AuthenticatedUser {
   id: number;
   email: string;
+  tag: string;
   token: string;
   teamId?: number;
 }
@@ -57,17 +58,28 @@ interface Notification {
   membershipId?: number;
 }
 
+interface TeamUserProfile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  profilePicture: string;
+  date: string;
+}
+
 interface Team {
   id: number;
   name: string;
-  manager?: TeamUser | null;
-  secondManager?: TeamUser | null;
+  manager?: TeamUserProfile | null;
+  secondManager?: TeamUserProfile | null;
+  managersCount: number;
+  membersCount: number;
 }
 
 interface TeamMembership {
   id: number;
-  member: User;
-  teamId: Team;
+  member: TeamUserProfile;
+  team: Team;
   status: 'PENDING' | 'ACCEPTED' | 'REFUSED';
   rejectionReason?: string;
 }
@@ -77,15 +89,23 @@ interface Profile {
   email: string;
   tag: string;
   speciality: string;
-  // team: string;
+  teamName?: string;
   profilePicture: string;
   date: string;
+  isManager?: boolean;
+  isAdmin: boolean;
 }
 
 interface Unavailability {
   id: number;
   startDate: string;
   endDate: string;
+}
+
+interface AvatarOption {
+  id: string;
+  label: string;
+  src: string;
 }
 
 export type {
@@ -97,9 +117,11 @@ export type {
   UserContextType,
   JwtPayload,
   Notification,
+  TeamUserProfile,
   Team,
   TeamUser,
   TeamMembership,
   Profile,
   Unavailability,
+  AvatarOption,
 };

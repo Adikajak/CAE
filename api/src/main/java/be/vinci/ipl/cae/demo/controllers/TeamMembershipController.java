@@ -1,5 +1,8 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.models.dtos.TeamMembershipResponseDto;
+import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -7,7 +10,9 @@ import be.vinci.ipl.cae.demo.services.TeamMembershipService;
 import be.vinci.ipl.cae.demo.services.TeamService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,30 +68,51 @@ public class TeamMembershipController {
   }
 
   /**
+   * Get the current membership of the authenticated user.
+   */
+  @GetMapping("/me")
+  public ResponseEntity<TeamMembershipResponseDto> getCurrentUserMembership(
+      Authentication authentication
+  ) {
+    User user = (User) authentication.getPrincipal();
+    return teamMembershipService.getMembership(user)
+        .map(membership -> ResponseEntity.ok(toResponse(membership)))
+        .orElseGet(() -> ResponseEntity.noContent().build());
+  }
+
+  /**
    * List all members of a team.
    */
   @GetMapping("/{teamId}/members")
-  public List<TeamMembership> getAllMembers(@PathVariable Long teamId) {
+  public List<TeamMembershipResponseDto> getAllMembers(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
-    return teamMembershipService.getAllMembers(team);
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
+        );
+    return teamMembershipService.getAllMembers(team).stream()
+        .map(this::toResponse)
+        .toList();
   }
 
   /**
    * List pending membership requests for a team.
    */
   @GetMapping("/{teamId}/requests")
-  public List<TeamMembership> getPendingRequests(@PathVariable Long teamId) {
+  public List<TeamMembershipResponseDto> getPendingRequests(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
-    return teamMembershipService.getPendingRequests(team);
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
+        );
+    return teamMembershipService.getPendingRequests(team).stream()
+        .map(this::toResponse)
+        .toList();
   }
 
   /**
    * Accept a membership request.
    */
   @PatchMapping("/{membershipId}/accept")
-  public TeamMembership acceptMembership(
+  public TeamMembershipResponseDto acceptMembership(
       Authentication authentication,
       @PathVariable Long membershipId
   ) {
@@ -95,14 +121,14 @@ public class TeamMembershipController {
         membershipId,
         "Seul le responsable ou le second responsable peut accepter une demande"
     );
-    return teamMembershipService.acceptMembership(membership);
+    return toResponse(teamMembershipService.acceptMembership(membership));
   }
 
   /**
    * Refuse a membership request.
    */
   @PatchMapping("/{membershipId}/refuse")
-  public TeamMembership refuseMembership(
+  public TeamMembershipResponseDto refuseMembership(
       Authentication authentication,
       @PathVariable Long membershipId,
       @RequestParam String reason
@@ -112,7 +138,21 @@ public class TeamMembershipController {
         membershipId,
         "Seul le responsable ou le second responsable peut refuser une demande"
     );
-    return teamMembershipService.refuseMembership(membership, reason);
+    return toResponse(teamMembershipService.refuseMembership(membership, reason));
+  }
+
+  /**
+   * Exclude an accepted member from a team.
+   */
+  @DeleteMapping("/{membershipId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void excludeMember(Authentication authentication, @PathVariable Long membershipId) {
+    User currentUser = (User) authentication.getPrincipal();
+    try {
+      teamMembershipService.excludeMember(currentUser, membershipId);
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
   }
 
   private TeamMembership getTeamMembershipIfAuthorized(
@@ -136,4 +176,56 @@ public class TeamMembershipController {
     }
     return membership;
   }
+
+  private TeamMembershipResponseDto toResponse(TeamMembership membership) {
+    Team team = membership.getTeam();
+    int managersCount = (team.getManager() != null ? 1 : 0)
+        + (team.getSecondManager() != null ? 1 : 0);
+    int membersCount = teamMembershipService.getAllMembers(team).size();
+
+    TeamResponseDto teamDto = new TeamResponseDto(
+        team.getId(),
+        team.getName(),
+        toUserProfile(team.getManager()),
+        toUserProfile(team.getSecondManager()),
+        managersCount,
+        membersCount
+    );
+
+    return new TeamMembershipResponseDto(
+        membership.getId(),
+        toUserProfile(membership.getMember()),
+        teamDto,
+        membership.getStatus(),
+        membership.getRejectionReason()
+    );
+  }
+
+  //CPD-OFF
+  private UserProfileDto toUserProfile(User user) {
+    if (user == null) {
+      return null;
+    }
+
+    Team team = user.getTeam();
+    boolean isManager = team != null && (
+        (team.getManager() != null && team.getManager().getId().equals(user.getId()))
+            || (team.getSecondManager() != null
+            && team.getSecondManager().getId().equals(user.getId()))
+    );
+
+    return new UserProfileDto(
+        user.getId(),
+        user.getEmail(),
+        user.getTag(),
+        user.getSpeciality() != null ? user.getSpeciality().getName() : null,
+        user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
+        user.getDate(),
+        team != null ? team.getName() : null,
+        isManager
+    );
+  }
+  //CPD-ON
+
+
 }

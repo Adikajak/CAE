@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect, useCallback } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -21,14 +21,37 @@ import PersonIcon from '@mui/icons-material/Person';
 import logoCae from '../../assets/images/logo_cae.png';
 
 import { UserContext } from '../../contexts/UserContext';
-import { UserContextType } from '../../types';
+import { UserContextType, Notification } from '../../types';
 
 const NavBar = () => {
   const { authenticatedUser, clearUser, jwtData } =
     useContext<UserContextType>(UserContext);
   const navigate = useNavigate();
   const isAdmin = jwtData()?.isAdmin ?? false;
+  const displayName = authenticatedUser?.tag ?? '';
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [hasUnread, setHasUnread] = useState(false);
+
+  const fetchUnread = useCallback(async () => {
+    if (!authenticatedUser) return;
+    try {
+      const response = await fetch('/api/notifications/', {
+        headers: { Authorization: authenticatedUser.token },
+      });
+      if (!response.ok) return;
+      const data: Notification[] = await response.json();
+      setHasUnread(data.some((n) => !n.isRead));
+    } catch {
+      // silently fail (comment so it won't be empty)
+    }
+  }, [authenticatedUser]);
+
+  useEffect(() => {
+    if (!authenticatedUser) return;
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, [authenticatedUser, fetchUnread]);
 
   const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(event.currentTarget);
@@ -116,6 +139,7 @@ const NavBar = () => {
                   overlap="circular"
                   variant="dot"
                   anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  invisible={!hasUnread}
                 >
                   <NotificationsIcon />
                 </Badge>
@@ -138,10 +162,10 @@ const NavBar = () => {
                   sx={{ fontWeight: 700, maxWidth: 140 }}
                   noWrap
                 >
-                  {authenticatedUser.email}
+                  {displayName}
                 </Typography>
                 <Avatar sx={{ width: 30, height: 30, bgcolor: '#7DBB6D' }}>
-                  {authenticatedUser.email.slice(0, 1).toUpperCase()}
+                  {displayName.slice(0, 1).toUpperCase()}
                 </Avatar>
               </Button>
 

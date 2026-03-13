@@ -2,11 +2,14 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
+import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -22,6 +25,8 @@ public class TeamMembershipService {
   private final NotificationService notificationService;
   private final UserRepository userRepository;
   private final TeamMembershipRepository teamMembershipRepository;
+  private final TeamRepository teamRepository;
+  private final NotificationRepository notificationRepository;
 
   /**
    * Constructor for dependency injection.
@@ -32,11 +37,15 @@ public class TeamMembershipService {
   public TeamMembershipService(
       UserRepository userRepository,
       TeamMembershipRepository teamMembershipRepository,
-      NotificationService notificationService
+      TeamRepository teamRepository,
+      NotificationService notificationService,
+      NotificationRepository notificationRepository
   ) {
     this.userRepository = userRepository;
     this.teamMembershipRepository = teamMembershipRepository;
+    this.teamRepository = teamRepository;
     this.notificationService = notificationService;
+    this.notificationRepository = notificationRepository;
   }
 
   /**
@@ -106,15 +115,13 @@ public class TeamMembershipService {
   @Transactional
   public TeamMembership acceptMembership(TeamMembership membership) {
     membership.setStatus(MembershipStatus.ACCEPTED);
+    User member = membership.getMember();
+    member.setTeam(membership.getTeam());
+    userRepository.save(member);
     final TeamMembership save = teamMembershipRepository.save(membership);
-
-    NotificationDto dto = new NotificationDto();
-    dto.setUserId(membership.getMember().getId());
-    dto.setObject("Demande acceptée");
-    dto.setMessage("Votre demande pour rejoinder l'équipe "
+    markRelatedNotificationsAsRead(membership.getId());
+    sendNotificationToMember(membership.getMember().getId(),"Demande acceptée","Votre demande pour rejoinder l'équipe "
         + membership.getTeam().getName() + "a été acceptée!");
-    dto.setType(NotificationType.GENERAL);
-    notificationService.createNotification(dto);
 
     return save;
   }
@@ -131,6 +138,7 @@ public class TeamMembershipService {
     membership.setStatus(MembershipStatus.REFUSED);
     membership.setRejectionReason(reason);
     final TeamMembership save = teamMembershipRepository.save(membership);
+    markRelatedNotificationsAsRead(membership.getId());
 
     NotificationDto dto = new NotificationDto();
     dto.setUserId(membership.getMember().getId());
@@ -155,6 +163,16 @@ public class TeamMembershipService {
   }
 
   /**
+   * Find the current membership of a user.
+   *
+   * @param user the user
+   * @return optional membership
+   */
+  public Optional<TeamMembership> getMembership(User user) {
+    return teamMembershipRepository.findByMember(user);
+  }
+
+  /**
    * Find a membership by its ID.
    *
    * @param membershipId the membership ID
@@ -162,5 +180,72 @@ public class TeamMembershipService {
    */
   public Optional<TeamMembership> getMembershipById(Long membershipId) {
     return teamMembershipRepository.findById(membershipId);
+  }
+
+  /**
+   * Exclude a member from a team.
+   *
+   * @param currentUser the authenticated user
+   * @param membershipId the membership id to remove
+   */
+  @Transactional
+  public void excludeMember(User currentUser, Long membershipId) {
+    TeamMembership membership = teamMembershipRepository.findById(membershipId)
+        .orElseThrow(() -> new IllegalStateException("Membre introuvable"));
+
+    Team team = membership.getTeam();
+    if (!sameUser(team.getManager(), currentUser)) {
+      throw new IllegalStateException("Seul le responsable principal peut exclure un membre");
+    }
+
+    if (membership.getStatus() != MembershipStatus.ACCEPTED) {
+      throw new IllegalStateException("Seuls les membres actifs peuvent être exclus");
+    }
+
+    User member = membership.getMember();
+    if (sameUser(member, team.getManager())) {
+      throw new IllegalStateException("Le responsable principal ne peut pas être exclu");
+    }
+
+    if (sameUser(member, team.getSecondManager())) {
+      team.setSecondManager(null);
+      teamRepository.save(team);
+    }
+
+    member.setTeam(null);
+    userRepository.save(member);
+    teamMembershipRepository.delete(membership);
+  }
+
+  //CPD-OFF
+  private boolean sameUser(User firstUser, User secondUser) {
+    return firstUser != null
+        && secondUser != null
+        && firstUser.getId() != null
+        && firstUser.getId().equals(secondUser.getId());
+  }
+  //CPD-ON
+  private void markRelatedNotificationsAsRead(Long membershipId) {
+    List<Notification> notifications = notificationRepository.findByMembershipId(membershipId);
+    for (Notification notif : notifications) {
+      notif.setIsRead(true);
+      notificationRepository.save(notif);
+    }
+  }
+
+  /**
+   * Send a general notification to a member.
+   *
+   * @param userId  the user ID
+   * @param object  the notification subject
+   * @param message the notification message
+   */
+  private void sendNotificationToMember(Long userId, String object, String message) {
+    NotificationDto dto = new NotificationDto();
+    dto.setUserId(userId);
+    dto.setObject(object);
+    dto.setMessage(message);
+    dto.setType(NotificationType.GENERAL);
+    notificationService.createNotification(dto);
   }
 }

@@ -2,7 +2,7 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
+import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
 import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
@@ -67,11 +67,18 @@ public class UserService {
    * @param email the email to included in the claim
    * @return the JWT token
    */
-  public AuthenticatedUser createJwtToken(Long id, String email, boolean isAdmin) {
+  public AuthenticatedUser createJwtToken(
+      Long id,
+      String email,
+      String tag,
+      boolean isAdmin,
+      Long teamId
+  ) {
     String token = JWT.create()
         .withIssuer("auth0")
         .withClaim("id", id)
         .withClaim("email", email)
+        .withClaim("tag", tag)
         .withClaim("isAdmin", isAdmin)
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + lifetimeJwt))
@@ -80,7 +87,9 @@ public class UserService {
     AuthenticatedUser authenticatedUser = new AuthenticatedUser();
     authenticatedUser.setId(id);
     authenticatedUser.setEmail(email);
+    authenticatedUser.setTag(tag);
     authenticatedUser.setAdmin(isAdmin);
+    authenticatedUser.setTeamId(teamId);
     authenticatedUser.setToken(token);
 
     return authenticatedUser;
@@ -135,7 +144,13 @@ public class UserService {
       return null;
     }
 
-    return createJwtToken(user.getId(), email, user.isAdmin());
+    return createJwtToken(
+      user.getId(),
+      email,
+      user.getTag(),
+      user.isAdmin(),
+      user.getTeam() == null ? null : user.getTeam().getId()
+    );
   }
 
   /**
@@ -168,14 +183,7 @@ public class UserService {
     User newUser = createOne(email, password, false, tag, profilePictureEntity,
         speciality);
 
-    NotificationDto notificationDto = new NotificationDto();
-    notificationDto.setUserId(newUser.getId());
-    notificationDto.setObject("Bienvenue !");
-    notificationDto.setMessage("Votre compte a été créé avec succès.");
-    notificationDto.setType(NotificationType.WELCOME);
-    notificationService.createNotification(notificationDto);
-
-    return createJwtToken(newUser.getId(), email, false);
+    return createJwtToken(newUser.getId(), email, newUser.getTag(), false, null);
   }
 
   /**
@@ -212,7 +220,18 @@ public class UserService {
     user.setAdmin(isAdmin);
     user.setDate(LocalDate.now());
 
-    return userRepository.save(user);
+    User savedUser = userRepository.save(user);
+    sendWelcomeNotification(savedUser);
+    return savedUser;
+  }
+
+  private void sendWelcomeNotification(User user) {
+    NotificationDto notificationDto = new NotificationDto();
+    notificationDto.setUserId(user.getId());
+    notificationDto.setObject("Bienvenue !");
+    notificationDto.setMessage("Votre compte a été créé avec succès.");
+    notificationDto.setType(NotificationType.WELCOME);
+    notificationService.createNotification(notificationDto);
   }
 
   /**
@@ -254,7 +273,7 @@ public class UserService {
    * @param request the unavailability dates
    * @return the saved unavailability
    */
-  public Unavailability addUnavailability(User user, UnavailabilityRequest request) {
+  public Unavailability addUnavailability(User user, UnavailabilityRequestDto request) {
     Unavailability unavailability = new Unavailability();
     unavailability.setUser(user);
     unavailability.setStartDate(request.startDate());
@@ -275,6 +294,23 @@ public class UserService {
       return false;
     }
     user.setSpeciality(speciality);
+    userRepository.save(user);
+    return true;
+  }
+
+  /**
+   * Updates the profile picture of a given user.
+   *
+   * @param user the authenticated user
+   * @param profilePictureUrl the URL of the new profile picture
+   * @return true if the picture was updated, false if the URL does not match any existing picture
+   */
+  public boolean updateProfilePicture(User user, String profilePictureUrl) {
+    ProfilePicture picture = profilePictureRepository.findByUrl(profilePictureUrl);
+    if (picture == null) {
+      return false;
+    }
+    user.setProfilePicture(picture);
     userRepository.save(user);
     return true;
   }

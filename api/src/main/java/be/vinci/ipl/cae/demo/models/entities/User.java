@@ -13,7 +13,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 /**
@@ -34,7 +33,7 @@ public class User {
   private @Email @NotBlank String email;
 
   @Column(nullable = false)
-  private @NotBlank @Size(min = 8) String password;
+  private @NotBlank /*@Size(min = 8)*/ String password;
 
   //@ManyToOne(fetch = FetchType.LAZY, optional = false) Tiago check ?
   @ManyToOne(fetch = FetchType.EAGER, optional = false)
@@ -56,7 +55,7 @@ public class User {
   @Column(nullable = false)
   private LocalDate date;
   
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "team_id", nullable = true)
   @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
   private Team team;

@@ -11,3 +11,22 @@ Content-Type: application/json
 ### Appel à l'endpoint admin avec le token renvoyé par le login
 GET {{baseUrl}}/administrators
 Authorization: {{adminToken}}
+
+### Récupérer la liste des utilisateurs non-administrateurs
+GET {{baseUrl}}/administrators/non-admins
+Authorization: {{adminToken}}
+
+### Promouvoir un utilisateur en administrateur (remplacer {userId} par un ID réel)
+# Exemple: POST {{baseUrl}}/administrators/2
+POST {{baseUrl}}/administrators/2
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+### Rétrograder un administrateur (remplacer {userId} par un ID réel, ≠ du sien)
+# Exemple: DELETE {{baseUrl}}/administrators/2
+DELETE {{baseUrl}}/administrators/2
+Authorization: {{adminToken}}
+
+### Tentative de rétrogradation de soi-même (doit retourner 403 Forbidden)
+DELETE {{baseUrl}}/administrators/1
+Authorization: {{adminToken}}

@@ -5,7 +5,7 @@ import java.time.LocalDate;
 /**
  * UserProfile DTO.
  */
-public class UserProfile {
+public class UserProfileDto {
 
   private Long id;
   private String email;
@@ -13,6 +13,8 @@ public class UserProfile {
   private String speciality;
   private String profilePicture;
   private LocalDate date;
+  private String teamName;
+  private boolean isManager;
 
   /**
    * Constructor for UserProfile.
@@ -23,15 +25,19 @@ public class UserProfile {
    * @param speciality     the user speciality.
    * @param profilePicture the user profile picture.
    * @param date           the user date creation profil
+   * @param teamName       the user team
+   * @param isManager      the user manager
    */
-  public UserProfile(Long id, String email, String tag, String speciality,
-      String profilePicture, LocalDate date) {
+  public UserProfileDto(Long id, String email, String tag, String speciality,
+                        String profilePicture, LocalDate date, String teamName, boolean isManager) {
     this.id = id;
     this.email = email;
     this.tag = tag;
     this.speciality = speciality;
     this.profilePicture = profilePicture;
     this.date = date;
+    this.teamName = teamName;
+    this.isManager = isManager;
   }
 
   public Long getId() {
@@ -56,5 +62,13 @@ public class UserProfile {
 
   public LocalDate getDate() {
     return date;
+  }
+
+  public String getTeamName() {
+    return teamName;
+  }
+
+  public boolean getIsManager() {
+    return isManager;
   }
 }

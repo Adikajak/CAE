@@ -19,13 +19,15 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
-import { UserContextType, Team } from '../../types';
+import { TeamMembership, UserContextType, Team } from '../../types';
 
 const TeamsListPage = () => {
   const { authenticatedUser, setAuthenticatedUser } =
     useContext<UserContextType>(UserContext);
 
   const [teams, setTeams] = useState<Team[]>([]);
+  const [currentMembership, setCurrentMembership] =
+    useState<TeamMembership | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +42,10 @@ const TeamsListPage = () => {
   useEffect(() => {
     const fetchTeams = async () => {
       setLoading(true);
+      setError(null);
+      if (!authenticatedUser?.token) {
+        setCurrentMembership(null);
+      }
       try {
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
@@ -48,8 +54,27 @@ const TeamsListPage = () => {
           headers['Authorization'] = authenticatedUser.token;
         }
 
-        const res = await fetch('/api/teams', { headers });
+        const membershipRequest = authenticatedUser?.token
+          ? fetch('/api/teams/memberships/me', { headers })
+          : Promise.resolve(null);
+
+        const [res, membershipResponse] = await Promise.all([
+          fetch('/api/teams', { headers }),
+          membershipRequest,
+        ]);
+
         if (!res.ok) throw new Error(`Erreur ${res.status}`);
+
+        if (membershipResponse?.status === 204) {
+          setCurrentMembership(null);
+        } else if (membershipResponse && membershipResponse.ok) {
+          const membershipData: TeamMembership =
+            await membershipResponse.json();
+          setCurrentMembership(membershipData);
+        } else if (membershipResponse && !membershipResponse.ok) {
+          throw new Error(`Erreur ${membershipResponse.status}`);
+        }
+
         const teamsData: Team[] = await res.json();
         setTeams(teamsData);
       } catch (err: unknown) {
@@ -85,7 +110,7 @@ const TeamsListPage = () => {
         if (res.status === 403) {
           errorMsg =
             'Impossible de créer une nouvelle team (une ou plusieurs raisons) :\n' +
-            "• Vous êtes déjà le responsable d'une team\n" +
+            "• Vous faites déjà d'une team\n" +
             '• Le nom de la team que vous voulez créer existe déjà';
         }
 
@@ -96,6 +121,7 @@ const TeamsListPage = () => {
       if (setAuthenticatedUser) {
         setAuthenticatedUser({ ...authenticatedUser, teamId: createdTeam.id });
       }
+      setCurrentMembership(null);
       setTeams((prev) => [...prev, createdTeam]);
       setNewTeamName('');
       setAcceptManagerRole(false);
@@ -107,18 +133,24 @@ const TeamsListPage = () => {
     }
   };
 
-  const getTeamMemberCount = (team: Team) => {
-    let count = 0;
-    if (team.manager) {
-      count += 1;
-      if (team.secondManager) count += 1;
-    }
-    return count;
-  };
+  // const getTeamMemberCount = (team: Team) => {
+  //   let count = 0;
+  //   if (team.manager) {
+  //     count += 1;
+  //     if (team.secondManager) count += 1;
+  //   }
+  //   return count;
+  // };
+
+  const currentTeamId =
+    authenticatedUser?.teamId ??
+    (currentMembership?.status === 'ACCEPTED'
+      ? currentMembership.team.id
+      : undefined);
 
   const sortedTeams = teams.slice().sort((a, b) => {
-    const isAUserTeam = a.manager?.id === authenticatedUser?.id;
-    const isBUserTeam = b.manager?.id === authenticatedUser?.id;
+    const isAUserTeam = a.id === currentTeamId;
+    const isBUserTeam = b.id === currentTeamId;
     if (isAUserTeam && !isBUserTeam) return -1;
     if (!isAUserTeam && isBUserTeam) return 1;
     return a.name.localeCompare(b.name);
@@ -148,7 +180,7 @@ const TeamsListPage = () => {
           Liste des Teams
         </Typography>
 
-        {authenticatedUser && !authenticatedUser.teamId && (
+        {authenticatedUser && (
           <Box
             sx={{
               mb: 3,
@@ -274,7 +306,15 @@ const TeamsListPage = () => {
                 </TableRow>
               ) : (
                 sortedTeams.map((team) => {
-                  const isUserTeam = team.manager?.id === authenticatedUser?.id;
+                  const isUserTeam = team.id === currentTeamId;
+                  const isPendingForTeam =
+                    currentMembership?.status === 'PENDING' &&
+                    currentMembership.team.id === team.id;
+                  const hasBlockedMembership =
+                    Boolean(authenticatedUser?.teamId) ||
+                    currentMembership?.status === 'PENDING' ||
+                    currentMembership?.status === 'ACCEPTED';
+
                   return (
                     <TableRow
                       key={team.id}
@@ -286,16 +326,19 @@ const TeamsListPage = () => {
                     >
                       <TableCell align="center">{team.name}</TableCell>
                       <TableCell align="center">
-                        {getTeamMemberCount(team)}
+                        {team.managersCount + team.membersCount}
                       </TableCell>
                       {authenticatedUser && (
                         <TableCell align="center">
                           {isUserTeam ? (
                             'Ma team'
+                          ) : isPendingForTeam ? (
+                            'Demande en attente'
                           ) : (
                             <Button
                               variant="outlined"
                               size="small"
+                              disabled={hasBlockedMembership}
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 try {
@@ -312,6 +355,22 @@ const TeamsListPage = () => {
                                     throw new Error(
                                       `Erreur ${response.status}`,
                                     );
+                                  const membershipResponse = await fetch(
+                                    '/api/teams/memberships/me',
+                                    {
+                                      headers: {
+                                        Authorization: authenticatedUser!.token,
+                                      },
+                                    },
+                                  );
+
+                                  if (membershipResponse.status === 204) {
+                                    setCurrentMembership(null);
+                                  } else if (membershipResponse.ok) {
+                                    const membershipData: TeamMembership =
+                                      await membershipResponse.json();
+                                    setCurrentMembership(membershipData);
+                                  }
                                   alert(
                                     `Demande d'adhésion à la team ${team.name}`,
                                   );
@@ -322,7 +381,9 @@ const TeamsListPage = () => {
                                 }
                               }}
                             >
-                              Rejoindre
+                              {hasBlockedMembership
+                                ? 'Indisponible'
+                                : 'Rejoindre'}
                             </Button>
                           )}
                         </TableCell>
