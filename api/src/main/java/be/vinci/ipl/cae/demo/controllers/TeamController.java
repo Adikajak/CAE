@@ -136,6 +136,26 @@ public class TeamController {
     }
   }
 
+  /**
+   * Leave the current team.
+   *
+   * @param authentication authenticated user
+   * @param teamId the team id
+   */
+  @PatchMapping("/{teamId}/leave")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void leaveTeam(
+      Authentication authentication,
+      @PathVariable Long teamId
+  ) {
+    User currentUser = (User) authentication.getPrincipal();
+    try {
+      teamService.leaveTeam(currentUser, teamId);
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
+  }
+
   private TeamResponseDto toResponse(Team team) {
     int managersCount = teamService.getManagersCount(team);
     int membersCount = teamService.getAcceptedMembersCount(team);
