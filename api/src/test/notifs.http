@@ -1,35 +1,46 @@
-###
+@baseUrl = http://localhost:3000
+
+### Get all notifications for authenticated user
 GET {{baseUrl}}/notifications/
+Authorization: {{token}}
 
+###
 
-### POST notification for the test user
+### Get a single notification by ID
+GET {{baseUrl}}/notifications/1
+Authorization: {{token}}
 
+###
+
+### Mark a notification as read
+POST {{baseUrl}}/notifications/1/read
+Authorization: {{token}}
+
+###
+
+### Create a notification
 POST {{baseUrl}}/notifications/
+Authorization: {{token}}
 Content-Type: application/json
 
 {
-  "object": "New notification",
-  "message": "0.000000002% of Mazovian was build",
-  "userId": 1
-}
-###
-
-POST {{baseUrl}}/auths/register
-Content-Type: application/json
-
-{
-  "email": "admin@vinci.be",
-  "password": "$2y$10$EW75BdcbCfKEA3NbE7in4OiYYacfP3OY4Q2JsVzjxd3jNxxgAEZNu",
-  "tag": "admin",
-  "profile_picture": "https://robohash.org/admin?set=set2",
-  "speciality": "Assassin"
+  "userId": 1,
+  "object": "Test notification",
+  "message": "This is a test notification message",
+  "type": "GENERAL"
 }
 
 ###
-POST {{baseUrl}}/auths/login
+
+### Create a team invitation notification
+POST {{baseUrl}}/notifications/
+Authorization: {{token}}
 Content-Type: application/json
 
 {
-  "email": "admin@vinci.be",
-  "password": "$2y$10$EW75BdcbCfKEA3NbE7in4OiYYacfP3OY4Q2JsVzjxd3jNxxgAEZNu"
+  "userId": 1,
+  "object": "Invitation à rejoindre une équipe",
+  "message": "Vous avez été invité à rejoindre une équipe",
+  "type": "TEAM_INVITATION",
+  "membershipId": 1
 }
