@@ -117,14 +117,8 @@ public class TeamMembershipService {
     userRepository.save(member);
     final TeamMembership save = teamMembershipRepository.save(membership);
     markRelatedNotificationsAsRead(membership.getId());
-
-    NotificationDto dto = new NotificationDto();
-    dto.setUserId(membership.getMember().getId());
-    dto.setObject("Demande acceptée");
-    dto.setMessage("Votre demande pour rejoinder l'équipe "
+    sendNotificationToMember(membership.getMember().getId(),"Demande acceptée","Votre demande pour rejoinder l'équipe "
         + membership.getTeam().getName() + "a été acceptée!");
-    dto.setType(NotificationType.GENERAL);
-    notificationService.createNotification(dto);
 
     return save;
   }
@@ -181,5 +175,21 @@ public class TeamMembershipService {
       notif.setIsRead(true);
       notificationRepository.save(notif);
     }
+  }
+
+  /**
+   * Send a general notification to a member.
+   *
+   * @param userId  the user ID
+   * @param object  the notification subject
+   * @param message the notification message
+   */
+  private void sendNotificationToMember(Long userId, String object, String message) {
+    NotificationDto dto = new NotificationDto();
+    dto.setUserId(userId);
+    dto.setObject(object);
+    dto.setMessage(message);
+    dto.setType(NotificationType.GENERAL);
+    notificationService.createNotification(dto);
   }
 }
