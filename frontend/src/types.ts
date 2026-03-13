@@ -70,8 +70,8 @@ interface TeamUserProfile {
 interface Team {
   id: number;
   name: string;
-  manager?: TeamUser | null;
-  secondManager?: TeamUser | null;
+  manager?: TeamUserProfile | null;
+  secondManager?: TeamUserProfile | null;
   managersCount: number;
   membersCount: number;
 }
