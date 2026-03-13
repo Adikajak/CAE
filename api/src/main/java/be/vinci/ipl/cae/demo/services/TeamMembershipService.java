@@ -7,9 +7,9 @@ import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
-import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -120,8 +120,11 @@ public class TeamMembershipService {
     userRepository.save(member);
     final TeamMembership save = teamMembershipRepository.save(membership);
     markRelatedNotificationsAsRead(membership.getId());
-    sendNotificationToMember(membership.getMember().getId(),"Demande acceptée","Votre demande pour rejoinder l'équipe "
-        + membership.getTeam().getName() + "a été acceptée!");
+    sendNotificationToMember(
+        membership.getMember().getId(),
+        "Demande acceptée",
+        "Votre demande pour rejoinder l'équipe " + membership.getTeam().getName()
+            + "a été acceptée!");
 
     return save;
   }
@@ -224,6 +227,7 @@ public class TeamMembershipService {
         && firstUser.getId() != null
         && firstUser.getId().equals(secondUser.getId());
   }
+
   //CPD-ON
   private void markRelatedNotificationsAsRead(Long membershipId) {
     List<Notification> notifications = notificationRepository.findByMembershipId(membershipId);

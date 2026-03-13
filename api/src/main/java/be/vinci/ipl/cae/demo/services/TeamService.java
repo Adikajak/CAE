@@ -90,6 +90,7 @@ public class TeamService {
   public List<Team> getAllTeams() {
     return (List<Team>) teamRepository.findAll();
   }
+
   /**
    * Counts the number of managers.
    *
@@ -193,6 +194,43 @@ public class TeamService {
     return teamRepository.save(team);
   }
   //CPD-ON
+
+  /**
+   * Leave a team.
+   *
+   * @param currentUser the authenticated user
+   * @param teamId the team id
+   */
+  @Transactional
+  public void leaveTeam(User currentUser, Long teamId) {
+    Team team = teamRepository.findById(teamId)
+        .orElseThrow(() -> new IllegalStateException("Équipe non trouvée"));
+
+    if (!sameTeam(currentUser.getTeam(), team)) {
+      throw new IllegalStateException("Vous n'appartenez pas à cette team");
+    }
+
+    if (sameUser(team.getManager(), currentUser)) {
+      if (team.getSecondManager() == null) {
+        throw new IllegalStateException(
+            "Impossible de quitter : désignez d'abord un autre responsable"
+        );
+      }
+
+      team.setManager(team.getSecondManager());
+      team.setSecondManager(null);
+      teamRepository.save(team);
+    } else if (sameUser(team.getSecondManager(), currentUser)) {
+      team.setSecondManager(null);
+      teamRepository.save(team);
+    }
+
+    teamMembershipRepository.findByTeamAndMember(team, currentUser)
+        .ifPresent(teamMembershipRepository::delete);
+
+    currentUser.setTeam(null);
+    userRepository.save(currentUser);
+  }
 
   //CPD-OFF
   private boolean sameUser(User firstUser, User secondUser) {

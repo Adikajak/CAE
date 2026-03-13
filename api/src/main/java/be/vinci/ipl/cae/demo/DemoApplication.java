@@ -8,9 +8,8 @@ import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import java.time.LocalDate;
-
 import be.vinci.ipl.cae.demo.services.UserService;
+import java.time.LocalDate;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -106,10 +105,10 @@ public class DemoApplication {
         return;
       }
 
-      Team teamAlpha = findOrCreateTeam(teamRepository, TEAM_ALPHA);
-      Team teamOmega = findOrCreateTeam(teamRepository, TEAM_OMEGA);
+      final Team teamAlpha = findOrCreateTeam(teamRepository, TEAM_ALPHA);
+      final Team teamOmega = findOrCreateTeam(teamRepository, TEAM_OMEGA);
 
-      User lea = userService.createOne(
+      final User lea = userService.createOne(
           "lea@mail.com",
           DEFAULT_PASSWORD,
           false,
@@ -165,6 +164,8 @@ public class DemoApplication {
       teamAlpha.setManager(lea);
       teamAlpha.setSecondManager(null);
       teamRepository.save(teamAlpha);
+      lea.setTeam(teamAlpha);
+      userRepository.save(lea);
 
       teamOmega.setManager(tibo);
       teamOmega.setSecondManager(null);
