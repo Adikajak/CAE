@@ -183,13 +183,6 @@ public class UserService {
     User newUser = createOne(email, password, false, tag, profilePictureEntity,
         speciality);
 
-    NotificationDto notificationDto = new NotificationDto();
-    notificationDto.setUserId(newUser.getId());
-    notificationDto.setObject("Bienvenue !");
-    notificationDto.setMessage("Votre compte a été créé avec succès.");
-    notificationDto.setType(NotificationType.WELCOME);
-    notificationService.createNotification(notificationDto);
-
     return createJwtToken(newUser.getId(), email, newUser.getTag(), false, null);
   }
 
