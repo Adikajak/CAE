@@ -92,6 +92,12 @@ interface Unavailability {
   endDate: string;
 }
 
+interface AvatarOption {
+  id: string;
+  label: string;
+  src: string;
+}
+
 export type {
   User,
   UserProfile,
@@ -106,4 +112,5 @@ export type {
   TeamMembership,
   Profile,
   Unavailability,
+  AvatarOption,
 };
