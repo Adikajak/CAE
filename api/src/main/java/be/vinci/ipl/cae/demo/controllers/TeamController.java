@@ -137,9 +137,8 @@ public class TeamController {
   }
 
   private TeamResponseDto toResponse(Team team) {
-    int managersCount = (team.getManager() != null ? 1 : 0)
-        + (team.getSecondManager() != null ? 1 : 0);
-    int membersCount = 0;
+    int managersCount = teamService.getManagersCount(team);
+    int membersCount = teamService.getAcceptedMembersCount(team);
 
     return new TeamResponseDto(
         team.getId(),
