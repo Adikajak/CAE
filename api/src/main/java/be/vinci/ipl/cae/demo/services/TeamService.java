@@ -129,6 +129,12 @@ public class TeamService {
     return teamRepository.save(team);
   }
 
+  public int getAcceptedMembersCount(Team team) {
+    return teamMembershipRepository
+        .findByTeamAndStatus(team, MembershipStatus.ACCEPTED)
+        .size();
+  }
+
   /**
    * Renounce the primary manager role.
    *
