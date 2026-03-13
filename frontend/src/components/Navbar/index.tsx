@@ -49,7 +49,7 @@ const NavBar = () => {
   useEffect(() => {
     if (!authenticatedUser) return;
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000); // every 30 seconds
+    const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
   }, [authenticatedUser, fetchUnread]);
 
