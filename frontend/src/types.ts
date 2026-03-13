@@ -69,8 +69,10 @@ interface TeamUserProfile {
 interface Team {
   id: number;
   name: string;
-  manager?: TeamUserProfile | null;
-  secondManager?: TeamUserProfile | null;
+  manager?: TeamUser | null;
+  secondManager?: TeamUser | null;
+  managersCount: number;
+  membersCount: number;
 }
 
 interface TeamMembership {
@@ -86,15 +88,23 @@ interface Profile {
   email: string;
   tag: string;
   speciality: string;
-  // team: string;
+  teamName?: string;
   profilePicture: string;
   date: string;
+  isManager?: boolean;
+  isAdmin: boolean;
 }
 
 interface Unavailability {
   id: number;
   startDate: string;
   endDate: string;
+}
+
+interface AvatarOption {
+  id: string;
+  label: string;
+  src: string;
 }
 
 export type {
@@ -112,4 +122,5 @@ export type {
   TeamMembership,
   Profile,
   Unavailability,
+  AvatarOption,
 };

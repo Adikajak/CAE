@@ -2,7 +2,7 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequestDto;
 import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
-import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamService;

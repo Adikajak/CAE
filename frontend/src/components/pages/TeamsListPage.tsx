@@ -109,7 +109,7 @@ const TeamsListPage = () => {
         if (res.status === 403) {
           errorMsg =
             'Impossible de créer une nouvelle team (une ou plusieurs raisons) :\n' +
-            "• Vous êtes déjà le responsable d'une team\n" +
+            "• Vous faites déjà d'une team\n" +
             '• Le nom de la team que vous voulez créer existe déjà';
         }
 
@@ -177,7 +177,7 @@ const TeamsListPage = () => {
           Liste des Teams
         </Typography>
 
-        {authenticatedUser && !authenticatedUser.teamId && (
+        {authenticatedUser && (
           <Box
             sx={{
               mb: 3,
@@ -323,7 +323,7 @@ const TeamsListPage = () => {
                     >
                       <TableCell align="center">{team.name}</TableCell>
                       <TableCell align="center">
-                        {getTeamMemberCount(team)}
+                        {team.managersCount + team.membersCount}
                       </TableCell>
                       {authenticatedUser && (
                         <TableCell align="center">

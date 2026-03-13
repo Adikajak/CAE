@@ -2,7 +2,7 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequest;
+import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
 import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
@@ -260,7 +260,7 @@ public class UserService {
    * @param request the unavailability dates
    * @return the saved unavailability
    */
-  public Unavailability addUnavailability(User user, UnavailabilityRequest request) {
+  public Unavailability addUnavailability(User user, UnavailabilityRequestDto request) {
     Unavailability unavailability = new Unavailability();
     unavailability.setUser(user);
     unavailability.setStartDate(request.startDate());
@@ -281,6 +281,23 @@ public class UserService {
       return false;
     }
     user.setSpeciality(speciality);
+    userRepository.save(user);
+    return true;
+  }
+
+  /**
+   * Updates the profile picture of a given user.
+   *
+   * @param user the authenticated user
+   * @param profilePictureUrl the URL of the new profile picture
+   * @return true if the picture was updated, false if the URL does not match any existing picture
+   */
+  public boolean updateProfilePicture(User user, String profilePictureUrl) {
+    ProfilePicture picture = profilePictureRepository.findByUrl(profilePictureUrl);
+    if (picture == null) {
+      return false;
+    }
+    user.setProfilePicture(picture);
     userRepository.save(user);
     return true;
   }
