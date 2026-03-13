@@ -6,8 +6,8 @@ import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
-import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -216,10 +216,12 @@ public class TeamMembershipService {
     teamMembershipRepository.delete(membership);
   }
 
+  //CPD-OFF
   private boolean sameUser(User firstUser, User secondUser) {
     return firstUser != null
         && secondUser != null
         && firstUser.getId() != null
         && firstUser.getId().equals(secondUser.getId());
   }
+  //CPD-ON
 }

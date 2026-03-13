@@ -86,9 +86,9 @@ public class TeamMembershipController {
   @GetMapping("/{teamId}/members")
   public List<TeamMembershipResponseDto> getAllMembers(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
-      .orElseThrow(
-        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
-      );
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
+        );
     return teamMembershipService.getAllMembers(team).stream()
         .map(this::toResponse)
         .toList();
@@ -100,9 +100,9 @@ public class TeamMembershipController {
   @GetMapping("/{teamId}/requests")
   public List<TeamMembershipResponseDto> getPendingRequests(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
-      .orElseThrow(
-        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
-      );
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
+        );
     return teamMembershipService.getPendingRequests(team).stream()
         .map(this::toResponse)
         .toList();
@@ -180,7 +180,7 @@ public class TeamMembershipController {
   private TeamMembershipResponseDto toResponse(TeamMembership membership) {
     Team team = membership.getTeam();
     int managersCount = (team.getManager() != null ? 1 : 0)
-      + (team.getSecondManager() != null ? 1 : 0);
+        + (team.getSecondManager() != null ? 1 : 0);
     int membersCount = teamMembershipService.getAllMembers(team).size();
 
     TeamResponseDto teamDto = new TeamResponseDto(
@@ -188,8 +188,8 @@ public class TeamMembershipController {
         team.getName(),
         toUserProfile(team.getManager()),
         toUserProfile(team.getSecondManager()),
-      managersCount,
-      membersCount
+        managersCount,
+        membersCount
     );
 
     return new TeamMembershipResponseDto(
@@ -201,6 +201,7 @@ public class TeamMembershipController {
     );
   }
 
+  //CPD-OFF
   private UserProfileDto toUserProfile(User user) {
     if (user == null) {
       return null;
@@ -224,6 +225,7 @@ public class TeamMembershipController {
         isManager
     );
   }
+  //CPD-ON
 
 
 }

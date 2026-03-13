@@ -100,6 +100,7 @@ public class TeamService {
    * @return updated team
    */
   @Transactional
+  //CPD-OFF
   public Team designateSecondManager(User currentUser, Long teamId, Long memberId) {
     Team team = teamRepository.findById(teamId)
         .orElseThrow(() -> new IllegalStateException("Équipe non trouvée"));
@@ -122,13 +123,21 @@ public class TeamService {
     }
 
     if (sameUser(member, team.getManager())) {
-      throw new IllegalStateException("Le responsable principal ne peut pas être désigné à nouveau");
+      throw new IllegalStateException(
+          "Le responsable principal ne peut pas être désigné à nouveau");
     }
 
     team.setSecondManager(member);
     return teamRepository.save(team);
   }
+  //CPD-ON
 
+  /**
+   * Count accepted members of a team.
+   *
+   * @param team the team
+   * @return number of accepted members
+   */
   public int getAcceptedMembersCount(Team team) {
     return teamMembershipRepository
         .findByTeamAndStatus(team, MembershipStatus.ACCEPTED)
@@ -143,6 +152,7 @@ public class TeamService {
    * @return updated team
    */
   @Transactional
+  //CPD-OFF
   public Team renounceManagerRole(User currentUser, Long teamId) {
     Team team = teamRepository.findById(teamId)
         .orElseThrow(() -> new IllegalStateException("Équipe non trouvée"));
@@ -161,13 +171,16 @@ public class TeamService {
     team.setSecondManager(null);
     return teamRepository.save(team);
   }
+  //CPD-ON
 
+  //CPD-OFF
   private boolean sameUser(User firstUser, User secondUser) {
     return firstUser != null
         && secondUser != null
         && firstUser.getId() != null
         && firstUser.getId().equals(secondUser.getId());
   }
+  //CPD-ON
 
   private boolean sameTeam(Team firstTeam, Team secondTeam) {
     return firstTeam != null

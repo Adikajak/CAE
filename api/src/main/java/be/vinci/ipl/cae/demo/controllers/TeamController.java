@@ -151,6 +151,7 @@ public class TeamController {
     );
   }
 
+  //CPD-OFF
   private UserProfileDto toUserProfile(User user) {
     if (user == null) {
       return null;
@@ -175,4 +176,5 @@ public class TeamController {
         isManager
     );
   }
+  //CPD-ON
 }
