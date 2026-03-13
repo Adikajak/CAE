@@ -38,7 +38,6 @@ public class TeamMembershipService {
       UserRepository userRepository,
       TeamMembershipRepository teamMembershipRepository,
       TeamRepository teamRepository,
-      NotificationService notificationService
       NotificationService notificationService,
       NotificationRepository notificationRepository
   ) {
