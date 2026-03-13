@@ -90,6 +90,24 @@ public class TeamService {
   public List<Team> getAllTeams() {
     return (List<Team>) teamRepository.findAll();
   }
+  /**
+   * Counts the number of managers.
+   *
+   * @param team the team
+   * @return the number of managers
+   */
+  public int getManagersCount(Team team) {
+    int count = 0;
+
+    if (team.getManager() != null) {
+      count++;
+    }
+    if (team.getSecondManager() != null) {
+      count++;
+    }
+
+    return count;
+  }
 
   /**
    * Designate a second manager for the team.
@@ -139,9 +157,12 @@ public class TeamService {
    * @return number of accepted members
    */
   public int getAcceptedMembersCount(Team team) {
-    return teamMembershipRepository
+    return (int) teamMembershipRepository
         .findByTeamAndStatus(team, MembershipStatus.ACCEPTED)
-        .size();
+        .stream()
+        .filter(m -> !sameUser(m.getMember(), team.getManager()))
+        .filter(m -> !sameUser(m.getMember(), team.getSecondManager()))
+        .count();
   }
 
   /**
