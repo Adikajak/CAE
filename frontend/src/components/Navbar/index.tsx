@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect, useCallback } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -21,7 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import logoCae from '../../assets/images/logo_cae.png';
 
 import { UserContext } from '../../contexts/UserContext';
-import { UserContextType } from '../../types';
+import { UserContextType, Notification } from '../../types';
 
 const NavBar = () => {
   const { authenticatedUser, clearUser, jwtData } =
@@ -30,6 +30,28 @@ const NavBar = () => {
   const isAdmin = jwtData()?.isAdmin ?? false;
   const displayName = authenticatedUser?.tag ?? '';
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [hasUnread, setHasUnread] = useState(false);
+
+  const fetchUnread = useCallback(async () => {
+    if (!authenticatedUser) return;
+    try {
+      const response = await fetch('/api/notifications/', {
+        headers: { Authorization: authenticatedUser.token },
+      });
+      if (!response.ok) return;
+      const data: Notification[] = await response.json();
+      setHasUnread(data.some((n) => !n.isRead));
+    } catch {
+      // silently fail
+    }
+  }, [authenticatedUser]);
+
+  useEffect(() => {
+    if (!authenticatedUser) return;
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000); // every 30 seconds
+    return () => clearInterval(interval);
+  }, [authenticatedUser, fetchUnread]);
 
   const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(event.currentTarget);
@@ -117,6 +139,7 @@ const NavBar = () => {
                   overlap="circular"
                   variant="dot"
                   anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  invisible={!hasUnread}
                 >
                   <NotificationsIcon />
                 </Badge>

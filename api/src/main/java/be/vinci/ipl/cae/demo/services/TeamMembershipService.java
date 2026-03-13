@@ -2,12 +2,14 @@ package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
+import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -24,6 +26,7 @@ public class TeamMembershipService {
   private final UserRepository userRepository;
   private final TeamMembershipRepository teamMembershipRepository;
   private final TeamRepository teamRepository;
+  private final NotificationRepository notificationRepository;
 
   /**
    * Constructor for dependency injection.
@@ -36,11 +39,14 @@ public class TeamMembershipService {
       TeamMembershipRepository teamMembershipRepository,
       TeamRepository teamRepository,
       NotificationService notificationService
+      NotificationService notificationService,
+      NotificationRepository notificationRepository
   ) {
     this.userRepository = userRepository;
     this.teamMembershipRepository = teamMembershipRepository;
     this.teamRepository = teamRepository;
     this.notificationService = notificationService;
+    this.notificationRepository = notificationRepository;
   }
 
   /**
@@ -114,6 +120,7 @@ public class TeamMembershipService {
     member.setTeam(membership.getTeam());
     userRepository.save(member);
     final TeamMembership save = teamMembershipRepository.save(membership);
+    markRelatedNotificationsAsRead(membership.getId());
 
     NotificationDto dto = new NotificationDto();
     dto.setUserId(membership.getMember().getId());
@@ -138,6 +145,7 @@ public class TeamMembershipService {
     membership.setStatus(MembershipStatus.REFUSED);
     membership.setRejectionReason(reason);
     final TeamMembership save = teamMembershipRepository.save(membership);
+    markRelatedNotificationsAsRead(membership.getId());
 
     NotificationDto dto = new NotificationDto();
     dto.setUserId(membership.getMember().getId());
@@ -224,4 +232,11 @@ public class TeamMembershipService {
         && firstUser.getId().equals(secondUser.getId());
   }
   //CPD-ON
+  private void markRelatedNotificationsAsRead(Long membershipId) {
+    List<Notification> notifications = notificationRepository.findByMembershipId(membershipId);
+    for (Notification notif : notifications) {
+      notif.setIsRead(true);
+      notificationRepository.save(notif);
+    }
+  }
 }

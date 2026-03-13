@@ -159,7 +159,7 @@ const NotificationPage = () => {
                   <Typography variant="caption" color="text.secondary">
                     {new Date(n.createdAt).toLocaleString()}
                   </Typography>
-                  {!n.isRead && (
+                  {!n.isRead && n.type !== 'TEAM_INVITATION' && (
                     <Box sx={{ marginTop: 1 }}>
                       <Button
                         size="small"
