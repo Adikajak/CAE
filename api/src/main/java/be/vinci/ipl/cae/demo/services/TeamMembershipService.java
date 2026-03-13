@@ -7,6 +7,7 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -22,6 +23,7 @@ public class TeamMembershipService {
   private final NotificationService notificationService;
   private final UserRepository userRepository;
   private final TeamMembershipRepository teamMembershipRepository;
+  private final TeamRepository teamRepository;
 
   /**
    * Constructor for dependency injection.
@@ -32,10 +34,12 @@ public class TeamMembershipService {
   public TeamMembershipService(
       UserRepository userRepository,
       TeamMembershipRepository teamMembershipRepository,
+      TeamRepository teamRepository,
       NotificationService notificationService
   ) {
     this.userRepository = userRepository;
     this.teamMembershipRepository = teamMembershipRepository;
+    this.teamRepository = teamRepository;
     this.notificationService = notificationService;
   }
 
@@ -106,7 +110,6 @@ public class TeamMembershipService {
   @Transactional
   public TeamMembership acceptMembership(TeamMembership membership) {
     membership.setStatus(MembershipStatus.ACCEPTED);
-
     User member = membership.getMember();
     member.setTeam(membership.getTeam());
     userRepository.save(member);
@@ -159,6 +162,16 @@ public class TeamMembershipService {
   }
 
   /**
+   * Find the current membership of a user.
+   *
+   * @param user the user
+   * @return optional membership
+   */
+  public Optional<TeamMembership> getMembership(User user) {
+    return teamMembershipRepository.findByMember(user);
+  }
+
+  /**
    * Find a membership by its ID.
    *
    * @param membershipId the membership ID
@@ -167,4 +180,48 @@ public class TeamMembershipService {
   public Optional<TeamMembership> getMembershipById(Long membershipId) {
     return teamMembershipRepository.findById(membershipId);
   }
+
+  /**
+   * Exclude a member from a team.
+   *
+   * @param currentUser the authenticated user
+   * @param membershipId the membership id to remove
+   */
+  @Transactional
+  public void excludeMember(User currentUser, Long membershipId) {
+    TeamMembership membership = teamMembershipRepository.findById(membershipId)
+        .orElseThrow(() -> new IllegalStateException("Membre introuvable"));
+
+    Team team = membership.getTeam();
+    if (!sameUser(team.getManager(), currentUser)) {
+      throw new IllegalStateException("Seul le responsable principal peut exclure un membre");
+    }
+
+    if (membership.getStatus() != MembershipStatus.ACCEPTED) {
+      throw new IllegalStateException("Seuls les membres actifs peuvent être exclus");
+    }
+
+    User member = membership.getMember();
+    if (sameUser(member, team.getManager())) {
+      throw new IllegalStateException("Le responsable principal ne peut pas être exclu");
+    }
+
+    if (sameUser(member, team.getSecondManager())) {
+      team.setSecondManager(null);
+      teamRepository.save(team);
+    }
+
+    member.setTeam(null);
+    userRepository.save(member);
+    teamMembershipRepository.delete(membership);
+  }
+
+  //CPD-OFF
+  private boolean sameUser(User firstUser, User secondUser) {
+    return firstUser != null
+        && secondUser != null
+        && firstUser.getId() != null
+        && firstUser.getId().equals(secondUser.getId());
+  }
+  //CPD-ON
 }

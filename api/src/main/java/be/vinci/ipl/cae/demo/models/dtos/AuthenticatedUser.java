@@ -8,6 +8,7 @@ public class AuthenticatedUser {
   private Long id;
   private String email;
   private boolean isAdmin;
+  private Long teamId;
   private String token;
 
   public Long getId() {
@@ -26,6 +27,10 @@ public class AuthenticatedUser {
     return isAdmin;
   }
 
+  public Long getTeamId() {
+    return teamId;
+  }
+
   public String getToken() {
     return token;
   }
@@ -36,6 +41,10 @@ public class AuthenticatedUser {
 
   public void setAdmin(boolean isAdmin) {
     this.isAdmin = isAdmin;
+  }
+
+  public void setTeamId(Long teamId) {
+    this.teamId = teamId;
   }
 
   public void setToken(String token) {

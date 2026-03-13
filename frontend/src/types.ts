@@ -1,6 +1,6 @@
 interface UserContextType {
   authenticatedUser: MaybeAuthenticatedUser;
-  setAuthenticatedUser?: (user: AuthenticatedUser) => void;
+  setAuthenticatedUser?: (user: MaybeAuthenticatedUser) => void;
   registerUser: (newUser: UserRegister) => Promise<void>;
   loginUser: (user: User, rememberMe: boolean) => Promise<void>;
   clearUser: () => void;
@@ -57,6 +57,15 @@ interface Notification {
   membershipId?: number;
 }
 
+interface TeamUserProfile {
+  id: number;
+  email: string;
+  tag: string;
+  speciality: string;
+  profilePicture: string;
+  date: string;
+}
+
 interface Team {
   id: number;
   name: string;
@@ -68,8 +77,8 @@ interface Team {
 
 interface TeamMembership {
   id: number;
-  member: User;
-  teamId: Team;
+  member: TeamUserProfile;
+  team: Team;
   status: 'PENDING' | 'ACCEPTED' | 'REFUSED';
   rejectionReason?: string;
 }
@@ -107,6 +116,7 @@ export type {
   UserContextType,
   JwtPayload,
   Notification,
+  TeamUserProfile,
   Team,
   TeamUser,
   TeamMembership,

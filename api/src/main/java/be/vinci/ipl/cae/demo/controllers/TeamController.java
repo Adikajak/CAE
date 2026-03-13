@@ -10,6 +10,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,35 +45,21 @@ public class TeamController {
   @GetMapping({"", "/"})
   public List<TeamResponseDto> getAllTeams() {
     return teamService.getAllTeams().stream()
-        .map(team -> new TeamResponseDto(
-            team.getId(),
-            team.getName(),
-            team.getManager() != null
-              ? new UserProfileDto(
-                  team.getManager().getId(),
-                  team.getManager().getEmail(),
-                  team.getManager().getTag(),
-                  team.getManager().getSpeciality().getName(),
-                  team.getManager().getProfilePicture().getUrl(),
-                  team.getManager().getDate(),
-                  team.getManager().getTeam().getName(),
-                  true
+        .map(this::toResponse)
+        .toList();
+  }
 
-              ) : null,
-            team.getSecondManager() != null
-                ? new UserProfileDto(
-                team.getSecondManager().getId(),
-                team.getSecondManager().getEmail(),
-                team.getSecondManager().getTag(),
-                team.getSecondManager().getSpeciality().getName(),
-                team.getSecondManager().getProfilePicture().getUrl(),
-                team.getSecondManager().getDate(),
-                team.getSecondManager().getTeam().getName(),
-                true
-            ) : null,
-            teamService.getManagersCount(team),
-            teamService.getAcceptedMembersCount(team)
-        )).toList();
+  /**
+   * Get a team by its id.
+   *
+   * @param teamId the team id
+   * @return the team
+   */
+  @GetMapping("/{teamId}")
+  public TeamResponseDto getTeamById(@PathVariable Long teamId) {
+    Team team = teamService.getTeamById(teamId)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
+    return toResponse(team);
   }
 
   /**
@@ -100,41 +88,93 @@ public class TeamController {
 
     try {
       Team createdTeam = teamService.createTeam(team, user);
-      return new TeamResponseDto(
-          createdTeam.getId(),
-          createdTeam.getName(),
-          createdTeam.getManager() != null
-              ? new UserProfileDto(
-              createdTeam.getManager().getId(),
-              createdTeam.getManager().getEmail(),
-              createdTeam.getManager().getTag(),
-              createdTeam.getManager().getSpeciality().getName(),
-              createdTeam.getManager().getProfilePicture().getUrl(),
-              createdTeam.getManager().getDate(),
-              createdTeam.getManager().getTeam().getName(),
-              true
-          )
-              : null,
-          createdTeam.getSecondManager() != null
-              ? new UserProfileDto(
-              createdTeam.getSecondManager().getId(),
-              createdTeam.getSecondManager().getEmail(),
-              createdTeam.getSecondManager().getTag(),
-              createdTeam.getSecondManager().getSpeciality().getName(),
-              createdTeam.getSecondManager().getProfilePicture().getUrl(),
-              createdTeam.getSecondManager().getDate(),
-              createdTeam.getSecondManager().getTeam().getName(),
-              true
-          )
-              : null,
-          teamService.getManagersCount(team),
-          teamService.getAcceptedMembersCount(team)
-      );
+      return toResponse(createdTeam);
     } catch (IllegalStateException e) {
-      throw new ResponseStatusException(
-        HttpStatus.BAD_REQUEST,
-        e.getMessage(), e
-      );
+      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
   }
+
+  /**
+   * Designate a second manager for a team.
+   *
+   * @param authentication authenticated user
+   * @param teamId the team id
+   * @param memberId the member id to promote
+   * @return updated team
+   */
+  @PatchMapping("/{teamId}/second-manager/{memberId}")
+  public TeamResponseDto designateSecondManager(
+      Authentication authentication,
+      @PathVariable Long teamId,
+      @PathVariable Long memberId
+  ) {
+    User currentUser = (User) authentication.getPrincipal();
+    try {
+      return toResponse(teamService.designateSecondManager(currentUser, teamId, memberId));
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
+  }
+
+  /**
+   * Renounce the primary manager role.
+   *
+   * @param authentication authenticated user
+   * @param teamId the team id
+   * @return updated team
+   */
+  @PatchMapping("/{teamId}/manager/renounce")
+  public TeamResponseDto renounceManagerRole(
+      Authentication authentication,
+      @PathVariable Long teamId
+  ) {
+    User currentUser = (User) authentication.getPrincipal();
+    try {
+      return toResponse(teamService.renounceManagerRole(currentUser, teamId));
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    }
+  }
+
+  private TeamResponseDto toResponse(Team team) {
+    int managersCount = (team.getManager() != null ? 1 : 0)
+        + (team.getSecondManager() != null ? 1 : 0);
+    int membersCount = 0;
+
+    return new TeamResponseDto(
+        team.getId(),
+        team.getName(),
+        toUserProfile(team.getManager()),
+        toUserProfile(team.getSecondManager()),
+        managersCount,
+        membersCount
+    );
+  }
+
+  //CPD-OFF
+  private UserProfileDto toUserProfile(User user) {
+    if (user == null) {
+      return null;
+    }
+
+    Team currentTeam = user.getTeam();
+    boolean isManager = currentTeam != null && (
+        (currentTeam.getManager() != null
+            && currentTeam.getManager().getId().equals(user.getId()))
+            || (currentTeam.getSecondManager() != null
+            && currentTeam.getSecondManager().getId().equals(user.getId()))
+    );
+
+    return new UserProfileDto(
+        user.getId(),
+        user.getEmail(),
+        user.getTag(),
+        user.getSpeciality() != null ? user.getSpeciality().getName() : null,
+        user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
+        user.getDate(),
+        currentTeam != null ? currentTeam.getName() : null,
+        isManager
+    );
+  }
+  //CPD-ON
 }
