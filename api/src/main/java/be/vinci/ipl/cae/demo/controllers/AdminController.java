@@ -102,8 +102,9 @@ public class AdminController {
     //CPD-OFF
     var team = user.getTeam();
     boolean isManager = team != null && (
-        (team.getManager() != null && team.getManager().getId().equals(user.getId())) ||
-            (team.getSecondManager() != null && team.getSecondManager().getId().equals(user.getId()))
+        (team.getManager() != null && team.getManager().getId().equals(user.getId()))
+            || (team.getSecondManager() != null
+            && team.getSecondManager().getId().equals(user.getId()))
     );
 
     return new UserProfileDto(

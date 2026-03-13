@@ -106,6 +106,10 @@ public class TeamMembershipService {
   @Transactional
   public TeamMembership acceptMembership(TeamMembership membership) {
     membership.setStatus(MembershipStatus.ACCEPTED);
+
+    User member = membership.getMember();
+    member.setTeam(membership.getTeam());
+    userRepository.save(member);
     final TeamMembership save = teamMembershipRepository.save(membership);
 
     NotificationDto dto = new NotificationDto();

@@ -68,7 +68,9 @@ public class TeamController {
                 team.getSecondManager().getDate(),
                 team.getSecondManager().getTeam().getName(),
                 true
-            ) : null
+            ) : null,
+            teamService.getManagersCount(team),
+            teamService.getAcceptedMembersCount(team)
         )).toList();
   }
 
@@ -124,7 +126,9 @@ public class TeamController {
               createdTeam.getSecondManager().getTeam().getName(),
               true
           )
-              : null
+              : null,
+          teamService.getManagersCount(team),
+          teamService.getAcceptedMembersCount(team)
       );
     } catch (IllegalStateException e) {
       throw new ResponseStatusException(

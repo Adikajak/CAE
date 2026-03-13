@@ -62,6 +62,8 @@ interface Team {
   name: string;
   manager?: TeamUser | null;
   secondManager?: TeamUser | null;
+  managersCount: number;
+  membersCount: number;
 }
 
 interface TeamMembership {

@@ -106,16 +106,7 @@ const TeamsListPage = () => {
       setCreating(false);
     }
   };
-
-  const getTeamMemberCount = (team: Team) => {
-    let count = 0;
-    if (team.manager) {
-      count += 1;
-      if (team.secondManager) count += 1;
-    }
-    return count;
-  };
-
+  console.log(teams);
   const sortedTeams = teams.slice().sort((a, b) => {
     const isAUserTeam = a.manager?.id === authenticatedUser?.id;
     const isBUserTeam = b.manager?.id === authenticatedUser?.id;
@@ -286,7 +277,7 @@ const TeamsListPage = () => {
                     >
                       <TableCell align="center">{team.name}</TableCell>
                       <TableCell align="center">
-                        {getTeamMemberCount(team)}
+                        {team.managersCount + team.membersCount}
                       </TableCell>
                       {authenticatedUser && (
                         <TableCell align="center">
