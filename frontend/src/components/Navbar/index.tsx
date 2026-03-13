@@ -42,14 +42,14 @@ const NavBar = () => {
       const data: Notification[] = await response.json();
       setHasUnread(data.some((n) => !n.isRead));
     } catch {
-      // silently fail
+      // silently fail (comment so it won't be empty)
     }
   }, [authenticatedUser]);
 
   useEffect(() => {
     if (!authenticatedUser) return;
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000); // every 30 seconds
+    const interval = setInterval(fetchUnread, 30000);
     return () => clearInterval(interval);
   }, [authenticatedUser, fetchUnread]);
 
