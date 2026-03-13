@@ -48,6 +48,7 @@ describe('AdministrationPage', () => {
     authenticatedUser: {
       id: 1,
       email: 'admin@admin.com',
+      tag: 'admin1',
       token: 'test-token',
     },
     registerUser: vi.fn(),

@@ -27,6 +27,7 @@ describe('ProfilePage', () => {
     authenticatedUser: {
       id: 1,
       email: 'user@user.com',
+      tag: 'user1',
       token: 'test-token',
     },
     registerUser: vi.fn(),
