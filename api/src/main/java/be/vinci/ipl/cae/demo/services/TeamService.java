@@ -4,7 +4,6 @@ import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
-import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
@@ -18,16 +17,14 @@ public class TeamService {
 
   private final TeamRepository teamRepository;
   private final UserRepository userRepository;
-  private final UserRepository userRepository;
 
   /**
    * Constructor for TeamService.
    *
    * @param teamRepository the team repository
    */
-  public TeamService(TeamRepository teamRepository, UserRepository userRepository, UserRepository userRepository) {
+  public TeamService(TeamRepository teamRepository, UserRepository userRepository) {
     this.teamRepository = teamRepository;
-    this.userRepository = userRepository;
     this.userRepository = userRepository;
   }
 
@@ -50,15 +47,11 @@ public class TeamService {
     }
 
     team.setManager(creator);
-    Team savedTeam = teamRepository.save(team);
-
-    creator.setTeam(team);
-    userRepository.save(creator);
-
-    return savedTeam;
     Team createdTeam = teamRepository.save(team);
+
     creator.setTeam(createdTeam);
     userRepository.save(creator);
+
     return createdTeam;
   }
 

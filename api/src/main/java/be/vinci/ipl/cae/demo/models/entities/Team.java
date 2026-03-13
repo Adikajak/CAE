@@ -1,5 +1,6 @@
 package be.vinci.ipl.cae.demo.models.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,10 +28,12 @@ public class Team {
 
   @OneToOne
   @JoinColumn(name = "manager_id", nullable = true)
+  @JsonIgnore
   private User manager;
 
   @OneToOne
   @JoinColumn(name = "second_manager_id", nullable = true)
+  @JsonIgnore
   private User secondManager;
 
   public Long getId() {

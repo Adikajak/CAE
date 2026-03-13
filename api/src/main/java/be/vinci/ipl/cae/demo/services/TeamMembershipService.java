@@ -162,6 +162,16 @@ public class TeamMembershipService {
   }
 
   /**
+   * Find the current membership of a user.
+   *
+   * @param user the user
+   * @return optional membership
+   */
+  public Optional<TeamMembership> getMembership(User user) {
+    return teamMembershipRepository.findByMember(user);
+  }
+
+  /**
    * Find a membership by its ID.
    *
    * @param membershipId the membership ID

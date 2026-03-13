@@ -45,28 +45,6 @@ public class TeamController {
   @GetMapping({"", "/"})
   public List<TeamResponseDto> getAllTeams() {
     return teamService.getAllTeams().stream()
-        .map(team -> new TeamResponseDto(
-            team.getId(),
-            team.getName(),
-            team.getManager() != null
-              ? new UserProfile(
-                  team.getManager().getId(),
-                  team.getManager().getEmail(),
-                  team.getManager().getTag(),
-                  team.getManager().getSpeciality().getName(),
-                  team.getManager().getProfilePicture().getUrl(),
-                  team.getManager().getDate()
-              ) : null,
-            team.getSecondManager() != null
-                ? new UserProfile(
-                team.getSecondManager().getId(),
-                team.getSecondManager().getEmail(),
-                team.getSecondManager().getTag(),
-                team.getSecondManager().getSpeciality().getName(),
-                team.getSecondManager().getProfilePicture().getUrl(),
-                team.getSecondManager().getDate()
-            ) : null
-        )).toList();
         .map(this::toResponse)
         .toList();
   }
@@ -78,7 +56,7 @@ public class TeamController {
    * @return the team
    */
   @GetMapping("/{teamId}")
-  public TeamResponse getTeamById(@PathVariable Long teamId) {
+  public TeamResponseDto getTeamById(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
     return toResponse(team);
@@ -110,50 +88,10 @@ public class TeamController {
 
     try {
       Team createdTeam = teamService.createTeam(team, user);
-      return new TeamResponseDto(
-          createdTeam.getId(),
-          createdTeam.getName(),
-          createdTeam.getManager() != null
-              ? new UserProfile(
-              createdTeam.getManager().getId(),
-              createdTeam.getManager().getEmail(),
-              createdTeam.getManager().getTag(),
-              createdTeam.getManager().getSpeciality().getName(),
-              createdTeam.getManager().getProfilePicture().getUrl(),
-              createdTeam.getManager().getDate()
-          )
-              : null,
-          createdTeam.getSecondManager() != null
-              ? new UserProfile(
-              createdTeam.getSecondManager().getId(),
-              createdTeam.getSecondManager().getEmail(),
-              createdTeam.getSecondManager().getTag(),
-              createdTeam.getSecondManager().getSpeciality().getName(),
-              createdTeam.getSecondManager().getProfilePicture().getUrl(),
-              createdTeam.getSecondManager().getDate()
-          )
-              : null
-      );
       return toResponse(createdTeam);
     } catch (IllegalStateException e) {
-        throw new ResponseStatusException(
-            HttpStatus.CONFLICT,
-            e.getMessage(), e
-        );
-      }
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          e.getMessage(), e
-      );
+      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
     }
-    return new UserProfile(
-        user.getId(),
-        user.getEmail(),
-        user.getTag(),
-        user.getSpeciality().getName(),
-        user.getProfilePicture().getUrl(),
-        user.getDate()
-    );
   }
 
   /**
@@ -165,7 +103,7 @@ public class TeamController {
    * @return updated team
    */
   @PatchMapping("/{teamId}/second-manager/{memberId}")
-  public TeamResponse designateSecondManager(
+  public TeamResponseDto designateSecondManager(
       Authentication authentication,
       @PathVariable Long teamId,
       @PathVariable Long memberId
@@ -186,7 +124,7 @@ public class TeamController {
    * @return updated team
    */
   @PatchMapping("/{teamId}/manager/renounce")
-  public TeamResponse renounceManagerRole(
+  public TeamResponseDto renounceManagerRole(
       Authentication authentication,
       @PathVariable Long teamId
   ) {
@@ -198,8 +136,8 @@ public class TeamController {
     }
   }
 
-  private TeamResponse toResponse(Team team) {
-    return new TeamResponse(
+  private TeamResponseDto toResponse(Team team) {
+    return new TeamResponseDto(
         team.getId(),
         team.getName(),
         toUserProfile(team.getManager()),

@@ -1,12 +1,15 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.models.dtos.TeamMembershipResponseDto;
+import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamMembershipService;
 import be.vinci.ipl.cae.demo.services.TeamService;
-import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 /**
  * Controller to handle Team Memberships.
@@ -64,30 +69,47 @@ public class TeamMembershipController {
   }
 
   /**
+   * Get the current membership of the authenticated user.
+   */
+  @GetMapping("/me")
+  public ResponseEntity<TeamMembershipResponseDto> getCurrentUserMembership(
+      Authentication authentication
+  ) {
+    User user = (User) authentication.getPrincipal();
+    return teamMembershipService.getMembership(user)
+        .map(membership -> ResponseEntity.ok(toResponse(membership)))
+        .orElseGet(() -> ResponseEntity.noContent().build());
+  }
+
+  /**
    * List all members of a team.
    */
   @GetMapping("/{teamId}/members")
-  public List<TeamMembership> getAllMembers(@PathVariable Long teamId) {
+  public List<TeamMembershipResponseDto> getAllMembers(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
-    return teamMembershipService.getAllMembers(team);
+    return teamMembershipService.getAllMembers(team).stream()
+        .map(this::toResponse)
+        .toList();
   }
 
   /**
    * List pending membership requests for a team.
    */
   @GetMapping("/{teamId}/requests")
-  public List<TeamMembership> getPendingRequests(@PathVariable Long teamId) {
+  public List<TeamMembershipResponseDto> getPendingRequests(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
-    return teamMembershipService.getPendingRequests(team);
+    return teamMembershipService.getPendingRequests(team).stream()
+        .map(this::toResponse)
+        .toList();
   }
 
   /**
    * Accept a membership request.
    */
   @PatchMapping("/{membershipId}/accept")
-  public TeamMembership acceptMembership(
+  public TeamMembershipResponseDto acceptMembership(
       Authentication authentication,
       @PathVariable Long membershipId
   ) {
@@ -96,14 +118,14 @@ public class TeamMembershipController {
         membershipId,
         "Seul le responsable ou le second responsable peut accepter une demande"
     );
-    return teamMembershipService.acceptMembership(membership);
+    return toResponse(teamMembershipService.acceptMembership(membership));
   }
 
   /**
    * Refuse a membership request.
    */
   @PatchMapping("/{membershipId}/refuse")
-  public TeamMembership refuseMembership(
+  public TeamMembershipResponseDto refuseMembership(
       Authentication authentication,
       @PathVariable Long membershipId,
       @RequestParam String reason
@@ -113,7 +135,7 @@ public class TeamMembershipController {
         membershipId,
         "Seul le responsable ou le second responsable peut refuser une demande"
     );
-    return teamMembershipService.refuseMembership(membership, reason);
+    return toResponse(teamMembershipService.refuseMembership(membership, reason));
   }
 
   /**
@@ -150,5 +172,36 @@ public class TeamMembershipController {
           message);
     }
     return membership;
+  }
+
+  private TeamMembershipResponseDto toResponse(TeamMembership membership) {
+    Team team = membership.getTeam();
+    TeamResponseDto teamDto = new TeamResponseDto(
+        team.getId(),
+        team.getName(),
+        toUserProfile(team.getManager()),
+        toUserProfile(team.getSecondManager())
+    );
+    return new TeamMembershipResponseDto(
+        membership.getId(),
+        toUserProfile(membership.getMember()),
+        teamDto,
+        membership.getStatus(),
+        membership.getRejectionReason()
+    );
+  }
+
+  private UserProfile toUserProfile(User user) {
+    if (user == null) {
+      return null;
+    }
+    return new UserProfile(
+        user.getId(),
+        user.getEmail(),
+        user.getTag(),
+        user.getSpeciality().getName(),
+        user.getProfilePicture().getUrl(),
+        user.getDate()
+    );
   }
 }
