@@ -229,7 +229,7 @@ public class UserService {
     NotificationDto notificationDto = new NotificationDto();
     notificationDto.setUserId(user.getId());
     notificationDto.setObject("Bienvenue !");
-    notificationDto.setMessage("Votre compte a ete cree avec succes.");
+    notificationDto.setMessage("Votre compte a été créé avec succès.");
     notificationDto.setType(NotificationType.WELCOME);
     notificationService.createNotification(notificationDto);
   }
