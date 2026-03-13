@@ -8,7 +8,7 @@ import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
 public class TeamMembershipResponseDto {
 
   private Long id;
-  private UserProfile member;
+  private UserProfileDto member;
   private TeamResponseDto team;
   private MembershipStatus status;
   private String rejectionReason;
@@ -24,7 +24,7 @@ public class TeamMembershipResponseDto {
    */
   public TeamMembershipResponseDto(
       Long id,
-      UserProfile member,
+      UserProfileDto member,
       TeamResponseDto team,
       MembershipStatus status,
       String rejectionReason
@@ -40,7 +40,7 @@ public class TeamMembershipResponseDto {
     return id;
   }
 
-  public UserProfile getMember() {
+  public UserProfileDto getMember() {
     return member;
   }
 

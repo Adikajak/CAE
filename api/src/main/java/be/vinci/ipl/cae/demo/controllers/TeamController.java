@@ -137,25 +137,42 @@ public class TeamController {
   }
 
   private TeamResponseDto toResponse(Team team) {
+    int managersCount = (team.getManager() != null ? 1 : 0)
+        + (team.getSecondManager() != null ? 1 : 0);
+    int membersCount = 0;
+
     return new TeamResponseDto(
         team.getId(),
         team.getName(),
         toUserProfile(team.getManager()),
-        toUserProfile(team.getSecondManager())
+        toUserProfile(team.getSecondManager()),
+        managersCount,
+        membersCount
     );
   }
 
-  private UserProfile toUserProfile(User user) {
+  private UserProfileDto toUserProfile(User user) {
     if (user == null) {
       return null;
     }
-    return new UserProfile(
+
+    Team currentTeam = user.getTeam();
+    boolean isManager = currentTeam != null && (
+        (currentTeam.getManager() != null
+            && currentTeam.getManager().getId().equals(user.getId()))
+            || (currentTeam.getSecondManager() != null
+            && currentTeam.getSecondManager().getId().equals(user.getId()))
+    );
+
+    return new UserProfileDto(
         user.getId(),
         user.getEmail(),
         user.getTag(),
-        user.getSpeciality().getName(),
-        user.getProfilePicture().getUrl(),
-        user.getDate()
+        user.getSpeciality() != null ? user.getSpeciality().getName() : null,
+        user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
+        user.getDate(),
+        currentTeam != null ? currentTeam.getName() : null,
+        isManager
     );
   }
 }

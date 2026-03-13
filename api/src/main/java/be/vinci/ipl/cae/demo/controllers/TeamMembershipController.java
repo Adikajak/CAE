@@ -2,12 +2,13 @@ package be.vinci.ipl.cae.demo.controllers;
 
 import be.vinci.ipl.cae.demo.models.dtos.TeamMembershipResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
-import be.vinci.ipl.cae.demo.models.dtos.UserProfile;
+import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamMembershipService;
 import be.vinci.ipl.cae.demo.services.TeamService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 /**
  * Controller to handle Team Memberships.
@@ -87,7 +86,9 @@ public class TeamMembershipController {
   @GetMapping("/{teamId}/members")
   public List<TeamMembershipResponseDto> getAllMembers(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
+      .orElseThrow(
+        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
+      );
     return teamMembershipService.getAllMembers(team).stream()
         .map(this::toResponse)
         .toList();
@@ -99,7 +100,9 @@ public class TeamMembershipController {
   @GetMapping("/{teamId}/requests")
   public List<TeamMembershipResponseDto> getPendingRequests(@PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
+      .orElseThrow(
+        () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
+      );
     return teamMembershipService.getPendingRequests(team).stream()
         .map(this::toResponse)
         .toList();
@@ -176,12 +179,19 @@ public class TeamMembershipController {
 
   private TeamMembershipResponseDto toResponse(TeamMembership membership) {
     Team team = membership.getTeam();
+    int managersCount = (team.getManager() != null ? 1 : 0)
+      + (team.getSecondManager() != null ? 1 : 0);
+    int membersCount = teamMembershipService.getAllMembers(team).size();
+
     TeamResponseDto teamDto = new TeamResponseDto(
         team.getId(),
         team.getName(),
         toUserProfile(team.getManager()),
-        toUserProfile(team.getSecondManager())
+        toUserProfile(team.getSecondManager()),
+      managersCount,
+      membersCount
     );
+
     return new TeamMembershipResponseDto(
         membership.getId(),
         toUserProfile(membership.getMember()),
@@ -191,17 +201,29 @@ public class TeamMembershipController {
     );
   }
 
-  private UserProfile toUserProfile(User user) {
+  private UserProfileDto toUserProfile(User user) {
     if (user == null) {
       return null;
     }
-    return new UserProfile(
+
+    Team team = user.getTeam();
+    boolean isManager = team != null && (
+        (team.getManager() != null && team.getManager().getId().equals(user.getId()))
+            || (team.getSecondManager() != null
+            && team.getSecondManager().getId().equals(user.getId()))
+    );
+
+    return new UserProfileDto(
         user.getId(),
         user.getEmail(),
         user.getTag(),
-        user.getSpeciality().getName(),
-        user.getProfilePicture().getUrl(),
-        user.getDate()
+        user.getSpeciality() != null ? user.getSpeciality().getName() : null,
+        user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
+        user.getDate(),
+        team != null ? team.getName() : null,
+        isManager
     );
   }
+
+
 }
