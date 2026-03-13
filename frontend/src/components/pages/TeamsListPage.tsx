@@ -68,7 +68,8 @@ const TeamsListPage = () => {
         if (membershipResponse?.status === 204) {
           setCurrentMembership(null);
         } else if (membershipResponse && membershipResponse.ok) {
-          const membershipData: TeamMembership = await membershipResponse.json();
+          const membershipData: TeamMembership =
+            await membershipResponse.json();
           setCurrentMembership(membershipData);
         } else if (membershipResponse && !membershipResponse.ok) {
           throw new Error(`Erreur ${membershipResponse.status}`);
@@ -132,18 +133,20 @@ const TeamsListPage = () => {
     }
   };
 
-  const getTeamMemberCount = (team: Team) => {
-    let count = 0;
-    if (team.manager) {
-      count += 1;
-      if (team.secondManager) count += 1;
-    }
-    return count;
-  };
+  // const getTeamMemberCount = (team: Team) => {
+  //   let count = 0;
+  //   if (team.manager) {
+  //     count += 1;
+  //     if (team.secondManager) count += 1;
+  //   }
+  //   return count;
+  // };
 
   const currentTeamId =
     authenticatedUser?.teamId ??
-    (currentMembership?.status === 'ACCEPTED' ? currentMembership.team.id : undefined);
+    (currentMembership?.status === 'ACCEPTED'
+      ? currentMembership.team.id
+      : undefined);
 
   const sortedTeams = teams.slice().sort((a, b) => {
     const isAUserTeam = a.id === currentTeamId;

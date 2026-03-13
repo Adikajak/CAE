@@ -116,6 +116,14 @@ const TeamDetailsPage = () => {
     [memberships],
   );
 
+  const memberProfilesById = useMemo(() => {
+    const profiles = new Map<number, TeamUserProfile>();
+    memberships.forEach((membership) => {
+      profiles.set(membership.member.id, membership.member);
+    });
+    return profiles;
+  }, [memberships]);
+
   const roster = useMemo(() => {
     if (!team) {
       return [] as TeamRosterRow[];
@@ -123,9 +131,25 @@ const TeamDetailsPage = () => {
 
     const rows = new Map<number, TeamRosterRow>();
 
+    const getMemberProfile = (userId: number): TeamUserProfile => {
+      const profile = memberProfilesById.get(userId);
+      if (profile) {
+        return profile;
+      }
+
+      return {
+        id: userId,
+        email: '',
+        tag: `Utilisateur ${userId}`,
+        speciality: '',
+        profilePicture: '',
+        date: '',
+      };
+    };
+
     if (team.manager) {
       rows.set(team.manager.id, {
-        member: team.manager,
+        member: getMemberProfile(team.manager.id),
         roleLabel: 'Responsable',
       });
     }
@@ -135,7 +159,7 @@ const TeamDetailsPage = () => {
         membershipId: acceptedMemberships.find(
           (membership) => membership.member.id === team.secondManager?.id,
         )?.id,
-        member: team.secondManager,
+        member: getMemberProfile(team.secondManager.id),
         roleLabel: 'Co-responsable',
       });
     }
@@ -151,9 +175,9 @@ const TeamDetailsPage = () => {
     });
 
     return Array.from(rows.values());
-  }, [acceptedMemberships, team]);
+  }, [acceptedMemberships, memberProfilesById, team]);
 
-  const isPrimaryManager = authenticatedUser?.email === team?.manager?.email;
+  const isPrimaryManager = authenticatedUser?.id === team?.manager?.id;
   const handleRefresh = () => {
     setRefreshKey((current) => current + 1);
   };
