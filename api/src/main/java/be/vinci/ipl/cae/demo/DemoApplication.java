@@ -9,12 +9,13 @@ import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.time.LocalDate;
+
+import be.vinci.ipl.cae.demo.services.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * Main class of the application.
@@ -95,66 +96,71 @@ public class DemoApplication {
   @Bean
   @Order(3)
   CommandLineRunner seedUsers(
+      UserService userService,
       UserRepository userRepository,
       ProfilePictureRepository profilePictureRepository,
       SpecialityRepository specialityRepository,
-      TeamRepository teamRepository,
-      BCryptPasswordEncoder passwordEncoder) {
+      TeamRepository teamRepository) {
     return args -> {
+      if (userRepository.findByEmail("lea@mail.com") != null) {
+        return;
+      }
+
       Team teamAlpha = findOrCreateTeam(teamRepository, TEAM_ALPHA);
       Team teamOmega = findOrCreateTeam(teamRepository, TEAM_OMEGA);
 
-      User lea = saveUser(
-          userRepository,
-          passwordEncoder,
+      User lea = userService.createOne(
           "lea@mail.com",
+          DEFAULT_PASSWORD,
+          false,
           "Lynx",
-          requireSpeciality(specialityRepository, "Tacticien"),
           requireProfilePicture(
               profilePictureRepository,
               "https://api.dicebear.com/7.x/bottts/svg?seed=apple"),
-          LocalDate.parse("2025-11-12"),
-          false,
-          teamAlpha);
+          requireSpeciality(specialityRepository, "Tacticien")
+      );
 
-      saveUser(
-          userRepository,
-          passwordEncoder,
+      User tom = userService.createOne(
           "tom@mail.com",
+          DEFAULT_PASSWORD,
+          false,
           "Rogue",
-          requireSpeciality(specialityRepository, "Executeur"),
           requireProfilePicture(
               profilePictureRepository,
               "https://api.dicebear.com/7.x/bottts/svg?seed=banana"),
-          LocalDate.parse("2025-12-03"),
-          false,
-          teamAlpha);
+          requireSpeciality(specialityRepository, "Executeur")
+      );
+      tom.setDate(LocalDate.parse("2025-12-03"));
+      tom.setTeam(teamAlpha);
+      userRepository.save(tom);
 
-      saveUser(
-          userRepository,
-          passwordEncoder,
+      User ines = userService.createOne(
           "ines@mail.com",
+          DEFAULT_PASSWORD,
+          true,
           "Pulse",
-          requireSpeciality(specialityRepository, "Guerrisseur"),
           requireProfilePicture(
               profilePictureRepository,
               "https://api.dicebear.com/7.x/bottts/svg?seed=carrot"),
-          LocalDate.parse("2026-01-18"),
-          true,
-          teamAlpha);
+          requireSpeciality(specialityRepository, "Guerrisseur")
+      );
+      ines.setDate(LocalDate.parse("2026-01-18"));
+      ines.setTeam(teamAlpha);
+      userRepository.save(ines);
 
-      User tibo = saveUser(
-          userRepository,
-          passwordEncoder,
+      User tibo = userService.createOne(
           "tibo@mail.com",
+          DEFAULT_PASSWORD,
+          true,
           "Iron",
-          requireSpeciality(specialityRepository, "Gardien"),
           requireProfilePicture(
               profilePictureRepository,
               "https://api.dicebear.com/7.x/bottts/svg?seed=broccoli"),
-          LocalDate.parse("2025-10-27"),
-          true,
-          teamOmega);
+          requireSpeciality(specialityRepository, "Gardien")
+      );
+      tibo.setDate(LocalDate.parse("2025-10-27"));
+      tibo.setTeam(teamOmega);
+      tibo = userRepository.save(tibo);
 
       teamAlpha.setManager(lea);
       teamAlpha.setSecondManager(null);
@@ -193,35 +199,4 @@ public class DemoApplication {
     }
     return profilePicture;
   }
-
-  private static User saveUser(
-      UserRepository userRepository,
-      BCryptPasswordEncoder passwordEncoder,
-      String email,
-      String tag,
-      Speciality speciality,
-      ProfilePicture profilePicture,
-      LocalDate date,
-      boolean isAdmin,
-      Team team) {
-    User user = userRepository.findByEmail(email);
-    if (user == null) {
-      user = new User();
-      user.setEmail(email);
-    }
-
-    user.setTag(tag);
-    user.setSpeciality(speciality);
-    user.setProfilePicture(profilePicture);
-    user.setDate(date);
-    user.setAdmin(isAdmin);
-    user.setTeam(team);
-
-    if (user.getPassword() == null || !passwordEncoder.matches(DEFAULT_PASSWORD, user.getPassword())) {
-      user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
-    }
-
-    return userRepository.save(user);
-  }
 }
-

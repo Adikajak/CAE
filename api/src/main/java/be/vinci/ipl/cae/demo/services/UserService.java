@@ -227,7 +227,18 @@ public class UserService {
     user.setAdmin(isAdmin);
     user.setDate(LocalDate.now());
 
-    return userRepository.save(user);
+    User savedUser = userRepository.save(user);
+    sendWelcomeNotification(savedUser);
+    return savedUser;
+  }
+
+  private void sendWelcomeNotification(User user) {
+    NotificationDto notificationDto = new NotificationDto();
+    notificationDto.setUserId(user.getId());
+    notificationDto.setObject("Bienvenue !");
+    notificationDto.setMessage("Votre compte a ete cree avec succes.");
+    notificationDto.setType(NotificationType.WELCOME);
+    notificationService.createNotification(notificationDto);
   }
 
   /**
