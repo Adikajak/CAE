@@ -5,7 +5,6 @@ import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
-import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,17 +17,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class NotificationService {
 
   private final NotificationRepository repository;
-  private final UserRepository userRepository;
 
   /**
    * Constructor for NotificationService.
    *
    * @param repository     the notification repository
-   * @param userRepository the user repository
    */
-  public NotificationService(NotificationRepository repository, UserRepository userRepository) {
+
+  public NotificationService(NotificationRepository repository) {
     this.repository = repository;
-    this.userRepository = userRepository;
   }
 
   /**
@@ -55,36 +52,61 @@ public class NotificationService {
   /**
    * Mark a notification as read.
    *
-   * @param notificationId the notification ID
+   * @param notification the notification ID
    */
-  public void markNotificationAsRead(Long notificationId) {
-    Notification notif = repository.findById(notificationId)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    notif.setIsRead(true);
-    repository.save(notif);
+  public void markNotificationAsRead(Notification notification) {
+    notification.setIsRead(true);
+    repository.save(notification);
   }
 
   /**
-   * Create a new notification.
+   * Set membership ID if notification is a team invitation.
    *
-   * @param notificationDto the notification data
-   * @return the created notification
+   * @param notif the notification
+   * @param dto   the notification data
    */
-  public Notification createNotification(NotificationDto notificationDto) {
-    User user = userRepository.findById(notificationDto.getUserId())
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+  private void setMembershipIfInvitation(Notification notif, NotificationDto dto) {
+    if (dto.getType() == NotificationType.TEAM_INVITATION) {
+      notif.setMembershipId(dto.getMembershipId());
+    }
+  }
 
+  /**
+   * Build a notification for a user.
+   *
+   * @param user the user
+   * @param dto  the notification data
+   * @return the built notification
+   */
+  public Notification buildNotification(User user, NotificationDto dto) {
     Notification notif = new Notification();
     notif.setUser(user);
-    notif.setObject(notificationDto.getObject());
-    notif.setMessage(notificationDto.getMessage());
-    notif.setType(notificationDto.getType());
+    notif.setObject(dto.getObject());
+    notif.setMessage(dto.getMessage());
+    notif.setType(dto.getType());
+    setMembershipIfInvitation(notif, dto);
+    return notif;
+  }
 
-    if (notificationDto.getType() == NotificationType.TEAM_INVITATION) {
-      notif.setMembershipId(notificationDto.getMembershipId());
-    }
+  /**
+   * Save a notification.
+   *
+   * @param notification the notification to save
+   * @return the saved notification
+   */
+  public Notification saveNotification(Notification notification) {
+    return repository.save(notification);
+  }
 
-    return repository.save(notif);
+  /**
+   * Build and save a notification for a user.
+   *
+   * @param user the user
+   * @param dto  the notification data
+   * @return the saved notification
+   */
+  public Notification createNotification(User user, NotificationDto dto) {
+    return saveNotification(buildNotification(user, dto));
   }
 
   /**

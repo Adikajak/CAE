@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <Box
       component="footer"
-      sx={{ py: 3, bgcolor: 'primary.main', color: '#fff' }}
+      sx={{ py: 1.5, bgcolor: 'primary.main', color: '#fff' }}
     >
       <Container
         maxWidth="sm"
@@ -29,7 +29,7 @@ const Footer = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <img src={logo} alt="" width={50} />
+          <img src={logo} alt="" width={30} />
         </Box>
       </Container>
     </Box>

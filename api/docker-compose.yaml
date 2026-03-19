@@ -3,8 +3,8 @@ services:
     image: postgres:latest
     container_name: postgres_container
     environment:
-      POSTGRES_DB: cae_db
-      POSTGRES_USER: cae_user
-      POSTGRES_PASSWORD: cae
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "${DB_PORT}:5432"

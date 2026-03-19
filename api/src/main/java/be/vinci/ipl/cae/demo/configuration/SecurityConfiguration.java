@@ -44,6 +44,8 @@ public class SecurityConfiguration {
         .sessionManagement(sessionManagement ->
             sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+          .requestMatchers("/error").permitAll()
             .requestMatchers("/auths/**").permitAll()
             .requestMatchers("/profile-pictures/**").permitAll()
             .requestMatchers("/specialities/**").permitAll()

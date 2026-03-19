@@ -15,12 +15,14 @@ const App = () => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
+        height: '100vh',
       }}
     >
       <NavBar />
 
-      <Outlet />
+      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+        <Outlet />
+      </Box>
 
       <Footer />
     </Box>

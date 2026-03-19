@@ -45,12 +45,19 @@ public class TeamService {
    */
   @Transactional
   public Team createTeam(Team team, User creator) {
-    Optional<Team> existing = teamRepository.findByName(team.getName());
+    Optional<Team> existing = teamRepository.findByNameIgnoreCase(team.getName());
     if (existing.isPresent()) {
       throw new IllegalStateException("Le nom de cette team existe déjà");
     }
     if (creator.getTeam() != null) {
       throw new IllegalStateException("Cet utilisateur possède déjà une team");
+    }
+    boolean hasPendingMembershipRequest = teamMembershipRepository
+        .findByMemberAndStatus(creator, MembershipStatus.PENDING)
+            .isPresent();
+
+    if (hasPendingMembershipRequest) {
+      throw new IllegalStateException("Cet utilisateur a déjà une demande d'adhésion en attente");
     }
 
     team.setManager(creator);
@@ -79,7 +86,7 @@ public class TeamService {
    * @return optional team
    */
   public Optional<Team> getTeamByName(String name) {
-    return teamRepository.findByName(name);
+    return teamRepository.findByNameIgnoreCase(name);
   }
 
   /**

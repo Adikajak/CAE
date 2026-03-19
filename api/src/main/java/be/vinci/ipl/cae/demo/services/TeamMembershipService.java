@@ -49,6 +49,30 @@ public class TeamMembershipService {
   }
 
   /**
+   * notify the manager or managers about the notification.
+   *
+   * @param team the team in which menager is
+   * @param dto nofitication dto
+   */
+  private void notifyManagers(Team team, NotificationDto dto) {
+    notificationService.createNotification(team.getManager(), dto);
+    if (team.getSecondManager() != null) {
+      dto.setUserId(team.getSecondManager().getId());
+      notificationService.createNotification(team.getSecondManager(), dto);
+    }
+  }
+
+  private void notifyManagersOfRequest(User user, Team team, Long membershipId) {
+    NotificationDto dto = new NotificationDto();
+    dto.setObject("Nouvelle demande d'adhésion");
+    dto.setMessage(user.getTag() + " souhaite rejoindre l'équipe " + team.getName());
+    dto.setType(NotificationType.TEAM_INVITATION);
+    dto.setMembershipId(membershipId);
+    dto.setUserId(team.getManager().getId());
+    notifyManagers(team, dto);
+  }
+
+  /**
    * Adds a user to a team if the tag is unique within that team.
    *
    * @param user the user to add
@@ -58,6 +82,23 @@ public class TeamMembershipService {
    */
   @Transactional
   public TeamMembership addUserToTeam(User user, Team team) {
+    if (user.getTeam() != null) {
+      throw new IllegalStateException("Vous appartenez déjà à une team");
+    }
+
+    boolean hasExistingMembership = teamMembershipRepository.findByMember(user).isPresent();
+    if (hasExistingMembership) {
+      throw new IllegalStateException("Vous avez déjà une demande d'adhésion en cours");
+    }
+
+    boolean isAlreadyManager =
+        (team.getManager() != null && team.getManager().getId().equals(user.getId()))
+        || (team.getSecondManager() != null &&
+            team.getSecondManager().getId().equals(user.getId()));
+    if (isAlreadyManager) {
+      throw new IllegalStateException("Vous êtes déjà responsable de cette team");
+    }
+
     boolean tagTaken = userRepository.existsByTeamAndTag(team, user.getTag());
     if (tagTaken) {
       throw new IllegalStateException("This tag is already used by another user in this team");
@@ -70,18 +111,8 @@ public class TeamMembershipService {
 
     userRepository.save(user);
     TeamMembership save = teamMembershipRepository.save(membership);
-    NotificationDto dto = new NotificationDto();
-    dto.setUserId(team.getManager().getId());
-    dto.setObject("Nouvelle demande d'adhésion");
-    dto.setMessage(user.getTag() + " souhaite rejoindre l'équipe " + team.getName());
-    dto.setType(NotificationType.TEAM_INVITATION);
-    dto.setMembershipId(save.getId());
-    notificationService.createNotification(dto);
 
-    if (team.getSecondManager() != null) {
-      dto.setUserId(team.getSecondManager().getId());
-      notificationService.createNotification(dto);
-    }
+    notifyManagersOfRequest(user, team, save.getId());
 
     return save;
   }
@@ -121,10 +152,11 @@ public class TeamMembershipService {
     final TeamMembership save = teamMembershipRepository.save(membership);
     markRelatedNotificationsAsRead(membership.getId());
     sendNotificationToMember(
-        membership.getMember().getId(),
+        membership.getMember(),
         "Demande acceptée",
-        "Votre demande pour rejoinder l'équipe " + membership.getTeam().getName()
-            + "a été acceptée!");
+        "Votre demande pour rejoindre l'équipe " +
+            membership.getTeam().getName() + " a été acceptée !"
+    );
 
     return save;
   }
@@ -143,14 +175,12 @@ public class TeamMembershipService {
     final TeamMembership save = teamMembershipRepository.save(membership);
     markRelatedNotificationsAsRead(membership.getId());
 
-    NotificationDto dto = new NotificationDto();
-    dto.setUserId(membership.getMember().getId());
-    dto.setObject("Demande refusée");
-    dto.setMessage("Votre demande pour rejoindre l'équipe "
-        + membership.getTeam().getName() + " a été refusée. Raison : " + reason);
-    dto.setType(NotificationType.GENERAL);
-    notificationService.createNotification(dto);
-
+    sendNotificationToMember(
+        membership.getMember(),
+        "Demande refusée",
+        "Votre demande pour rejoindre l'équipe "
+            + membership.getTeam().getName() + " a été refusée. Raison : " + reason
+    );
     return save;
   }
 
@@ -240,16 +270,15 @@ public class TeamMembershipService {
   /**
    * Send a general notification to a member.
    *
-   * @param userId  the user ID
+   * @param member  the user ID
    * @param object  the notification subject
    * @param message the notification message
    */
-  private void sendNotificationToMember(Long userId, String object, String message) {
+  private void sendNotificationToMember(User member, String object, String message) {
     NotificationDto dto = new NotificationDto();
-    dto.setUserId(userId);
     dto.setObject(object);
     dto.setMessage(message);
     dto.setType(NotificationType.GENERAL);
-    notificationService.createNotification(dto);
+    notificationService.createNotification(member, dto);
   }
 }

@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.NotificationService;
+import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,14 +25,17 @@ import org.springframework.web.server.ResponseStatusException;
 public class NotificationController {
 
   private final NotificationService service;
+  private final UserService userService;
 
   /**
    * Constructor for NotificationController.
    *
    * @param service the notification service
+   * @param userService the user service
    */
-  public NotificationController(NotificationService service) {
+  public NotificationController(NotificationService service, UserService userService) {
     this.service = service;
+    this.userService = userService;
   }
 
   /**
@@ -63,19 +67,22 @@ public class NotificationController {
    */
   @PostMapping("/{id}/read")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void markAsRead(@PathVariable Long id) {
-    service.markNotificationAsRead(id);
+  public void markAsRead(@PathVariable Long id, @AuthenticationPrincipal User user) {
+    service.markNotificationAsRead(getNotification(id, user));
   }
 
   /**
    * Create a new notification.
    *
-   * @param notification the notification data
+   * @param notificationDto the notification data
    * @return the created notification
    */
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
-  public Notification createNotification(@Valid @RequestBody NotificationDto notification) {
-    return service.createNotification(notification);
+  public Notification createNotification(@Valid @RequestBody NotificationDto notificationDto) {
+    User user = userService.findUser(notificationDto.getUserId())
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    return service.saveNotification(service.buildNotification(user, notificationDto));
   }
 }

@@ -41,6 +41,15 @@ public interface TeamMembershipRepository extends CrudRepository<TeamMembership,
   Optional<TeamMembership> findByTeamAndMember(Team team, User member);
 
   /**
+   * Find the member and its membership status.
+   *
+   * @param member the member
+   * @param status the status
+   * @return the matching TeamMembership if found, empty otherwise
+   */
+  Optional<TeamMembership> findByMemberAndStatus(User member, MembershipStatus status);
+
+  /**
    * Find all memberships of a team with the given status.
    *
    * @param team the team

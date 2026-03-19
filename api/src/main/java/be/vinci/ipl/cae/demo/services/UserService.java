@@ -14,10 +14,13 @@ import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import jakarta.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,10 +30,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-  private static final String jwtSecret = "ilovemypizza!";
+  @Value("${JWT_SECRET}")
+  private String jwtSecret;
   private static final long lifetimeJwt = 24 * 60 * 60 * 1000; // 24 hours
+  private Algorithm algorithm;
 
-  private static final Algorithm algorithm = Algorithm.HMAC256(jwtSecret);
+  @PostConstruct
+  public void init() {
+    this.algorithm = Algorithm.HMAC256(jwtSecret);
+  }
 
   private final BCryptPasswordEncoder passwordEncoder;
   private final UserRepository userRepository;
@@ -231,7 +239,7 @@ public class UserService {
     notificationDto.setObject("Bienvenue !");
     notificationDto.setMessage("Votre compte a été créé avec succès.");
     notificationDto.setType(NotificationType.WELCOME);
-    notificationService.createNotification(notificationDto);
+    notificationService.createNotification(user, notificationDto);
   }
 
   /**
@@ -313,5 +321,15 @@ public class UserService {
     user.setProfilePicture(picture);
     userRepository.save(user);
     return true;
+  }
+
+  /**
+   * Find a user by ID.
+   *
+   * @param userId the user ID
+   * @return the user if found
+   */
+  public Optional<User> findUser(Long userId) {
+    return userRepository.findById(userId);
   }
 }

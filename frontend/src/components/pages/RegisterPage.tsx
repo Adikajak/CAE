@@ -20,15 +20,9 @@ import {
   useTheme,
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { UserContextType } from '../../types';
+import { UserContextType, AvatarOption } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
 import './index.css';
-
-interface AvatarOption {
-  id: string;
-  label: string;
-  src: string;
-}
 
 const AVATAR_URLS_CACHE_KEY = 'register_avatar_urls';
 
@@ -46,15 +40,46 @@ const preloadImages = (urls: string[]) => {
   });
 };
 
-const getRegisterErrorMessage = (err: unknown): string => {
-  if (err instanceof Error) {
-    if (err.message.includes('400')) {
-      return "Echec d'inscription. Verifiez les champs et la specialite choisie.";
-    }
+type HttpError = Error & {
+  status?: number;
+};
 
-    if (err.message.includes('409')) {
-      return 'Cette adresse email existe deja. Veuillez en utiliser une autre.';
-    }
+const getRegisterErrorMessage = (err: unknown): string => {
+  const httpError = err as HttpError;
+  const status =
+    typeof httpError?.status === 'number' ? httpError.status : undefined;
+  const lowerMessage = err instanceof Error ? err.message.toLowerCase() : '';
+
+  if (status === 400) {
+    return "Echec d'inscription. Verifiez les champs et la specialite choisie.";
+  }
+
+  if (status === 409) {
+    return 'Cette adresse email existe deja. Veuillez en utiliser une autre.';
+  }
+
+  if (
+    lowerMessage.includes('failed to fetch') ||
+    lowerMessage.includes('network')
+  ) {
+    return "Impossible de contacter le serveur. Veuillez verifier que l'API est lancee.";
+  }
+
+  if (
+    lowerMessage.includes('409') ||
+    lowerMessage.includes('conflict') ||
+    lowerMessage.includes('duplicate') ||
+    lowerMessage.includes('already')
+  ) {
+    return 'Cette adresse email existe deja. Veuillez en utiliser une autre.';
+  }
+
+  if (lowerMessage.includes('400') || lowerMessage.includes('bad request')) {
+    return "Echec d'inscription. Verifiez les champs et la specialite choisie.";
+  }
+
+  if (typeof status === 'number') {
+    return `Echec d'inscription (HTTP ${status}). Veuillez reessayer.`;
   }
 
   return "Echec d'inscription. Veuillez reessayer.";
@@ -114,7 +139,7 @@ const RegisterPage = () => {
           localStorage.setItem(AVATAR_URLS_CACHE_KEY, JSON.stringify(urls));
           preloadImages(urls);
         } else {
-          setErrorMessage('Aucune photo de profil configuree en base.');
+          setErrorMessage('Aucune photo de profil configurée en base.');
         }
       } catch (err) {
         console.error('RegisterPage::loadProfilePictures::error: ', err);
@@ -135,7 +160,7 @@ const RegisterPage = () => {
         setSpecialties(specialtiesList);
       } catch (err) {
         console.error('RegisterPage::loadSpecialties::error: ', err);
-        setErrorMessage('Impossible de charger les specialites.');
+        setErrorMessage('Impossible de charger les specialités.');
       }
     };
 
@@ -149,8 +174,16 @@ const RegisterPage = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
+    const trimmedEmail = email.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(trimmedEmail)) {
+      setErrorMessage('Veuillez entrer une adresse email valide.');
+      return;
+    }
+
     if (!specialty) {
-      setErrorMessage('Veuillez choisir une specialite.');
+      setErrorMessage('Veuillez choisir une specialité.');
       return;
     }
 
@@ -165,16 +198,16 @@ const RegisterPage = () => {
       );
 
       await registerUser({
-        email,
+        email: trimmedEmail,
         password,
         tag,
         speciality: specialty,
         profile_picture: selectedAvatar?.src ?? '',
       });
       setSuccessMessage(
-        'Compte cree avec succes. Redirection vers la connexion...',
+        'Compte créé avec succes. Redirection vers la connexion...',
       );
-      setTimeout(() => navigate('/'), 1200);
+      setTimeout(() => navigate('/login'), 1200);
     } catch (err) {
       console.error('RegisterPage::error: ', err);
       setErrorMessage(getRegisterErrorMessage(err));

@@ -36,6 +36,8 @@ public class DemoApplication {
    * @param args the arguments
    */
   public static void main(String[] args) {
+    System.out.println("CWD: " + System.getProperty("user.dir"));
+
     SpringApplication.run(DemoApplication.class, args);
   }
 
@@ -45,7 +47,7 @@ public class DemoApplication {
     return args -> {
       String[] names = {
           "Architecte", "Executeur", "Tacticien", "Gardien", "Catalyseur",
-          "Perturbateur", "Guerrisseur"
+          "Perturbateur", "Guérisseur"
       };
 
       for (String name : names) {
@@ -145,7 +147,7 @@ public class DemoApplication {
           requireProfilePicture(
               profilePictureRepository,
               "https://api.dicebear.com/7.x/bottts/svg?seed=carrot"),
-          requireSpeciality(specialityRepository, "Guerrisseur")
+          requireSpeciality(specialityRepository, "Guérisseur")
       );
       ines.setDate(LocalDate.parse("2026-01-18"));
       ines.setTeam(teamAlpha);
@@ -190,7 +192,7 @@ public class DemoApplication {
   }
 
   private static Team findOrCreateTeam(TeamRepository teamRepository, String name) {
-    return teamRepository.findByName(name).orElseGet(() -> {
+    return teamRepository.findByNameIgnoreCase(name).orElseGet(() -> {
       Team team = new Team();
       team.setName(name);
       return teamRepository.save(team);

@@ -58,12 +58,11 @@ public class AdministrationService {
     userRepository.save(userEntity);
 
     NotificationDto notificationDto = new NotificationDto();
-    notificationDto.setUserId(userEntity.getId());
     notificationDto.setObject("Vous avez été promu administrateur !");
     notificationDto.setMessage("Votre compte a été promu au rang d'administrateur. "
         + "Un grand pouvoir implique de grandes responsabilités :)");
     notificationDto.setType(NotificationType.GENERAL);
-    notificationService.createNotification(notificationDto);
+    notificationService.createNotification(userEntity, notificationDto);
     return true;
   }
 
@@ -86,11 +85,10 @@ public class AdministrationService {
     userRepository.save(userEntity);
 
     NotificationDto notificationDto = new NotificationDto();
-    notificationDto.setUserId(userEntity.getId());
     notificationDto.setObject("Vous avez été rétrogradé.");
     notificationDto.setMessage("Votre statut d'administrateur a été révoqué.");
     notificationDto.setType(NotificationType.GENERAL);
-    notificationService.createNotification(notificationDto);
+    notificationService.createNotification(userEntity, notificationDto);
     return true;
   }
 }

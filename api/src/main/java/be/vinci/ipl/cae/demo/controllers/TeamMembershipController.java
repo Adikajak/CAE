@@ -82,17 +82,27 @@ public class TeamMembershipController {
 
   /**
    * List all members of a team.
+   *
+   * @param authentication the authenticated user (nullable)
+   * @param teamId the team id
+   * @return list of memberships, with email only visible to managers and admins
    */
   @GetMapping("/{teamId}/members")
-  public List<TeamMembershipResponseDto> getAllMembers(@PathVariable Long teamId) {
+  //CPD-OFF
+  public List<TeamMembershipResponseDto> getAllMembers(
+      Authentication authentication,
+      @PathVariable Long teamId
+  ) {
     Team team = teamService.getTeamById(teamId)
         .orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
         );
+    boolean canViewEmail = canViewTeamEmails(authentication, team);
     return teamMembershipService.getAllMembers(team).stream()
-        .map(this::toResponse)
+        .map(m -> toResponse(m, canViewEmail))
         .toList();
   }
+  //CPD-ON
 
   /**
    * List pending membership requests for a team.
@@ -177,7 +187,7 @@ public class TeamMembershipController {
     return membership;
   }
 
-  private TeamMembershipResponseDto toResponse(TeamMembership membership) {
+  private TeamMembershipResponseDto toResponse(TeamMembership membership, boolean includeEmail) {
     Team team = membership.getTeam();
     int managersCount = (team.getManager() != null ? 1 : 0)
         + (team.getSecondManager() != null ? 1 : 0);
@@ -186,23 +196,40 @@ public class TeamMembershipController {
     TeamResponseDto teamDto = new TeamResponseDto(
         team.getId(),
         team.getName(),
-        toUserProfile(team.getManager()),
-        toUserProfile(team.getSecondManager()),
+        toUserProfile(team.getManager(), false),
+        toUserProfile(team.getSecondManager(), false),
         managersCount,
         membersCount
     );
 
     return new TeamMembershipResponseDto(
         membership.getId(),
-        toUserProfile(membership.getMember()),
+        toUserProfile(membership.getMember(), includeEmail),
         teamDto,
         membership.getStatus(),
         membership.getRejectionReason()
     );
   }
 
+  private TeamMembershipResponseDto toResponse(TeamMembership membership) {
+    return toResponse(membership, false);
+  }
+
   //CPD-OFF
-  private UserProfileDto toUserProfile(User user) {
+  private boolean canViewTeamEmails(Authentication authentication, Team team) {
+    if (authentication == null) {
+      return false;
+    }
+    User requester = (User) authentication.getPrincipal();
+    if (requester.isAdmin()) {
+      return true;
+    }
+    return (team.getManager() != null && team.getManager().getId().equals(requester.getId()))
+        || (team.getSecondManager() != null
+        && team.getSecondManager().getId().equals(requester.getId()));
+  }
+
+  private UserProfileDto toUserProfile(User user, boolean includeEmail) {
     if (user == null) {
       return null;
     }
@@ -216,7 +243,7 @@ public class TeamMembershipController {
 
     return new UserProfileDto(
         user.getId(),
-        user.getEmail(),
+        includeEmail ? user.getEmail() : null,
         user.getTag(),
         user.getSpeciality() != null ? user.getSpeciality().getName() : null,
         user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,

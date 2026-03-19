@@ -1,7 +1,6 @@
 package be.vinci.ipl.cae.demo.models.dtos;
 
 import jakarta.validation.constraints.NotBlank;
-import java.util.Locale;
 
 /**
  * Payload for creating a new team.
@@ -16,6 +15,6 @@ public class TeamCreateRequestDto {
   }
 
   public void setName(String name) {
-    this.name = name.toLowerCase(Locale.ROOT);
+    this.name = name;
   }
 }

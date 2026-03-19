@@ -28,6 +28,10 @@ const defaultUserContext: UserContextType = {
 
 const UserContext = createContext<UserContextType>(defaultUserContext);
 
+type HttpError = Error & {
+  status?: number;
+};
+
 const UserContextProvider = ({ children }: { children: ReactNode }) => {
   const [authenticatedUser, setAuthenticatedUserState] =
     useState<MaybeAuthenticatedUser>(() => getAuthenticatedUser());
@@ -55,10 +59,13 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
       const response = await fetch('/api/auths/register', options);
 
-      if (!response.ok)
-        throw new Error(
+      if (!response.ok) {
+        const error: HttpError = new Error(
           `fetch error : ${response.status} : ${response.statusText}`,
         );
+        error.status = response.status;
+        throw error;
+      }
 
       const createdUser: AuthenticatedUser = await response.json();
 
@@ -82,10 +89,13 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
       const response = await fetch('/api/auths/login', options);
 
-      if (!response.ok)
-        throw new Error(
+      if (!response.ok) {
+        const error: HttpError = new Error(
           `fetch error : ${response.status} : ${response.statusText}`,
         );
+        error.status = response.status;
+        throw error;
+      }
 
       const authenticatedUser: AuthenticatedUser = await response.json();
       console.log('authenticatedUser: ', authenticatedUser);
