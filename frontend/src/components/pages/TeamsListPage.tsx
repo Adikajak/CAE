@@ -112,8 +112,9 @@ const TeamsListPage = () => {
         if (res.status === 403) {
           errorMsg =
             'Impossible de créer une nouvelle team (une ou plusieurs raisons) :\n' +
-            "• Vous faites déjà d'une team\n" +
-            '• Le nom de la team que vous voulez créer existe déjà';
+            "• Vous faites déjà partie d'une team\n" +
+            '• Le nom de la team que vous voulez créer existe déjà\n' +
+            "• Vous avez une demande d'adhésion en attente";
         }
 
         throw new Error(errorMsg);
@@ -134,15 +135,6 @@ const TeamsListPage = () => {
       setCreating(false);
     }
   };
-
-  // const getTeamMemberCount = (team: Team) => {
-  //   let count = 0;
-  //   if (team.manager) {
-  //     count += 1;
-  //     if (team.secondManager) count += 1;
-  //   }
-  //   return count;
-  // };
 
   const currentTeamId =
     authenticatedUser?.teamId ??
@@ -165,7 +157,6 @@ const TeamsListPage = () => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
         width: '100%',
       }}
     >

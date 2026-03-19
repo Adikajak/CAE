@@ -6,6 +6,7 @@ import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamService;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -52,15 +53,19 @@ public class TeamController {
   /**
    * Get a team by its id.
    *
+   * @param authentication the authenticated user (nullable)
    * @param teamId the team id
    * @return the team
    */
   @GetMapping("/{teamId}")
-  public TeamResponseDto getTeamById(@PathVariable Long teamId) {
+  //CPD-OFF
+  public TeamResponseDto getTeamById(Authentication authentication, @PathVariable Long teamId) {
     Team team = teamService.getTeamById(teamId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée"));
-    return toResponse(team);
+    boolean canViewEmail = canViewTeamEmails(authentication, team);
+    return toResponse(team, canViewEmail);
   }
+  //CPD-ON
 
   /**
    * Create a new team. The creator becomes the primary manager.
@@ -74,15 +79,9 @@ public class TeamController {
   @ResponseStatus(HttpStatus.CREATED)
   public TeamResponseDto createTeam(
       Authentication authentication,
-      @RequestBody TeamCreateRequestDto request
+      @Valid @RequestBody TeamCreateRequestDto request
   ) {
     User user = (User) authentication.getPrincipal();
-    if (user == null) {
-      throw new ResponseStatusException(
-          HttpStatus.UNAUTHORIZED,
-          "Vous devez être connecté pour créer une team"
-      );
-    }
     Team team = new Team();
     team.setName(request.getName());
 
@@ -90,7 +89,7 @@ public class TeamController {
       Team createdTeam = teamService.createTeam(team, user);
       return toResponse(createdTeam);
     } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
     }
   }
 
@@ -156,22 +155,39 @@ public class TeamController {
     }
   }
 
-  private TeamResponseDto toResponse(Team team) {
+  private TeamResponseDto toResponse(Team team, boolean includeEmail) {
     int managersCount = teamService.getManagersCount(team);
     int membersCount = teamService.getAcceptedMembersCount(team);
 
     return new TeamResponseDto(
         team.getId(),
         team.getName(),
-        toUserProfile(team.getManager()),
-        toUserProfile(team.getSecondManager()),
+        toUserProfile(team.getManager(), includeEmail),
+        toUserProfile(team.getSecondManager(), includeEmail),
         managersCount,
         membersCount
     );
   }
 
+  private TeamResponseDto toResponse(Team team) {
+    return toResponse(team, false);
+  }
+
   //CPD-OFF
-  private UserProfileDto toUserProfile(User user) {
+  private boolean canViewTeamEmails(Authentication authentication, Team team) {
+    if (authentication == null) {
+      return false;
+    }
+    User requester = (User) authentication.getPrincipal();
+    if (requester.isAdmin()) {
+      return true;
+    }
+    return (team.getManager() != null && team.getManager().getId().equals(requester.getId()))
+        || (team.getSecondManager() != null
+        && team.getSecondManager().getId().equals(requester.getId()));
+  }
+
+  private UserProfileDto toUserProfile(User user, boolean includeEmail) {
     if (user == null) {
       return null;
     }
@@ -186,7 +202,7 @@ public class TeamController {
 
     return new UserProfileDto(
         user.getId(),
-        user.getEmail(),
+        includeEmail ? user.getEmail() : null,
         user.getTag(),
         user.getSpeciality() != null ? user.getSpeciality().getName() : null,
         user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,

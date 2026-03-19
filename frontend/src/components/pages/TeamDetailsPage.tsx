@@ -284,7 +284,6 @@ const TeamDetailsPage = () => {
       maxWidth="lg"
       sx={{
         py: { xs: 3, md: 5 },
-        minHeight: '100vh',
       }}
     >
       <Stack spacing={3}>

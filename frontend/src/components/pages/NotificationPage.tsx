@@ -23,6 +23,7 @@ const NotificationPage = () => {
   const [declineNotificationId, setDeclineNotificationId] = useState<
     number | null
   >(null);
+  const [declineError, setDeclineError] = useState<string | null>(null);
   const [decidedIds, setDecidedIds] = useState<Set<number>>(new Set());
   const [reason, setReason] = useState('');
   const navigate = useNavigate();
@@ -88,6 +89,11 @@ const NotificationPage = () => {
 
   const handleDecline = async () => {
     if (!declineId || !declineNotificationId) return;
+    if (!reason.trim()) {
+      setDeclineError('Veuillez entrer une raison.');
+      return;
+    }
+    setDeclineError(null);
     try {
       const response = await fetch(
         `/api/teams/memberships/${declineId}/refuse?reason=${encodeURIComponent(reason)}`,
@@ -116,7 +122,6 @@ const NotificationPage = () => {
       sx={{
         margin: 2,
         padding: 3,
-        minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -212,21 +217,38 @@ const NotificationPage = () => {
         </Box>
       )}
 
-      <Dialog open={declineId !== null} onClose={() => setDeclineId(null)}>
+      <Dialog
+        open={declineId !== null}
+        onClose={() => {
+          setDeclineId(null), setDeclineError(null), setReason('');
+        }}
+      >
         <DialogTitle>Refuser la demande</DialogTitle>
         <DialogContent>
+          {declineError && <Alert severity="error">{declineError}</Alert>}
           <TextField
             label="Raison du refus"
             fullWidth
             multiline
             rows={3}
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e) => {
+              setReason(e.target.value);
+              setDeclineError(null);
+            }}
             sx={{ marginTop: 1 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeclineId(null)}>Annuler</Button>
+          <Button
+            onClick={() => {
+              setDeclineId(null);
+              setDeclineError(null);
+              setReason('');
+            }}
+          >
+            Annuler
+          </Button>
           <Button variant="contained" color="error" onClick={handleDecline}>
             Confirmer le refus
           </Button>

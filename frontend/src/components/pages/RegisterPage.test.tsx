@@ -124,11 +124,16 @@ describe('RegisterPage', () => {
   );
 
   test(
-    'displays error messages on API error',
+    'displays duplicate email message on 409 error',
     async () => {
+      const duplicateEmailError = new Error('Conflict') as Error & {
+        status?: number;
+      };
+      duplicateEmailError.status = 409;
+
       const registerUserMock = vi
         .fn()
-        .mockRejectedValueOnce(new Error('409 Conflict'));
+        .mockRejectedValueOnce(duplicateEmailError);
       const mockContextValue = {
         ...createContextValue(),
         registerUser: registerUserMock,
@@ -136,13 +141,31 @@ describe('RegisterPage', () => {
 
       renderRegisterPage(mockContextValue);
 
-      // Just verify form renders without crashing
-      await waitFor(
-        () => {
-          expect(screen.getByLabelText(/email/i)).toBeTruthy();
-        },
-        { timeout: 3000 },
+      const emailInput = await screen.findByLabelText(/email/i);
+      const tagInput = screen.getByLabelText(/tag/i);
+      const passwordInput = getPasswordInput();
+      const specialtySelect = screen.getByRole('combobox', {
+        name: /specialite/i,
+      });
+
+      fireEvent.change(emailInput, { target: { value: 'lea@mail.com' } });
+      fireEvent.change(tagInput, { target: { value: 'lea' } });
+      fireEvent.change(passwordInput, { target: { value: 'password123' } });
+      fireEvent.mouseDown(specialtySelect);
+      fireEvent.click(
+        await screen.findByRole('option', { name: 'Architecte' }),
       );
+      fireEvent.click(screen.getByRole('button', { name: /creer le compte/i }));
+
+      await waitFor(() => {
+        expect(registerUserMock).toHaveBeenCalledOnce();
+      });
+
+      expect(
+        await screen.findByText(
+          /cette adresse email existe deja\. veuillez en utiliser une autre\./i,
+        ),
+      ).toBeTruthy();
     },
     { timeout: 10000 },
   );

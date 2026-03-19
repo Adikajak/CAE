@@ -17,12 +17,14 @@ import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -47,6 +49,13 @@ class UserServiceTest {
 
   @InjectMocks
   private UserService userService;
+
+  @BeforeEach
+  void setUp() {
+    // In Mockito-only tests, @PostConstruct is not called automatically.
+    ReflectionTestUtils.setField(userService, "jwtSecret", "test-secret");
+    userService.init();
+  }
 
   @Test
   void updatePasswordReturnsFalseWhenUserNotFound() {
@@ -150,6 +159,8 @@ class UserServiceTest {
   @Test
   void loginReturnsTokenWhenSuccessful() {
     User user = new User();
+    user.setTag("zed");
+    user.setAdmin(false);
     when(userRepository.findByEmail("z@mail.com")).thenReturn(user);
     when(passwordEncoder.matches("pass", user.getPassword())).thenReturn(true);
 
@@ -157,5 +168,7 @@ class UserServiceTest {
 
     assertNotNull(result);
     assertNotNull(result.getToken());
+    assertTrue(!result.getToken().isBlank());
   }
 }
+

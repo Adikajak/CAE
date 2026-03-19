@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
 public interface TeamRepository extends CrudRepository<Team, Long> {
 
   /**
-   * Finds a team by its name.
+   * Finds a team by its name (case-insensitive).
    *
    * @param name the name of the team
    * @return optional containing the team if found
    */
-  Optional<Team> findByName(String name);
+  Optional<Team> findByNameIgnoreCase(String name);
 }

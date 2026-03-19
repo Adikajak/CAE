@@ -61,7 +61,7 @@ class AdministrationServiceTest {
 
     assertFalse(result);
     verify(userRepository, never()).save(any());
-    verify(notificationService, never()).createNotification(any());
+    verify(notificationService, never()).createNotification(any(), any());
   }
 
   @Test
@@ -74,7 +74,7 @@ class AdministrationServiceTest {
 
     assertFalse(result);
     verify(userRepository, never()).save(any());
-    verify(notificationService, never()).createNotification(any());
+    verify(notificationService, never()).createNotification(any(), any());
   }
 
   @Test
@@ -88,8 +88,7 @@ class AdministrationServiceTest {
     assertTrue(result);
     assertTrue(user.isAdmin());
     verify(userRepository).save(user);
-    verify(notificationService).createNotification(any(NotificationDto.class));
-  }
+    verify(notificationService).createNotification(any(User.class), any(NotificationDto.class));  }
 
   @Test
   void demoteFromAdminReturnsFalseWhenUserNotFound() {
@@ -99,7 +98,7 @@ class AdministrationServiceTest {
 
     assertFalse(result);
     verify(userRepository, never()).save(any());
-    verify(notificationService, never()).createNotification(any());
+    verify(notificationService, never()).createNotification(any(), any());
   }
 
   @Test
@@ -112,7 +111,7 @@ class AdministrationServiceTest {
 
     assertFalse(result);
     verify(userRepository, never()).save(any());
-    verify(notificationService, never()).createNotification(any());
+    verify(notificationService, never()).createNotification(any(), any());
   }
 
   @Test
@@ -126,7 +125,6 @@ class AdministrationServiceTest {
     assertTrue(result);
     assertFalse(user.isAdmin());
     verify(userRepository).save(user);
-    verify(notificationService).createNotification(any(NotificationDto.class));
-  }
+    verify(notificationService).createNotification(any(User.class), any(NotificationDto.class));  }
 }
 
