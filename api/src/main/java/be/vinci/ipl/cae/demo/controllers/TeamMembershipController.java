@@ -106,13 +106,23 @@ public class TeamMembershipController {
 
   /**
    * List pending membership requests for a team.
+   * Only accessible to the primary manager or second manager of the team.
    */
   @GetMapping("/{teamId}/requests")
-  public List<TeamMembershipResponseDto> getPendingRequests(@PathVariable Long teamId) {
+  public List<TeamMembershipResponseDto> getPendingRequests(
+      Authentication authentication,
+      @PathVariable Long teamId
+  ) {
     Team team = teamService.getTeamById(teamId)
         .orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Équipe non trouvée")
         );
+
+    if (!canViewTeamEmails(authentication, team)) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+          "Seul le responsable peut voir les demandes");
+    }
+
     return teamMembershipService.getPendingRequests(team).stream()
         .map(this::toResponse)
         .toList();
@@ -217,7 +227,7 @@ public class TeamMembershipController {
 
   //CPD-OFF
   private boolean canViewTeamEmails(Authentication authentication, Team team) {
-    if (authentication == null) {
+    if (!(authentication != null && authentication.getPrincipal() instanceof User)) {
       return false;
     }
     User requester = (User) authentication.getPrincipal();

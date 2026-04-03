@@ -6,9 +6,7 @@ import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import java.util.Optional;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Service for managing notification-related HTTP requests.
@@ -107,22 +105,5 @@ public class NotificationService {
    */
   public Notification createNotification(User user, NotificationDto dto) {
     return saveNotification(buildNotification(user, dto));
-  }
-
-  /**
-   * Update an existing notification.
-   *
-   * @param id              the notification ID
-   * @param notificationDto the updated data
-   * @return the updated notification
-   */
-  public Notification updateNotification(Long id, NotificationDto notificationDto) {
-    Notification notif = repository.findById(id)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    notif.setObject(notificationDto.getObject());
-    notif.setMessage(notificationDto.getMessage());
-
-    return repository.save(notif);
   }
 }

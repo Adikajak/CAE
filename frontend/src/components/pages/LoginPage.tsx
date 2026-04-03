@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import { UserContextType } from '../../types';
 import { UserContext } from '../../contexts/UserContext';
-import './index.css';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 
 const LoginPage = () => {
@@ -34,9 +33,14 @@ const LoginPage = () => {
       navigate('/');
     } catch (err) {
       console.error('LoginPage::error: ', err);
-      setErrorMessage(
-        "Echec de connexion. Verifiez l'email et le mot de passe.",
-      );
+      const httpError = err as { status?: number };
+      if (httpError.status === 403) {
+        setErrorMessage('Votre compte a été banni de la plateforme.');
+      } else {
+        setErrorMessage(
+          "Echec de connexion. Verifiez l'email et le mot de passe.",
+        );
+      }
     }
   };
 

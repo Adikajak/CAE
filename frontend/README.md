@@ -232,7 +232,6 @@ Et voici le code de la nouvelle `RegisterPage` qui fait appel au contexte pour r
 
 ```tsx numbered
 import { useState, SyntheticEvent } from 'react';
-import './index.css';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { PizzeriaContext } from '../../types';
 
@@ -445,7 +444,6 @@ Et voici le code de la nouvelle `LoginPage` qui fait appel au contexte pour réc
 
 ```tsx numbered
 import { useState, SyntheticEvent } from 'react';
-import './index.css';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { PizzeriaContext } from '../../types';
 

@@ -1,11 +1,13 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.models.dtos.TeamActivityDto;
 import be.vinci.ipl.cae.demo.models.dtos.TeamCreateRequestDto;
 import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.TeamService;
+import be.vinci.ipl.cae.demo.services.TournamentRegistrationService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -28,14 +30,20 @@ import org.springframework.web.server.ResponseStatusException;
 public class TeamController {
 
   private final TeamService teamService;
+  private final TournamentRegistrationService tournamentRegistrationService;
 
   /**
    * Constructor for TeamController.
    *
    * @param teamService the injected TeamService
+   * @param tournamentRegistrationService the injected TournamentRegistrationService
    */
-  public TeamController(TeamService teamService) {
+  public TeamController(
+      TeamService teamService,
+      TournamentRegistrationService tournamentRegistrationService
+  ) {
     this.teamService = teamService;
+    this.tournamentRegistrationService = tournamentRegistrationService;
   }
 
   /**
@@ -155,6 +163,20 @@ public class TeamController {
     }
   }
 
+  /**
+   * Get all tournament activities for a team.
+   *
+   * @param teamId the team id
+   * @return list of team activity DTOs
+   */
+  @GetMapping("/{teamId}/registrations")
+  public List<TeamActivityDto> getTeamActivity(@PathVariable Long teamId) {
+    Team team = teamService.getTeamById(teamId)
+        .orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team non trouvée"));
+    return tournamentRegistrationService.getTeamActivity(team);
+  }
+
   private TeamResponseDto toResponse(Team team, boolean includeEmail) {
     int managersCount = teamService.getManagersCount(team);
     int membersCount = teamService.getAcceptedMembersCount(team);
@@ -175,7 +197,7 @@ public class TeamController {
 
   //CPD-OFF
   private boolean canViewTeamEmails(Authentication authentication, Team team) {
-    if (authentication == null) {
+    if (!(authentication != null && authentication.getPrincipal() instanceof User)) {
       return false;
     }
     User requester = (User) authentication.getPrincipal();

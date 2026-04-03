@@ -3,15 +3,19 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.PasswordUpdateDto;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
 import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
+import be.vinci.ipl.cae.demo.models.dtos.UserPublicProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.UserService;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -136,6 +140,55 @@ public class UserController {
   }
 
   /**
+   * Get the public profiles of all users.
+   *
+   * @return the list of public user profiles.
+   */
+  @GetMapping
+  public List<UserPublicProfileDto> getAllUsers() {
+    return StreamSupport.stream(userService.getAllUsers().spliterator(), false)
+        .map(this::toPublicProfile)
+        .toList();
+  }
+
+  /**
+   * Get the public profile of a user by id.
+   *
+   * @param id the user id.
+   * @return the public user profile.
+   */
+  @GetMapping("/{id}")
+  public UserPublicProfileDto getUserById(@PathVariable Long id) {
+    User user = userService.findUser(id).orElse(null);
+    if (user == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+    return toPublicProfile(user);
+  }
+
+  /**
+   * Converts a User to a UserPublicProfileDto.
+   *
+   * @param user the user entity
+   * @return the public user profile
+   */
+  private UserPublicProfileDto toPublicProfile(User user) {
+    //CPD-OFF
+    var team = user.getTeam();
+    return new UserPublicProfileDto(
+        user.getId(),
+        user.getTag(),
+        user.getSpeciality() != null ? user.getSpeciality().getName() : null,
+        user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
+        user.getDate(),
+        team != null ? team.getName() : null,
+        team != null ? team.getId() : null,
+        user.isBanned()
+    );
+    //CPD-ON
+  }
+
+  /**
    * Converts a User to a UserProfile.
    *
    * @param user the user entity
@@ -160,5 +213,24 @@ public class UserController {
         isManager
     );
     //CPD-ON
+  }
+
+  /**
+   * Ban a user by ID.
+   *
+   * @param authentication the authenticated admin
+   * @param id the user ID to ban
+   */
+  @PatchMapping("/{id}/ban")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void banUser(Authentication authentication, @PathVariable Long id) {
+    User requester = (User) authentication.getPrincipal();
+    if (!requester.isAdmin()) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+    boolean success = userService.banUser(id);
+    if (!success) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
   }
 }
