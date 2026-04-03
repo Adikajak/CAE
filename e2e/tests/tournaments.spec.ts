@@ -68,8 +68,8 @@ test.describe('Tournaments list', () => {
   test('TC-TR2: should navigate to tournament details when clicking a row', async ({
     page,
   }) => {
-    await expect(page.getByRole('cell', { name: 'Spring Showdown 2029' })).toBeVisible();
-    await page.getByRole('row').filter({ hasText: 'Spring Showdown 2029' }).click();
+    await expect(page.getByRole('cell', { name: 'Elite Championship 2026' })).toBeVisible();
+    await page.getByRole('row').filter({ hasText: 'Elite Championship 2026' }).getByRole('cell').first().click();
     await expect(page).toHaveURL(/\/tournaments\/\d+$/);
   });
 
@@ -77,8 +77,8 @@ test.describe('Tournaments list', () => {
   test('TC-TR4: should keep searched tournament visible with name filter', async ({
     page,
   }) => {
-    await page.getByLabel(/nom du tournoi/i).fill('Spring Showdown 2029');
-    await expect(page.getByRole('cell', { name: 'Spring Showdown 2029' })).toBeVisible();
+    await page.getByLabel(/nom du tournoi/i).fill('Elite Championship 2026');
+    await expect(page.getByRole('cell', { name: 'Elite Championship 2026' })).toBeVisible();
   });
 
   // TC-TR5: filtering by state keeps only the matching state entries
@@ -87,10 +87,10 @@ test.describe('Tournaments list', () => {
     await selectVisibleOption(page, { name: 'Terminé' });
 
     await expect(
-      page.getByRole('row').filter({ hasText: 'Spring Showdown 2026' }),
+      page.getByRole('row').filter({ hasText: 'Spring Arena Cup 2025' }),
     ).toHaveCount(1);
     await expect(
-      page.getByRole('row').filter({ hasText: 'Spring Showdown 2029' }),
+      page.getByRole('row').filter({ hasText: 'Elite Championship 2026' }),
     ).toHaveCount(0);
     await expect(page.getByRole('button', { name: /réinitialiser/i })).toBeEnabled();
   });
@@ -98,13 +98,13 @@ test.describe('Tournaments list', () => {
   // TC-TR6: duration filter can isolate a seeded tournament
   test('TC-TR6: should filter tournaments by duration', async ({ page }) => {
     await openFilterSelect(page, 'Durée');
-    await selectVisibleOption(page, { value: '6' });
+    await selectVisibleOption(page, { value: '8' });
 
     await expect(
-      page.getByRole('row').filter({ hasText: 'Spring Showdown 2026' }),
+      page.getByRole('row').filter({ hasText: 'Spring Battle Series 2026' }),
     ).toHaveCount(1);
     await expect(
-      page.getByRole('row').filter({ hasText: 'Spring Showdown 2029' }),
+      page.getByRole('row').filter({ hasText: 'Elite Championship 2026' }),
     ).toHaveCount(0);
   });
 

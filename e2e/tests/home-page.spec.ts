@@ -21,10 +21,10 @@ test.describe('Home page - unauthenticated', () => {
   test('TC-H3: should display only PLANIFIED or ONGOING tournaments', async ({ page }) => {
     await goToHomePage(page);
     await expect(page.getByRole('progressbar')).not.toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/spring showdown 2026/i)).not.toBeVisible();
-    await expect(page.getByText(/spring showdown 2027/i)).toBeVisible();
-    await expect(page.getByText(/spring showdown 2028/i)).toBeVisible();
-    await expect(page.getByText(/spring showdown 2029/i)).toBeVisible();
+    await expect(page.getByText(/spring arena cup 2025/i)).not.toBeVisible();
+    await expect(page.getByText(/spring battle series 2026/i)).toBeVisible();
+    await expect(page.getByText(/vinci easter cup 2026/i)).toBeVisible();
+    await expect(page.getByText(/elite championship 2026/i)).toBeVisible();
   });
 });
 
