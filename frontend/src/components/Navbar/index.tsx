@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useContext, useState, useEffect, useCallback } from 'react';
+import { useContext } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -21,45 +21,22 @@ import PersonIcon from '@mui/icons-material/Person';
 import logoCae from '../../assets/images/logo_cae.png';
 
 import { UserContext } from '../../contexts/UserContext';
-import { UserContextType, Notification } from '../../types';
+import { NavbarContext } from '../../contexts/NavbarContext';
+import { UserContextType, NavbarContextType } from '../../types';
 
 const NavBar = () => {
-  const { authenticatedUser, clearUser, jwtData } =
+  const { authenticatedUser, clearUser } =
     useContext<UserContextType>(UserContext);
+  const {
+    isAdmin,
+    displayName,
+    profilePictureUrl,
+    hasUnread,
+    menuAnchor,
+    openProfileMenu,
+    closeProfileMenu,
+  } = useContext<NavbarContextType>(NavbarContext);
   const navigate = useNavigate();
-  const isAdmin = jwtData()?.isAdmin ?? false;
-  const displayName = authenticatedUser?.tag ?? '';
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-  const [hasUnread, setHasUnread] = useState(false);
-
-  const fetchUnread = useCallback(async () => {
-    if (!authenticatedUser) return;
-    try {
-      const response = await fetch('/api/notifications/', {
-        headers: { Authorization: authenticatedUser.token },
-      });
-      if (!response.ok) return;
-      const data: Notification[] = await response.json();
-      setHasUnread(data.some((n) => !n.isRead));
-    } catch {
-      // silently fail (comment so it won't be empty)
-    }
-  }, [authenticatedUser]);
-
-  useEffect(() => {
-    if (!authenticatedUser) return;
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
-    return () => clearInterval(interval);
-  }, [authenticatedUser, fetchUnread]);
-
-  const openProfileMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchor(event.currentTarget);
-  };
-
-  const closeProfileMenu = () => {
-    setMenuAnchor(null);
-  };
 
   const navButtonSx = {
     color: '#F6F7FF',
@@ -113,10 +90,10 @@ const NavBar = () => {
           <Button sx={navButtonSx} onClick={() => navigate('/')}>
             Accueil
           </Button>
-          <Button sx={navButtonSx} onClick={() => navigate('/')}>
+          <Button sx={navButtonSx} onClick={() => navigate('/tournaments')}>
             Tournois
           </Button>
-          <Button sx={navButtonSx} onClick={() => navigate('/')}>
+          <Button sx={navButtonSx} onClick={() => navigate('/members')}>
             Membres
           </Button>
           <Button sx={navButtonSx} onClick={() => navigate('/teams')}>
@@ -164,7 +141,10 @@ const NavBar = () => {
                 >
                   {displayName}
                 </Typography>
-                <Avatar sx={{ width: 30, height: 30, bgcolor: '#7DBB6D' }}>
+                <Avatar
+                  src={profilePictureUrl || undefined}
+                  sx={{ width: 30, height: 30, bgcolor: '#7DBB6D' }}
+                >
                   {displayName.slice(0, 1).toUpperCase()}
                 </Avatar>
               </Button>

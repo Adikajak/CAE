@@ -9,11 +9,18 @@ public class Credentials {
   private String password;
 
   /**
-   * constructor.
+   * No-arg constructor.
    */
-  @SuppressWarnings("PMD.UnnecessaryConstructor")
   public Credentials() {
-    // empty for jpa generation
+    // empty for deserialization
+  }
+
+  /**
+   * Constructor.
+   */
+  public Credentials(String email, String password) {
+    this.email = email;
+    this.password = password;
   }
 
   public String getEmail() {

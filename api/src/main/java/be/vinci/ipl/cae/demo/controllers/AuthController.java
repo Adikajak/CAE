@@ -3,9 +3,13 @@ package be.vinci.ipl.cae.demo.controllers;
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.dtos.UserDto;
+import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -83,6 +87,25 @@ public class AuthController {
   }
 
   /**
+   * Refreshes the JWT token for the currently authenticated user.
+   * Reads the latest user state from the database to reflect any role changes.
+   *
+   * @param caller the authenticated user
+   * @return a new AuthenticatedUser with a fresh token
+   */
+  @GetMapping("/refresh")
+  @PreAuthorize("isAuthenticated()")
+  public AuthenticatedUser refresh(@AuthenticationPrincipal User caller) {
+    return userService.createJwtToken(
+        caller.getId(),
+        caller.getEmail(),
+        caller.getTag(),
+        caller.isAdmin(),
+        caller.getTeam() == null ? null : caller.getTeam().getId()
+    );
+  }
+
+  /**
    * Login a user.
    *
    * @param credentials the user credentials from the request body
@@ -94,14 +117,19 @@ public class AuthController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user = userService.login(credentials.getEmail(),
-        credentials.getPassword());
+    User user = userService.findByEmail(credentials.getEmail());
+    if (user != null && user.isBanned()) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
 
-    if (user == null) {
+    AuthenticatedUser authenticatedUser = userService.login(
+        credentials.getEmail(), credentials.getPassword());
+
+    if (authenticatedUser == null) {
       throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
     }
 
-    return user;
+    return authenticatedUser;
   }
 
 }

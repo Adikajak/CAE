@@ -1,16 +1,21 @@
 package be.vinci.ipl.cae.demo.services;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -94,7 +99,7 @@ class AdministrationServiceTest {
   void demoteFromAdminReturnsFalseWhenUserNotFound() {
     when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-    boolean result = administrationService.demoteFromAdmin(1L);
+    boolean result = administrationService.demoteFromAdmin(1L, 99L);
 
     assertFalse(result);
     verify(userRepository, never()).save(any());
@@ -107,7 +112,7 @@ class AdministrationServiceTest {
     user.setAdmin(false);
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-    boolean result = administrationService.demoteFromAdmin(1L);
+    boolean result = administrationService.demoteFromAdmin(1L, 99L);
 
     assertFalse(result);
     verify(userRepository, never()).save(any());
@@ -120,11 +125,61 @@ class AdministrationServiceTest {
     user.setAdmin(true);
     when(userRepository.findById(2L)).thenReturn(Optional.of(user));
 
-    boolean result = administrationService.demoteFromAdmin(2L);
+    boolean result = administrationService.demoteFromAdmin(2L, 99L);
 
     assertTrue(result);
     assertFalse(user.isAdmin());
     verify(userRepository).save(user);
-    verify(notificationService).createNotification(any(User.class), any(NotificationDto.class));  }
+    verify(notificationService).createNotification(any(User.class), any(NotificationDto.class));
+  }
+
+  @Test
+  void demoteFromAdminThrowsWhenCallerIsLastAdmin() {
+    User user = new User();
+    user.setAdmin(true);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userRepository.countByIsAdminTrue()).thenReturn(1L);
+
+    assertThrows(IllegalStateException.class,
+        () -> administrationService.demoteFromAdmin(1L, 1L));
+
+    verify(userRepository, never()).save(any());
+    verify(notificationService, never()).createNotification(any(), any());
+  }
+
+  @Test
+  void demoteFromAdminAllowsSelfDemotionWhenOtherAdminsExist() {
+    User user = new User();
+    user.setAdmin(true);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userRepository.countByIsAdminTrue()).thenReturn(2L);
+
+    boolean result = assertDoesNotThrow(() -> administrationService.demoteFromAdmin(1L, 1L));
+
+    assertTrue(result);
+    assertFalse(user.isAdmin());
+    verify(userRepository).save(user);
+    verify(notificationService).createNotification(any(User.class), any(NotificationDto.class));
+  }
+
+  @Test
+  void sendNotificationThrowsWhenActionTypeIsUnexpected() throws Exception {
+    User user = new User();
+
+    Class<?> actionTypeClass = Class.forName(
+        "be.vinci.ipl.cae.demo.services.AdministrationService$ActionType");
+    Object unknownAction = Enum.valueOf((Class<Enum>) actionTypeClass, "UNKNOWN");
+
+    Method sendNotification = AdministrationService.class.getDeclaredMethod(
+        "sendNotification", actionTypeClass, User.class);
+    sendNotification.setAccessible(true);
+
+    InvocationTargetException exception = assertThrows(InvocationTargetException.class,
+        () -> sendNotification.invoke(administrationService, unknownAction, user));
+
+    Throwable cause = exception.getCause();
+    assertInstanceOf(IllegalStateException.class, cause);
+    assertTrue(cause.getMessage().contains("ActionType inattendu"));
+  }
 }
 

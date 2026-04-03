@@ -76,6 +76,7 @@ public class AdminController {
 
   /**
    * Demotes an admin user to regular member.
+   * An admin may demote themselves only if at least one other admin exists.
    *
    * @param userId the user id to demote
    * @param caller the authenticated admin user
@@ -83,12 +84,13 @@ public class AdminController {
   @DeleteMapping("/{userId}")
   @ResponseStatus(HttpStatus.OK)
   public void demoteFromAdmin(@PathVariable Long userId, @AuthenticationPrincipal User caller) {
-    if (caller.getId().equals(userId)) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot demote yourself");
-    }
-    boolean demoted = administrationService.demoteFromAdmin(userId);
-    if (!demoted) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or not admin");
+    try {
+      boolean demoted = administrationService.demoteFromAdmin(userId, caller.getId());
+      if (!demoted) {
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or not admin");
+      }
+    } catch (IllegalStateException e) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
     }
   }
 

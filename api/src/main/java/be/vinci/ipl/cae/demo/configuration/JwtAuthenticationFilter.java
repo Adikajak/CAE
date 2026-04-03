@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                   HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
     String header = request.getHeader("Authorization");
-    if (header == null) {
+    if (header == null || header.isBlank()) {
       filterChain.doFilter(request, response);
       return;
     }

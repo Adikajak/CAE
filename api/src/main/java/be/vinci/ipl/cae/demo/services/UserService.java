@@ -6,15 +6,20 @@ import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
 import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
+import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
+import be.vinci.ipl.cae.demo.repositories.TeamRepository;
+import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
 import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,6 +40,9 @@ public class UserService {
   private static final long lifetimeJwt = 24 * 60 * 60 * 1000; // 24 hours
   private Algorithm algorithm;
 
+  /**
+   * Initialize the JWT algorithm once the secret is injected.
+   */
   @PostConstruct
   public void init() {
     this.algorithm = Algorithm.HMAC256(jwtSecret);
@@ -46,6 +54,9 @@ public class UserService {
   private final SpecialityRepository specialityRepository;
   private final NotificationService notificationService;
   private final ProfilePictureRepository profilePictureRepository;
+  private final TeamRepository teamRepository;
+  private final TeamMembershipRepository teamMembershipRepository;
+  private final TournamentRegistrationRepository tournamentRegistrationRepository;
 
   /**
    * Constructor.
@@ -60,13 +71,18 @@ public class UserService {
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
       UnavailabilityRepository unavailabilityRepository,
       SpecialityRepository specialityRepository, NotificationService notificationService,
-      ProfilePictureRepository profilePictureRepository) {
+      ProfilePictureRepository profilePictureRepository, TeamRepository teamRepository,
+      TeamMembershipRepository teamMembershipRepository,
+      TournamentRegistrationRepository tournamentRegistrationRepository) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.specialityRepository = specialityRepository;
     this.unavailabilityRepository = unavailabilityRepository;
     this.profilePictureRepository = profilePictureRepository;
     this.notificationService = notificationService;
+    this.teamRepository = teamRepository;
+    this.teamMembershipRepository = teamMembershipRepository;
+    this.tournamentRegistrationRepository = tournamentRegistrationRepository;
   }
 
   /**
@@ -145,6 +161,10 @@ public class UserService {
   public AuthenticatedUser login(String email, String password) {
     User user = userRepository.findByEmail(email);
     if (user == null) {
+      return null;
+    }
+
+    if (user.isBanned()) {
       return null;
     }
 
@@ -332,4 +352,75 @@ public class UserService {
   public Optional<User> findUser(Long userId) {
     return userRepository.findById(userId);
   }
+
+  /**
+   * Retrieves all users.
+   *
+   * @return all users.
+   */
+  public Iterable<User> getAllUsers() {
+    return userRepository.findAll();
+  }
+
+  /**
+   * Ban a user by ID.
+   *
+   * @param userId the ID of the user to ban
+   * @return true if the user was banned, false if not found
+   */
+  @Transactional
+  public boolean banUser(Long userId) {
+    Optional<User> optionalUser = userRepository.findById(userId);
+    if (optionalUser.isEmpty()) {
+      return false;
+    }
+    User user = optionalUser.get();
+
+    Team team = user.getTeam();
+    if (team != null) {
+      boolean isMainManager = team.getManager() != null
+          && team.getManager().getId().equals(userId);
+      boolean isSecondManager = team.getSecondManager() != null
+          && team.getSecondManager().getId().equals(userId);
+      boolean hasNoSecondManager = team.getSecondManager() == null;
+
+      if (isMainManager && hasNoSecondManager) {
+        User oldest = userRepository
+            .findFirstByTeamAndIsBannedFalseAndIdNotOrderByDateAsc(team, userId);
+        if (oldest != null) {
+          team.setManager(oldest);
+        } else {
+          team.setManager(null);
+        }
+      } else if (isMainManager && !hasNoSecondManager) {
+        team.setManager(team.getSecondManager());
+        team.setSecondManager(null);
+      } else if (isSecondManager) {
+        team.setSecondManager(null);
+      }
+
+      teamRepository.save(team);
+      if (team.getManager() == null) {
+        tournamentRegistrationRepository.deleteByTeam(team);
+      }
+    }
+    teamMembershipRepository.findByMember(user)
+        .ifPresent(teamMembershipRepository::delete);
+
+    user.setBanned(true);
+    user.setTeam(null);
+    userRepository.save(user);
+    return true;
+  }
+
+  /**
+   * Find a user by email.
+   *
+   * @param email the email
+   * @return the user or null if not found
+   */
+  public User findByEmail(String email) {
+    return userRepository.findByEmail(email);
+  }
 }
+

@@ -44,3 +44,20 @@ Authorization: {{token}}
   "oldPassword": "wrongpassword",
   "newPassword": "newpassword123"
 }
+
+### Get all users (public, no token)
+GET {{baseUrl}}/users
+
+### Get all users (with token, should also work)
+GET {{baseUrl}}/users
+Authorization: {{token}}
+
+### Get user by id (public, no token)
+GET {{baseUrl}}/users/1
+
+### Get user by id (with token, should also work)
+GET {{baseUrl}}/users/1
+Authorization: {{token}}
+
+### Get user by id not found (should fail 404)
+GET {{baseUrl}}/users/99999

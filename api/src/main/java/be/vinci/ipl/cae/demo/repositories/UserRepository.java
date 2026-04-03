@@ -2,6 +2,7 @@ package be.vinci.ipl.cae.demo.repositories;
 
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -41,4 +42,29 @@ public interface UserRepository extends CrudRepository<User, Long> {
    * @return all non-admin users
    */
   Iterable<User> findAllByIsAdminFalse();
+
+  /**
+   * Counts all admin users.
+   *
+   * @return the number of admin users
+   */
+  long countByIsAdminTrue();
+
+  /**
+   * Find the oldest non-banned member of a team excluding a specific user.
+   *
+   * @param team the team
+   * @param excludedId the user ID to exclude
+   * @return the oldest matching user or null
+   */
+  User findFirstByTeamAndIsBannedFalseAndIdNotOrderByDateAsc(Team team, Long excludedId);
+
+  /**
+   * Find all users with the given tag (case-insensitive).
+   *
+   * @param tag the player tag
+   * @return list of matching users
+   */
+  List<User> findByTagIgnoreCase(String tag);
 }
+

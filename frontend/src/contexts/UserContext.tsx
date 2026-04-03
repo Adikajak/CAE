@@ -15,6 +15,7 @@ import {
   setSessionStorage,
   storeAuthenticatedUser,
 } from '../utils/session';
+import { refreshToken } from '../services/administrationService';
 
 const defaultUserContext: UserContextType = {
   authenticatedUser: undefined,
@@ -24,6 +25,7 @@ const defaultUserContext: UserContextType = {
   jwtData: () => {
     return null;
   },
+  refreshUser: async () => {},
 };
 
 const UserContext = createContext<UserContextType>(defaultUserContext);
@@ -66,11 +68,6 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
         error.status = response.status;
         throw error;
       }
-
-      const createdUser: AuthenticatedUser = await response.json();
-
-      setAuthenticatedUser(createdUser);
-      console.log('createdUser: ', createdUser);
     } catch (err) {
       console.error('registerUser::error: ', err);
       throw err;
@@ -112,6 +109,14 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     setAuthenticatedUser(undefined);
   };
 
+  const refreshUser = async () => {
+    if (!authenticatedUser) {
+      return;
+    }
+    const refreshed = await refreshToken(authenticatedUser.token);
+    setAuthenticatedUser(refreshed);
+  };
+
   const jwtData = () => {
     if (authenticatedUser == null || authenticatedUser.token == null) {
       return null;
@@ -133,6 +138,7 @@ const UserContextProvider = ({ children }: { children: ReactNode }) => {
     loginUser,
     clearUser,
     jwtData,
+    refreshUser,
   };
 
   return (

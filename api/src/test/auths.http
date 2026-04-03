@@ -1,65 +1,97 @@
 @baseUrl = http://localhost:3000
 
-### Try to login an unknown user with an unvalid field (email must contain {value}@{value}.{value} like value)
+### Expected error:403 Login invalide: email mal formaté
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email":"unknown",
-  "password":"admin"
+  "email": "unknown",
+  "password": "Admin1234"
 }
 
-### Try to register an unknown user with an unvalid field (email must contain {value}@{value}.{value} like value)
+### Expected error:403 Register invalide: email mal formaté (payload complet)
 POST {{baseUrl}}/auths/register
 Content-Type: application/json
 
 {
-  "email":"unknown",
-  "password":"admin"
+  "email": "unknown",
+  "password": "Admin1234",
+  "tag": "Root",
+  "speciality": "Architecte",
+  "profile_picture": "https://api.dicebear.com/7.x/bottts/svg?seed=apple"
 }
 
-### Try to login an unknown user
-POST {{baseUrl}}/auths/login
-Content-Type: application/json
-
-{
-  "email":"unknown@unknown.com",
-  "password":"admin"
-}
-
-### Create the default admin
+### Expected error:400 Register invalide: mot de passe trop faible (pas de majuscule/chiffre)
 POST {{baseUrl}}/auths/register
 Content-Type: application/json
 
 {
-  "email":"admin@admin.com",
-  "password":"admin"
+  "email": "weak@password.com",
+  "password": "weakpass",
+  "tag": "Weak",
+  "speciality": "Architecte",
+  "profile_picture": "https://api.dicebear.com/7.x/bottts/svg?seed=apple"
 }
 
-### Login the default admin
+### Expected error:401 Login invalide: utilisateur inconnu
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email":"admin@admin.com",
-  "password":"admin"
+  "email": "unknown@unknown.com",
+  "password": "Admin1234"
 }
 
-
-### Create the manager user
+### Expected code:200 Create default admin (si deja créé, le test suivant validera 409)
 POST {{baseUrl}}/auths/register
 Content-Type: application/json
 
 {
-  "email":"manager@manager.com",
-  "password":"manager"
+  "email": "admin@admin.com",
+  "password": "Admin1234",
+  "tag": "Root",
+  "speciality": "Architecte",
+  "profile_picture": "https://api.dicebear.com/7.x/bottts/svg?seed=apple"
 }
 
-### Login the manager user
+### Expected error:409 Register invalide: email déjà utilisé
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "admin@admin.com",
+  "password": "Admin1234",
+  "tag": "Root2",
+  "speciality": "Architecte",
+  "profile_picture": "https://api.dicebear.com/7.x/bottts/svg?seed=banana"
+}
+
+### Expected code:200 Login default admin
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
 
 {
-  "email":"manager@manager.com",
-  "password":"manager"
+  "email": "admin@admin.com",
+  "password": "Admin1234"
+}
+
+### Expected code:200 Create manager user
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "manager@manager.com",
+  "password": "Manager1234",
+  "tag": "Manager",
+  "speciality": "Executeur",
+  "profile_picture": "https://api.dicebear.com/7.x/bottts/svg?seed=banana"
+}
+
+### Expected code:200 Login manager user
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "manager@manager.com",
+  "password": "Manager1234"
 }
