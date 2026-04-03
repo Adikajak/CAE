@@ -9,18 +9,18 @@ test.describe('Tournament details', () => {
   test('TC-TD1: should display tournament info after loading', async ({
     page,
   }) => {
-    await goToTournamentDetailsPage(page, 3);
-    await expect(page.getByText('Spring Showdown 2029')).toBeVisible();
+    await goToTournamentDetailsPage(page, 6);
+    await expect(page.getByText('Vinci Easter Cup 2026')).toBeVisible();
     await expect(page.getByRole('heading', { name: /teams inscrites/i })).toBeVisible();
   });
 
-  // TC-TD2: the empty state message is shown when no team is registered
-  test('TC-TD2: should show empty state when no team is registered', async ({
+  // TC-TD2: teams are listed for a tournament with registrations
+  test('TC-TD2: should show registered teams', async ({
     page,
   }) => {
-    await goToTournamentDetailsPage(page, 3);
+    await goToTournamentDetailsPage(page, 6);
     await expect(
-      page.getByText(/aucune team inscrite pour l'instant/i),
+      page.getByRole('columnheader', { name: /nom de la team/i }),
     ).toBeVisible();
   });
 
@@ -28,7 +28,7 @@ test.describe('Tournament details', () => {
   test('TC-TD3: should show register button for lea on a PLANIFIED tournament', async ({
     page,
   }) => {
-    await goToTournamentDetailsPage(page, 3);
+    await goToTournamentDetailsPage(page, 6);
     await expect(
       page.getByRole('button', { name: /inscrire ma team/i }),
     ).toBeVisible();
@@ -39,7 +39,7 @@ test.describe('Tournament details', () => {
   test('TC-TD7: should show error when team has less than 4 members', async ({
     page,
   }) => {
-    await goToTournamentDetailsPage(page, 3);
+    await goToTournamentDetailsPage(page, 6);
     await page.getByRole('button', { name: /inscrire ma team/i }).click();
     await expect(
       page.getByText(/votre team doit avoir au moins 4 membres/i),
@@ -50,7 +50,7 @@ test.describe('Tournament details', () => {
   test('TC-TD8: should not show register button for an ONGOING tournament', async ({
     page,
   }) => {
-    await goToTournamentDetailsPage(page, 2);
+    await goToTournamentDetailsPage(page, 5);
     await expect(
       page.getByRole('button', { name: /inscrire ma team/i }),
     ).not.toBeVisible();

@@ -8,8 +8,8 @@ test.describe('Tournament details - unauthenticated', () => {
   test('TC-TD6: should display tournament info without register button', async ({
     page,
   }) => {
-    await goToTournamentDetailsPage(page, 3);
-    await expect(page.getByText('Spring Showdown 2029')).toBeVisible();
+    await goToTournamentDetailsPage(page, 6);
+    await expect(page.getByText('Vinci Easter Cup 2026')).toBeVisible();
     await expect(
       page.getByRole('button', { name: /inscrire ma team/i }),
     ).not.toBeVisible();
