@@ -5,6 +5,11 @@ import { TournamentContext } from '../../../../contexts/TournamentContext';
 import { TournamentContextType } from '../../../../types';
 import TournamentFilters from './TournamentFilters';
 
+/**
+ * Builds a tournament context value for tests.
+ * @param {Partial<TournamentContextType>} overrides - fields to override
+ * @return {TournamentContextType} the context value
+ */
 const createTournamentContextValue = (
   overrides: Partial<TournamentContextType> = {},
 ): TournamentContextType =>
@@ -77,6 +82,11 @@ const createTournamentContextValue = (
     ...overrides,
   }) as TournamentContextType;
 
+/**
+ * Shows the filters component inside a tournament context.
+ * @param {TournamentContextType} tournamentCtx - the tournament context
+ * @return {void}
+ */
 const renderFilters = (
   tournamentCtx: TournamentContextType = createTournamentContextValue(),
 ) =>
@@ -86,11 +96,19 @@ const renderFilters = (
     </TournamentContext.Provider>,
   );
 
+/**
+ * Gets the box that holds the filter chips.
+ * @return {HTMLElement} the chips container
+ */
 const getChipsContainer = () =>
   screen
     .getByRole('button', { name: /réinitialiser/i })
     .closest('.MuiBox-root') as HTMLElement;
 
+/**
+ * Clicks the cancel icon on the first chip.
+ * @return {Promise<void>}
+ */
 const clickCancelIcon = async () =>
   await userEvent.click(screen.getByTestId('CancelIcon'));
 

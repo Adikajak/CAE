@@ -105,5 +105,10 @@ test.describe('Profile', () => {
       await expect(page.getByText(/la date de fin doit être après la date de début/i)).toBeVisible();
     });
   });
+
+    // TC-P9: Activity section is visible
+    test('TC-P9: should display the activity section', async ({ page }) => {
+    await expect(page.getByText(/mon activité/i)).toBeVisible();
+  });
 });
 

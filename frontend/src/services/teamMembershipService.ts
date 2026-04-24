@@ -3,6 +3,12 @@ import { createHeaders, ensureRequestSucceeded } from './apiUtils';
 
 const MEMBERSHIPS_BASE_URL = '/api/teams/memberships';
 
+/**
+ * Fetches the current user's team membership.
+ * Returns null if the user has no membership.
+ * @param {string} token - the auth token
+ * @return {Promise<TeamMembership | null>} the membership or null
+ */
 const fetchCurrentMembership = async (
   token: string,
 ): Promise<TeamMembership | null> => {
@@ -20,6 +26,12 @@ const fetchCurrentMembership = async (
   return response.json() as Promise<TeamMembership>;
 };
 
+/**
+ * Fetches all members of a team.
+ * @param {number} teamId - the team ID
+ * @param {string} token - the auth token
+ * @return {Promise<TeamMembership[]>} the list of memberships
+ */
 const fetchTeamMembers = async (
   teamId: number,
   token: string,
@@ -35,6 +47,12 @@ const fetchTeamMembers = async (
   return members ?? [];
 };
 
+/**
+ * Sends a join request to a team.
+ * @param {string} token - the auth token
+ * @param {number} teamId - the team ID
+ * @return {Promise<void>}
+ */
 const joinTeam = async (token: string, teamId: number): Promise<void> => {
   const response = await fetch(`${MEMBERSHIPS_BASE_URL}/${teamId}/membership`, {
     method: 'POST',
@@ -48,6 +66,12 @@ const joinTeam = async (token: string, teamId: number): Promise<void> => {
   );
 };
 
+/**
+ * Excludes a member from a team by their membership ID.
+ * @param {string} token - the auth token
+ * @param {number} membershipId - the membership ID
+ * @return {Promise<void>}
+ */
 const excludeMember = async (
   token: string,
   membershipId: number,

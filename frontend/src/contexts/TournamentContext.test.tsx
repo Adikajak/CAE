@@ -16,6 +16,7 @@ import {
 } from '../services/tournamentService';
 import { fetchTeamById } from '../services/teamService';
 import { fetchTeamActivity } from '../services/tournamentRegistrationService';
+import { fetchMemberActivity } from '../services/activityService';
 
 vi.mock('../services/tournamentService', () => ({
   createTournament: vi.fn(),
@@ -31,6 +32,12 @@ vi.mock('../services/teamService', () => ({
 
 vi.mock('../services/tournamentRegistrationService', () => ({
   fetchTeamActivity: vi.fn(),
+}));
+
+vi.mock('../services/activityService', () => ({
+  fetchMemberActivity: vi.fn(),
+  fetchTeamActivity: vi.fn(),
+  fetchPastTeams: vi.fn(),
 }));
 
 describe('TournamentContext', () => {
@@ -183,6 +190,7 @@ describe('TournamentContext', () => {
     vi.mocked(fetchTeamById).mockResolvedValue(userTeam);
     vi.mocked(fetchTeamActivity).mockResolvedValue([]);
     vi.mocked(fetchTournamentsFiltered).mockResolvedValue([]);
+    vi.mocked(fetchMemberActivity).mockResolvedValue([]);
     vi.mocked(publishTournament).mockResolvedValue({
       ...tournaments[0],
       state: 'PLANIFIED',
@@ -1079,6 +1087,51 @@ describe('TournamentContext', () => {
 
     await waitFor(() => {
       expect(contextValue?.registeredTournamentIds.has(1)).toBe(true);
+    });
+  });
+
+  test('participatedTournamentIds is populated from member activity', async () => {
+    vi.mocked(fetchMemberActivity).mockResolvedValue([
+      {
+        tournamentId: 1,
+        tournamentName: 'Spring Clash',
+        round: 1,
+        totalRounds: 4,
+        matchId: 10,
+        selectedTeamId: 99,
+        team1Id: 99,
+        team1Name: 'MY_TEAM',
+        team2Id: 50,
+        team2Name: 'OPP',
+        winnerTeamId: 99,
+        state: 'ENDED',
+      },
+    ]);
+
+    renderTournamentContext(createManagerUserContext());
+
+    await waitFor(() => {
+      expect(contextValue?.participatedTournamentIds.has(1)).toBe(true);
+    });
+  });
+
+  test('participatedTournamentIds is empty when user is not authenticated', async () => {
+    renderTournamentContext(createAnonymousUserContext());
+
+    await waitFor(() => {
+      expect(contextValue?.participatedTournamentIds.size).toBe(0);
+    });
+  });
+
+  test('participatedTournamentIds is empty when fetchMemberActivity fails', async () => {
+    vi.mocked(fetchMemberActivity).mockRejectedValue(
+      new Error('network error'),
+    );
+
+    renderTournamentContext(createManagerUserContext());
+
+    await waitFor(() => {
+      expect(contextValue?.participatedTournamentIds.size).toBe(0);
     });
   });
 

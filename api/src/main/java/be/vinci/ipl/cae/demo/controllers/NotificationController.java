@@ -7,6 +7,7 @@ import be.vinci.ipl.cae.demo.services.NotificationService;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 /**
  * RestController pour /notifications/ et /notifications.
  */
+@PreAuthorize("isAuthenticated()")
 @RestController
 @RequestMapping("/notifications")
 public class NotificationController {
@@ -77,6 +79,7 @@ public class NotificationController {
    * @param notificationDto the notification data
    * @return the created notification
    */
+  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping("/")
   @ResponseStatus(HttpStatus.CREATED)
   public Notification createNotification(@Valid @RequestBody NotificationDto notificationDto) {

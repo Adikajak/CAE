@@ -1,14 +1,16 @@
 package be.vinci.ipl.cae.demo.services;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.enums.MembershipStatus;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
@@ -17,6 +19,7 @@ import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import be.vinci.ipl.cae.demo.services.MembershipHistoryService;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -47,6 +50,12 @@ class TeamMembershipServiceTest {
   @InjectMocks
   private TeamMembershipService teamMembershipService;
 
+  @Mock
+  private MembershipHistoryService membershipHistoryService;
+
+  @Mock
+  private SelectionMatchService selectionMatchService;
+
   private User userWithId(long id) {
     User user = new User();
     ReflectionTestUtils.setField(user, "id", id);
@@ -70,64 +79,59 @@ class TeamMembershipServiceTest {
   // ── addUserToTeam ─────────────────────────────────────────────────────────
 
   @Test
-  void addUserToTeamThrowsWhenUserAlreadyHasTeam() {
+  void addUserToTeamReturnsNullWhenUserAlreadyHasTeam() {
     User user = new User();
     user.setTeam(new Team());
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.addUserToTeam(user, new Team()));
+    assertNull(teamMembershipService.addUserToTeam(user, new Team()));
 
     verify(teamMembershipRepository, never()).save(any());
   }
 
   @Test
-  void addUserToTeamThrowsWhenUserHasPendingMembership() {
+  void addUserToTeamReturnsNullWhenUserHasPendingMembership() {
     User user = new User();
     when(teamMembershipRepository.findByMember(user))
         .thenReturn(Optional.of(new TeamMembership()));
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.addUserToTeam(user, new Team()));
+    assertNull(teamMembershipService.addUserToTeam(user, new Team()));
 
     verify(teamMembershipRepository, never()).save(any());
   }
 
   @Test
-  void addUserToTeamThrowsWhenUserIsManager() {
+  void addUserToTeamReturnsNullWhenUserIsManager() {
     User manager = userWithId(10L);
     Team team = teamWithManager(manager);
     when(teamMembershipRepository.findByMember(manager)).thenReturn(Optional.empty());
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.addUserToTeam(manager, team));
+    assertNull(teamMembershipService.addUserToTeam(manager, team));
 
     verify(teamMembershipRepository, never()).save(any());
   }
 
   @Test
-  void addUserToTeamThrowsWhenUserIsSecondManager() {
+  void addUserToTeamReturnsNullWhenUserIsSecondManager() {
     User secondManager = userWithId(20L);
     User manager = userWithId(10L);
     Team team = teamWithManager(manager);
     team.setSecondManager(secondManager);
     when(teamMembershipRepository.findByMember(secondManager)).thenReturn(Optional.empty());
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.addUserToTeam(secondManager, team));
+    assertNull(teamMembershipService.addUserToTeam(secondManager, team));
 
     verify(teamMembershipRepository, never()).save(any());
   }
 
   @Test
-  void addUserToTeamThrowsWhenTagAlreadyTakenInTeam() {
+  void addUserToTeamReturnsNullWhenTagAlreadyTakenInTeam() {
     User user = new User();
     user.setTag("zed");
     Team team = new Team();
     when(teamMembershipRepository.findByMember(user)).thenReturn(Optional.empty());
     when(userRepository.existsByTeamAndTag(team, "zed")).thenReturn(true);
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.addUserToTeam(user, team));
+    assertNull(teamMembershipService.addUserToTeam(user, team));
 
     verify(teamMembershipRepository, never()).save(any());
   }
@@ -304,45 +308,79 @@ class TeamMembershipServiceTest {
   // ── excludeMember ─────────────────────────────────────────────────────────
 
   @Test
-  void excludeMemberThrowsWhenMembershipNotFound() {
+  void excludeMemberReturnsFalseWhenMembershipNotFound() {
     when(teamMembershipRepository.findById(1L)).thenReturn(Optional.empty());
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.excludeMember(new User(), 1L));
+    assertFalse(teamMembershipService.excludeMember(new User(), 1L));
   }
 
   @Test
-  void excludeMemberThrowsWhenNotPrimaryManager() {
+  void excludeMemberReturnsFalseWhenRequesterIsNotManager() {
     User manager = userWithId(10L);
+    User secondManager = userWithId(20L);
     User other = userWithId(99L);
     Team team = teamWithManager(manager);
+    team.setSecondManager(secondManager);
     TeamMembership membership = buildMembership(team, new User(), MembershipStatus.ACCEPTED);
     when(teamMembershipRepository.findById(1L)).thenReturn(Optional.of(membership));
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.excludeMember(other, 1L));
+    assertFalse(teamMembershipService.excludeMember(other, 1L));
   }
 
   @Test
-  void excludeMemberThrowsWhenMembershipNotAccepted() {
+  void excludeMemberReturnsFalseWhenMembershipNotAccepted() {
     User manager = userWithId(10L);
     Team team = teamWithManager(manager);
     TeamMembership membership = buildMembership(team, new User(), MembershipStatus.PENDING);
     when(teamMembershipRepository.findById(1L)).thenReturn(Optional.of(membership));
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.excludeMember(manager, 1L));
+    assertFalse(teamMembershipService.excludeMember(manager, 1L));
   }
 
   @Test
-  void excludeMemberThrowsWhenTargetIsPrimaryManager() {
+  void excludeMemberReturnsFalseWhenPrimaryManagerTargetsSelf() {
     User manager = userWithId(10L);
     Team team = teamWithManager(manager);
     TeamMembership membership = buildMembership(team, manager, MembershipStatus.ACCEPTED);
     when(teamMembershipRepository.findById(1L)).thenReturn(Optional.of(membership));
 
-    assertThrows(IllegalStateException.class,
-        () -> teamMembershipService.excludeMember(manager, 1L));
+    assertFalse(teamMembershipService.excludeMember(manager, 1L));
+  }
+
+  @Test
+  void excludeMemberAllowsPrimaryManagerToExcludeSecondManager() {
+    // tiago exclure remake
+    User manager = userWithId(10L);
+    User secondManager = userWithId(20L);
+    Team team = teamWithManager(manager);
+    team.setSecondManager(secondManager);
+    TeamMembership membership = buildMembership(team, secondManager, MembershipStatus.ACCEPTED);
+    when(teamMembershipRepository.findById(1L)).thenReturn(Optional.of(membership));
+
+    assertTrue(teamMembershipService.excludeMember(manager, 1L));
+
+    verify(teamRepository).save(team);
+    verify(teamMembershipRepository).delete(membership);
+    // tiago exclure remake
+  }
+
+  @Test
+  void excludeMemberAllowsSecondManagerToExcludePrimaryManager() {
+    // tiago exclure remake
+    User manager = userWithId(10L);
+    User secondManager = userWithId(20L);
+    Team team = teamWithManager(manager);
+    team.setSecondManager(secondManager);
+    TeamMembership membership = buildMembership(team, manager, MembershipStatus.ACCEPTED);
+    when(teamMembershipRepository.findById(1L)).thenReturn(Optional.of(membership));
+
+    assertTrue(teamMembershipService.excludeMember(secondManager, 1L));
+
+    assertSame(secondManager, team.getManager());
+    assertNull(team.getSecondManager());
+    verify(teamRepository).save(team);
+    verify(teamMembershipRepository).delete(membership);
+    // tiago exclure remake
   }
 
   @Test
@@ -353,7 +391,7 @@ class TeamMembershipServiceTest {
     TeamMembership membership = buildMembership(team, member, MembershipStatus.ACCEPTED);
     when(teamMembershipRepository.findById(1L)).thenReturn(Optional.of(membership));
 
-    teamMembershipService.excludeMember(manager, 1L);
+    assertTrue(teamMembershipService.excludeMember(manager, 1L));
 
     verify(userRepository).save(member);
     verify(teamMembershipRepository).delete(membership);
@@ -368,7 +406,7 @@ class TeamMembershipServiceTest {
     TeamMembership membership = buildMembership(team, secondManager, MembershipStatus.ACCEPTED);
     when(teamMembershipRepository.findById(1L)).thenReturn(Optional.of(membership));
 
-    teamMembershipService.excludeMember(manager, 1L);
+    assertTrue(teamMembershipService.excludeMember(manager, 1L));
 
     verify(teamRepository).save(team);
     verify(teamMembershipRepository).delete(membership);

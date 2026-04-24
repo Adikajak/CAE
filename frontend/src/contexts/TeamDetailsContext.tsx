@@ -21,6 +21,7 @@ import {
   fetchTeamById,
   designateSecondManager,
   leaveTeam,
+  excludeMember,
 } from '../services/teamService';
 import { fetchTeamMembers } from '../services/teamMembershipService';
 import { fetchTeamActivity } from '../services/tournamentRegistrationService';
@@ -47,6 +48,7 @@ const defaultTeamDetailsContext: TeamDetailsContextType = {
   handleRefresh: () => {},
   handleDesignateSecondManager: async () => {},
   handleLeaveTeam: async () => {},
+  handleExcludeMember: async () => {},
 };
 
 const TeamDetailsContext = createContext<TeamDetailsContextType>(
@@ -153,6 +155,24 @@ const TeamDetailsContextProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const handleExcludeMember = async (membershipId: number) => {
+    if (!authenticatedUser?.token) return;
+
+    setActionLoading(`exclude-${membershipId}`);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await excludeMember(authenticatedUser.token, membershipId);
+      setSuccess('Le membre a été exclu de la team.');
+      handleRefresh();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const acceptedMemberships = useMemo(
     () => memberships.filter((m) => m.status === 'ACCEPTED'),
     [memberships],
@@ -164,10 +184,15 @@ const TeamDetailsContextProvider = ({ children }: { children: ReactNode }) => {
     const rows = new Map<number, TeamMemberRow>();
 
     if (team.manager) {
+      // tiago exclure remake
       rows.set(team.manager.id, {
+        membershipId: acceptedMemberships.find(
+          (m) => m.member.id === team.manager?.id,
+        )?.id,
         member: team.manager,
         roleLabel: 'Responsable',
       });
+      // tiago exclure remake
     }
 
     if (team.secondManager) {
@@ -233,6 +258,7 @@ const TeamDetailsContextProvider = ({ children }: { children: ReactNode }) => {
     handleRefresh,
     handleDesignateSecondManager,
     handleLeaveTeam,
+    handleExcludeMember,
   };
 
   return (

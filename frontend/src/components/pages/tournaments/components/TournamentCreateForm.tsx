@@ -4,6 +4,8 @@ import { TournamentContext } from '../../../../contexts/TournamentContext';
 import { TournamentContextType } from '../../../../types';
 import TournamentCreateMessages from './TournamentCreateMessages';
 
+const TOURNAMENT_DESCRIPTION_MAX_LENGTH = 150;
+
 const TournamentCreateForm = () => {
   const {
     name,
@@ -77,7 +79,12 @@ const TournamentCreateForm = () => {
         label="Description"
         name="description"
         value={description}
-        onChange={(event) => setDescription(event.target.value)}
+        onChange={(event) =>
+          setDescription(
+            event.target.value.slice(0, TOURNAMENT_DESCRIPTION_MAX_LENGTH),
+          )
+        }
+        inputProps={{ maxLength: TOURNAMENT_DESCRIPTION_MAX_LENGTH }}
         sx={{ gridColumn: { md: '1 / span 2' } }}
       />
 

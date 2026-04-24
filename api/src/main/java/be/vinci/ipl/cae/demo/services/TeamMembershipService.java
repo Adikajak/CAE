@@ -1,12 +1,12 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
 import be.vinci.ipl.cae.demo.models.entities.Notification;
-import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.enums.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.enums.NotificationType;
 import be.vinci.ipl.cae.demo.repositories.NotificationRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
@@ -28,6 +28,8 @@ public class TeamMembershipService {
   private final TeamMembershipRepository teamMembershipRepository;
   private final TeamRepository teamRepository;
   private final NotificationRepository notificationRepository;
+  private final MembershipHistoryService membershipHistoryService;
+  private final SelectionMatchService selectionMatchService;
 
   /**
    * Constructor for dependency injection.
@@ -40,13 +42,17 @@ public class TeamMembershipService {
       TeamMembershipRepository teamMembershipRepository,
       TeamRepository teamRepository,
       NotificationService notificationService,
-      NotificationRepository notificationRepository
+      NotificationRepository notificationRepository,
+      MembershipHistoryService membershipHistoryService,
+      SelectionMatchService selectionMatchService
   ) {
     this.userRepository = userRepository;
     this.teamMembershipRepository = teamMembershipRepository;
     this.teamRepository = teamRepository;
     this.notificationService = notificationService;
     this.notificationRepository = notificationRepository;
+    this.membershipHistoryService = membershipHistoryService;
+    this.selectionMatchService = selectionMatchService;
   }
 
   /**
@@ -94,64 +100,63 @@ public class TeamMembershipService {
   }
 
   /**
-   * Adds a user to a team if the tag is unique within that team.
+   * Checks whether the user has a pending membership request.
+   *
+   * @param user the user to check
+   * @return true if a pending request exists
+   */
+  public boolean hasPendingRequest(User user) {
+    return teamMembershipRepository.findByMember(user).isPresent();
+  }
+
+  /**
+   * Checks whether the user is already a manager (primary or secondary) of the team.
+   *
+   * @param user the user to check
+   * @param team the team
+   * @return true if the user is a manager
+   */
+  public boolean isManagerOfTeam(User user, Team team) {
+    return (team.getManager() != null && team.getManager().getId().equals(user.getId()))
+        || (team.getSecondManager() != null
+        && team.getSecondManager().getId().equals(user.getId()));
+  }
+
+  /**
+   * Checks whether the user's tag is already taken in the team.
+   *
+   * @param user the user to check
+   * @param team the team
+   * @return true if the tag is already used by another member
+   */
+  public boolean isTagTakenInTeam(User user, Team team) {
+    return userRepository.existsByTeamAndTag(team, user.getTag());
+  }
+
+  /**
+   * Adds a user to a team by creating a pending membership request.
    *
    * @param user the user to add
    * @param team the team
-   * @return the TeamMembership created
-   * @throws IllegalStateException if the tag is already used by another user in the team
+   * @return the TeamMembership created, or null if the user is not eligible
    */
   @Transactional
   public TeamMembership addUserToTeam(User user, Team team) {
-    validateCanJoinTeam(user, team);
+    if (user.getTeam() != null) {
+      return null;
+    }
+    if (hasPendingRequest(user)) {
+      return null;
+    }
+    if (isManagerOfTeam(user, team)) {
+      return null;
+    }
+    if (isTagTakenInTeam(user, team)) {
+      return null;
+    }
     TeamMembership membership = createPendingMembership(user, team);
     notifyManagersOfRequest(user, team, membership.getId());
     return membership;
-  }
-
-  /**
-   * Validates that the user is allowed to join the team.
-   *
-   * @param user the user requesting to join
-   * @param team the target team
-   */
-  private void validateCanJoinTeam(User user, Team team) {
-    if (user.getTeam() != null) {
-      throw new IllegalStateException("Vous appartenez déjà à une team");
-    }
-    if (teamMembershipRepository.findByMember(user).isPresent()) {
-      throw new IllegalStateException("Vous avez déjà une demande d'adhésion en cours");
-    }
-    validateNotManager(user, team);
-    validateTagNotTaken(user, team);
-  }
-
-  /**
-   * Validates that the user is not already a manager of the team.
-   *
-   * @param user the user to check
-   * @param team the team
-   */
-  private void validateNotManager(User user, Team team) {
-    boolean isManager = (team.getManager() != null
-        && team.getManager().getId().equals(user.getId()))
-        || (team.getSecondManager() != null
-        && team.getSecondManager().getId().equals(user.getId()));
-    if (isManager) {
-      throw new IllegalStateException("Vous êtes déjà responsable de cette team");
-    }
-  }
-
-  /**
-   * Validates that the user's tag is not already used in the team.
-   *
-   * @param user the user to check
-   * @param team the team
-   */
-  private void validateTagNotTaken(User user, Team team) {
-    if (userRepository.existsByTeamAndTag(team, user.getTag())) {
-      throw new IllegalStateException("This tag is already used by another user in this team");
-    }
   }
 
   /**
@@ -299,55 +304,53 @@ public class TeamMembershipService {
   }
 
   /**
-   * Exclude a member from a team.
+   * Exclude a member from a team, with authorization and consistency checks.
    *
-   * @param currentUser the authenticated user
-   * @param membershipId the membership id to remove
+   * @param requester the user performing the exclusion (must be primary manager)
+   * @param membershipId the ID of the membership to remove
+   * @return true if the member was excluded, false if any precondition was not met
    */
   @Transactional
-  public void excludeMember(User currentUser, Long membershipId) {
-    TeamMembership membership = findMembershipOrThrow(membershipId);
-    validateCanExclude(currentUser, membership);
-    removeMemberFromTeam(membership);
-    teamMembershipRepository.delete(membership);
-  }
-
-  /**
-   * Finds a membership by ID or throws if not found.
-   *
-   * @param membershipId the membership ID
-   * @return the membership
-   */
-  private TeamMembership findMembershipOrThrow(Long membershipId) {
-    return teamMembershipRepository.findById(membershipId)
-        .orElseThrow(() -> new IllegalStateException("Membre introuvable"));
-  }
-
-  /**
-   * Validates that the current user can exclude the member.
-   *
-   * @param currentUser the authenticated user
-   * @param membership the membership to exclude
-   */
-  private void validateCanExclude(User currentUser, TeamMembership membership) {
-    if (!EntityUtils.sameUser(membership.getTeam().getManager(), currentUser)) {
-      throw new IllegalStateException("Seul le responsable principal peut exclure un membre");
+  public boolean excludeMember(User requester, Long membershipId) {
+    Optional<TeamMembership> found = teamMembershipRepository.findById(membershipId);
+    if (found.isEmpty()) {
+      return false;
     }
-    validateExclusionTarget(membership);
-  }
 
-  /**
-   * Validates that the membership target can be excluded.
-   *
-   * @param membership the membership to check
-   */
-  private void validateExclusionTarget(TeamMembership membership) {
+    TeamMembership membership = found.get();
+    Team team = membership.getTeam();
+    // tiago exclure remake
+    boolean isPrimaryManager = EntityUtils.sameUser(requester, team.getManager());
+    boolean isSecondManager = EntityUtils.sameUser(requester, team.getSecondManager());
+    if (!isPrimaryManager && !isSecondManager) {
+      return false;
+    }
+    // tiago exclure remake
+
+    if (isPrimaryManager && EntityUtils.sameUser(membership.getMember(), team.getManager())) {
+      return false;
+    }
     if (membership.getStatus() != MembershipStatus.ACCEPTED) {
-      throw new IllegalStateException("Seuls les membres actifs peuvent être exclus");
+      return false;
     }
-    if (EntityUtils.sameUser(membership.getMember(), membership.getTeam().getManager())) {
-      throw new IllegalStateException("Le responsable principal ne peut pas être exclu");
-    }
+
+    selectionMatchService.handleMemberLeftTeam(
+        membership.getMember().getId(), membership.getTeam().getId(), requester.getId())
+    ;
+    excludeMember(membership);
+    return true;
+  }
+
+  /**
+   * Exclude a member from a team.
+   *
+   * @param membership the membership to remove
+   */
+  @Transactional
+  public void excludeMember(TeamMembership membership) {
+    removeMemberFromTeam(membership);
+    membershipHistoryService.saveToHistory(membership.getMember(), membership.getTeam());
+    teamMembershipRepository.delete(membership);
   }
 
   /**
@@ -356,10 +359,36 @@ public class TeamMembershipService {
    * @param membership the membership to remove
    */
   private void removeMemberFromTeam(TeamMembership membership) {
+    // tiago exclure remake
+    clearManagerRoleIfNeeded(membership.getMember(), membership.getTeam());
+    // tiago exclure remake
     clearSecondManagerIfNeeded(membership.getMember(), membership.getTeam());
     membership.getMember().setTeam(null);
     userRepository.save(membership.getMember());
   }
+
+  // tiago exclure remake
+  /**
+   * Updates manager roles if the excluded member is the primary manager.
+   * Promotes second manager when available, otherwise clears the manager role.
+   *
+   * @param member the excluded member
+   * @param team the team
+   */
+  private void clearManagerRoleIfNeeded(User member, Team team) {
+    if (!EntityUtils.sameUser(member, team.getManager())) {
+      return;
+    }
+
+    if (team.getSecondManager() != null) {
+      team.setManager(team.getSecondManager());
+      team.setSecondManager(null);
+    } else {
+      team.setManager(null);
+    }
+    teamRepository.save(team);
+  }
+  // tiago exclure remake
 
   /**
    * Removes the second manager role if the leaving member holds it.

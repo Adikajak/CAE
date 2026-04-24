@@ -4,11 +4,13 @@ import be.vinci.ipl.cae.demo.models.dtos.TournamentRegistrationDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.results.TournamentRegistrationResult;
 import be.vinci.ipl.cae.demo.services.TeamService;
 import be.vinci.ipl.cae.demo.services.TournamentRegistrationService;
 import be.vinci.ipl.cae.demo.services.TournamentService;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,6 +55,7 @@ public class TournamentRegistrationController {
    * @param tournamentId the tournament id
    * @return the created registration DTO
    */
+  @PreAuthorize("isAuthenticated()")
   @PostMapping("/{tournamentId}/registrations")
   @ResponseStatus(HttpStatus.CREATED)
   public TournamentRegistrationDto registerTeam(
@@ -60,7 +63,15 @@ public class TournamentRegistrationController {
       @PathVariable Long tournamentId
   ) {
     User user = (User) authentication.getPrincipal();
-    return tryRegister(getTournamentOrThrow(tournamentId), getUserTeamOrThrow(user), user);
+    TournamentRegistrationResult result = tournamentRegistrationService.registerTeam(
+        getTournamentOrThrow(tournamentId), getUserTeamOrThrow(user), user);
+    if (!result.success()) {
+      if (result.conflict()) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, result.errorMessage());
+      }
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, result.errorMessage());
+    }
+    return result.registration();
   }
 
   /**
@@ -72,17 +83,6 @@ public class TournamentRegistrationController {
   @GetMapping("/{tournamentId}/registrations")
   public List<TournamentRegistrationDto> getRegistrations(@PathVariable Long tournamentId) {
     return tournamentRegistrationService.getRegistrations(getTournamentOrThrow(tournamentId));
-  }
-
-  private TournamentRegistrationDto tryRegister(Tournament tournament, Team team, User user) {
-    try {
-      return tournamentRegistrationService.registerTeam(tournament, team, user);
-    } catch (IllegalStateException e) {
-      if ("La période d'inscription est finie".equals(e.getMessage())) {
-        throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
-      }
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-    }
   }
 
   private Tournament getTournamentOrThrow(Long tournamentId) {

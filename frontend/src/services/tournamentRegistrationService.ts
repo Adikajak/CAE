@@ -4,6 +4,11 @@ import { createHeaders, ensureRequestSucceeded } from './apiUtils';
 const TOURNAMENT_BASE_URL = '/api/tournaments';
 const TEAMS_BASE_URL = '/api/teams';
 
+/**
+ * Fetches all registrations for a tournament.
+ * @param {number} tournamentId - the tournament ID
+ * @return {Promise<TournamentRegistration[]>} the list of registrations
+ */
 const fetchTournamentRegistrations = async (
   tournamentId: number,
 ): Promise<TournamentRegistration[]> => {
@@ -18,6 +23,12 @@ const fetchTournamentRegistrations = async (
   return registrations ?? [];
 };
 
+/**
+ * Registers the current user's team to a tournament.
+ * @param {number} tournamentId - the tournament ID
+ * @param {string} token - the auth token
+ * @return {Promise<TournamentRegistration>} the created registration
+ */
 const registerTeamToTournament = async (
   tournamentId: number,
   token: string,
@@ -47,6 +58,11 @@ const registerTeamToTournament = async (
   return response.json() as Promise<TournamentRegistration>;
 };
 
+/**
+ * Fetches the tournament activity for a team.
+ * @param {number} teamId - the team ID
+ * @return {Promise<TeamActivity[]>} the list of tournament activities
+ */
 const fetchTeamActivity = async (teamId: number): Promise<TeamActivity[]> => {
   const response = await fetch(`${TEAMS_BASE_URL}/${teamId}/registrations`, {
     method: 'GET',

@@ -62,12 +62,17 @@ const LoginPage = () => {
   return (
     <Box
       sx={{
-        margin: 2,
-        padding: 3,
+        paddingTop: '0.25em',
+        paddingBottom: '1.5em',
+        paddingX: '1.5em',
         borderRadius: 4,
-        boxShadow: 2,
+        boxShadow: 4,
         textAlign: 'center',
+        backgroundColor: '#FFF',
+        marginX: 'auto',
+        marginY: '3em',
       }}
+      maxWidth="sm"
     >
       <h1>Connexion</h1>
       <form onSubmit={handleSubmit}>

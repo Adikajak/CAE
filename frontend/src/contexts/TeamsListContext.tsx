@@ -46,6 +46,11 @@ const TeamsListContext = createContext<TeamsListContextType>(
   defaultTeamsListContext,
 );
 
+/**
+ * Gets a message from an error.
+ * @param {unknown} error - the error
+ * @return {string} the message
+ */
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) {
     return error.message;
@@ -53,6 +58,10 @@ const getErrorMessage = (error: unknown) => {
   return 'Une erreur inconnue est survenue';
 };
 
+/**
+ * Provides the list of teams, current membership, and team actions to its children.
+ * @return {JSX.Element} the provider
+ */
 const TeamsListContextProvider = ({ children }: { children: ReactNode }) => {
   const { authenticatedUser, setAuthenticatedUser } =
     useContext<UserContextType>(UserContext);

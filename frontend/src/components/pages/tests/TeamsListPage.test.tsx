@@ -16,6 +16,11 @@ describe('TeamsListPage', () => {
     { id: 2, name: 'Team Beta', managersCount: 1, membersCount: 2 },
   ];
 
+  /**
+   * Returns a user context for a logged-in user.
+   * @param {number} [teamId] - the user's team id
+   * @return {UserContextType} the context value
+   */
   const createContextValue = (teamId?: number): UserContextType => ({
     authenticatedUser: {
       id: 1,
@@ -34,6 +39,11 @@ describe('TeamsListPage', () => {
       .mockReturnValue({ id: 1, email: 'user@test.com', isAdmin: false }),
   });
 
+  /**
+   * Shows the teams list page inside a user context.
+   * @param {UserContextType} contextValue - the user context
+   * @return {void}
+   */
   const renderTeamsListPage = (contextValue = createContextValue()) =>
     render(
       <UserContext.Provider value={contextValue}>

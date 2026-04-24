@@ -4,10 +4,11 @@ import RegisterFormContainer from './components/RegisterFormContainer';
 const RegisterPageContent = () => (
   <Box
     sx={{
-      margin: { xs: 2, md: 4 },
-      display: 'flex',
       justifyContent: 'center',
+      marginX: 'auto',
+      marginY: '3em',
     }}
+    maxWidth="sm"
   >
     <RegisterFormContainer />
   </Box>

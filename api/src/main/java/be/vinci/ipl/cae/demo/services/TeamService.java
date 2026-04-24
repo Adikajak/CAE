@@ -1,10 +1,12 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
-import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.Team;
+import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.enums.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.enums.NotificationType;
+import be.vinci.ipl.cae.demo.models.results.TeamOperationResult;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
@@ -13,6 +15,7 @@ import be.vinci.ipl.cae.demo.utils.EntityUtils;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,6 +29,8 @@ public class TeamService {
   private final TeamMembershipRepository teamMembershipRepository;
   private final NotificationService notificationService;
   private final TournamentRegistrationRepository tournamentRegistrationRepository;
+  private final MembershipHistoryService membershipHistoryService;
+  private final SelectionMatchService selectionMatchService;
 
   /**
    * Constructor for TeamService.
@@ -38,12 +43,16 @@ public class TeamService {
       UserRepository userRepository,
       TeamMembershipRepository teamMembershipRepository,
       NotificationService notificationService,
-      TournamentRegistrationRepository tournamentRegistrationRepository) {
+      TournamentRegistrationRepository tournamentRegistrationRepository,
+      MembershipHistoryService membershipHistoryService,
+      SelectionMatchService selectionMatchService) {
     this.teamRepository = teamRepository;
     this.userRepository = userRepository;
     this.teamMembershipRepository = teamMembershipRepository;
     this.notificationService = notificationService;
     this.tournamentRegistrationRepository = tournamentRegistrationRepository;
+    this.membershipHistoryService = membershipHistoryService;
+    this.selectionMatchService = selectionMatchService;
   }
 
   /**
@@ -51,58 +60,57 @@ public class TeamService {
    *
    * @param team the team to create
    * @param creator the user who creates the team
-   * @return the created team
-   * @throws IllegalStateException if a team with the same name already exists
+   * @return created team or an error message
    */
   @Transactional
-  public Team createTeam(Team team, User creator) {
-    validateTeamNameIsUnique(team.getName());
-    validateUserCanCreateTeam(creator);
-    return saveNewTeam(team, creator);
-  }
-
-  /**
-   * Validates that the team name is not already taken.
-   *
-   * @param name the name to check
-   */
-  private void validateTeamNameIsUnique(String name) {
-    if (teamRepository.findByNameIgnoreCase(name).isPresent()) {
-      throw new IllegalStateException("Le nom de cette team existe déjà");
+  public TeamOperationResult createTeam(Team team, User creator) {
+    String err = validateTeamNameIsUnique(team.getName());
+    if (err != null) {
+      return TeamOperationResult.error(err);
     }
+    err = validateUserCanCreateTeam(creator);
+    if (err != null) {
+      return TeamOperationResult.error(err);
+    }
+    return TeamOperationResult.ok(saveNewTeam(team, creator));
   }
 
-  /**
-   * Validates that the creator can create a team.
-   *
-   * @param creator the user creating the team
-   */
-  private void validateUserCanCreateTeam(User creator) {
+  private String validateTeamNameIsUnique(String name) {
+    if (teamRepository.findByNameIgnoreCase(name).isPresent()) {
+      return "Le nom de cette team existe déjà";
+    }
+    return null;
+  }
+
+  private String validateUserCanCreateTeam(User creator) {
     if (creator.getTeam() != null) {
-      throw new IllegalStateException("Cet utilisateur possède déjà une team");
+      return "Cet utilisateur possède déjà une team";
     }
 
     if (teamMembershipRepository.findByMemberAndStatus(
         creator, MembershipStatus.PENDING).isPresent()) {
-      throw new IllegalStateException("Cet utilisateur a déjà une demande d'adhésion en attente");
+      return "Cet utilisateur a déjà une demande d'adhésion en attente";
     }
+    return null;
   }
 
-  /**
-   * Saves the team and assigns the creator as manager.
-   *
-   * @param team the team to save
-   * @param creator the primary manager
-   * @return the saved team
-   */
   private Team saveNewTeam(Team team, User creator) {
     team.setManager(creator);
     Team createdTeam = teamRepository.save(team);
 
     creator.setTeam(createdTeam);
     userRepository.save(creator);
+    createAcceptedMembershipForCreator(createdTeam, creator);
 
     return createdTeam;
+  }
+
+  private void createAcceptedMembershipForCreator(Team team, User creator) {
+    TeamMembership membership = new TeamMembership();
+    membership.setTeam(team);
+    membership.setMember(creator);
+    membership.setStatus(MembershipStatus.ACCEPTED);
+    teamMembershipRepository.save(membership);
   }
 
   /**
@@ -151,99 +159,77 @@ public class TeamService {
    * @param currentUser the authenticated user
    * @param teamId the team id
    * @param memberId the member id to promote
-   * @return updated team
+   * @return updated team or error message
    */
   @Transactional
-  public Team designateSecondManager(User currentUser, Long teamId, Long memberId) {
-    Team team = findTeamOrThrow(teamId);
-    validateIsPrimaryManager(team, currentUser);
-    validateHasNoSecondManager(team);
-    User member = findValidMemberForPromotion(team, memberId);
-    return applySecondManager(team, member);
+  public TeamOperationResult designateSecondManager(
+      User currentUser, Long teamId, Long memberId) {
+    return loadTeamOrError(
+        teamId,
+        team -> designateSecondManagerOnTeam(team, currentUser, memberId));
   }
 
-  /**
-   * Finds a team by ID or throws if not found.
-   *
-   * @param teamId the team ID
-   * @return the team
-   */
-  private Team findTeamOrThrow(Long teamId) {
+  private TeamOperationResult designateSecondManagerOnTeam(Team team, User currentUser,
+      Long memberId) {
+    String err = validateIsPrimaryManager(team, currentUser);
+    if (err != null) {
+      return TeamOperationResult.error(err);
+    }
+    err = validateHasNoSecondManager(team);
+    if (err != null) {
+      return TeamOperationResult.error(err);
+    }
+    Optional<User> memberOpt = userRepository.findById(memberId);
+    if (memberOpt.isEmpty()) {
+      return TeamOperationResult.error("Membre introuvable");
+    }
+    User member = memberOpt.get();
+    err = validateMemberInTeam(member, team);
+    if (err != null) {
+      return TeamOperationResult.error(err);
+    }
+    err = validateNotAlreadyPrimaryManager(member, team);
+    if (err != null) {
+      return TeamOperationResult.error(err);
+    }
+    return TeamOperationResult.ok(applySecondManager(team, member));
+  }
+
+  private TeamOperationResult loadTeamOrError(
+      Long teamId, Function<Team, TeamOperationResult> next) {
     return teamRepository.findById(teamId)
-        .orElseThrow(() -> new IllegalStateException("Équipe non trouvée"));
+        .map(next)
+        .orElse(TeamOperationResult.error("Équipe non trouvée"));
   }
 
-  /**
-   * Validates that the user is the primary manager of the team.
-   *
-   * @param team the team
-   * @param user the user to check
-   */
-  private void validateIsPrimaryManager(Team team, User user) {
+  private String validateIsPrimaryManager(Team team, User user) {
     if (!EntityUtils.sameUser(team.getManager(), user)) {
-      throw new IllegalStateException("Seul le responsable principal peut désigner un responsable");
+      return "Seul le responsable principal peut désigner un responsable";
     }
+    return null;
   }
 
-  /**
-   * Validates that the team has no second manager yet.
-   *
-   * @param team the team
-   */
-  private void validateHasNoSecondManager(Team team) {
+  private String validateHasNoSecondManager(Team team) {
     if (team.getSecondManager() != null) {
-      throw new IllegalStateException(
-          "Impossible de désigner un autre responsable : la team en a déjà un");
+      return "Impossible de désigner un autre responsable : la team en a déjà un";
     }
+    return null;
   }
 
-  /**
-   * Finds and validates a member eligible for promotion.
-   *
-   * @param team the team
-   * @param memberId the member ID
-   * @return the validated member
-   */
-  private User findValidMemberForPromotion(Team team, Long memberId) {
-    User member = userRepository.findById(memberId)
-        .orElseThrow(() -> new IllegalStateException("Membre introuvable"));
-    validateMemberInTeam(member, team);
-    validateNotAlreadyPrimaryManager(member, team);
-    return member;
-  }
-
-  /**
-   * Validates that the member belongs to the team.
-   *
-   * @param member the user to check
-   * @param team the team
-   */
-  private void validateMemberInTeam(User member, Team team) {
+  private String validateMemberInTeam(User member, Team team) {
     if (!sameTeam(member.getTeam(), team)) {
-      throw new IllegalStateException("Le membre sélectionné n'appartient pas à cette team");
+      return "Le membre sélectionné n'appartient pas à cette team";
     }
+    return null;
   }
 
-  /**
-   * Validates that the member is not already the primary manager.
-   *
-   * @param member the user to check
-   * @param team the team
-   */
-  private void validateNotAlreadyPrimaryManager(User member, Team team) {
+  private String validateNotAlreadyPrimaryManager(User member, Team team) {
     if (EntityUtils.sameUser(member, team.getManager())) {
-      throw new IllegalStateException(
-          "Le responsable principal ne peut pas être désigné à nouveau");
+      return "Le responsable principal ne peut pas être désigné à nouveau";
     }
+    return null;
   }
 
-  /**
-   * Sets the second manager, sends notification and saves the team.
-   *
-   * @param team the team
-   * @param member the new second manager
-   * @return the updated team
-   */
   private Team applySecondManager(Team team, User member) {
     team.setSecondManager(member);
     sendRoleNotification(
@@ -273,37 +259,31 @@ public class TeamService {
    *
    * @param currentUser the authenticated user
    * @param teamId the team id
-   * @return updated team
+   * @return updated team or error message
    */
   @Transactional
-  public Team renounceManagerRole(User currentUser, Long teamId) {
-    Team team = findTeamOrThrow(teamId);
-    validateCanRenounce(team, currentUser);
-    return promoteSecondManager(team);
+  public TeamOperationResult renounceManagerRole(User currentUser, Long teamId) {
+    return loadTeamOrError(teamId, team -> renounceManagerRoleOnTeam(team, currentUser));
   }
 
-  /**
-   * Validates that the current user can renounce their manager role.
-   *
-   * @param team the team
-   * @param currentUser the user attempting to renounce
-   */
-  private void validateCanRenounce(Team team, User currentUser) {
+  private TeamOperationResult renounceManagerRoleOnTeam(Team team, User currentUser) {
+    String err = validateCanRenounce(team, currentUser);
+    if (err != null) {
+      return TeamOperationResult.error(err);
+    }
+    return TeamOperationResult.ok(promoteSecondManager(team));
+  }
+
+  private String validateCanRenounce(Team team, User currentUser) {
     if (!EntityUtils.sameUser(team.getManager(), currentUser)) {
-      throw new IllegalStateException("Seul le responsable principal peut renoncer à ce rôle");
+      return "Seul le responsable principal peut renoncer à ce rôle";
     }
     if (team.getSecondManager() == null) {
-      throw new IllegalStateException(
-          "Impossible de renoncer : désignez d'abord un autre responsable");
+      return "Impossible de renoncer : désignez d'abord un autre responsable";
     }
+    return null;
   }
 
-  /**
-   * Swaps primary and second manager, saves and sends notifications.
-   *
-   * @param team the team
-   * @return the updated team
-   */
   private Team promoteSecondManager(Team team) {
     User formerManager = team.getManager();
     User promotedManager = team.getSecondManager();
@@ -312,27 +292,12 @@ public class TeamService {
     return savedTeam;
   }
 
-  /**
-   * Sets the two manager roles and saves the team.
-   *
-   * @param team the team
-   * @param newManager the new primary manager
-   * @param newSecondManager the new second manager
-   * @return the saved team
-   */
   private Team applyManagerSwap(Team team, User newManager, User newSecondManager) {
     team.setManager(newManager);
     team.setSecondManager(newSecondManager);
     return teamRepository.save(team);
   }
 
-  /**
-   * Sends role change notifications to both managers.
-   *
-   * @param formerManager the demoted manager
-   * @param promotedManager the promoted manager
-   * @param teamName the team name
-   */
   private void notifyManagerSwap(User formerManager, User promotedManager, String teamName) {
     sendRoleNotification(formerManager, "Rétrogradation de rôle",
         "Vous êtes désormais second responsable de l'équipe " + teamName + ".");
@@ -346,51 +311,51 @@ public class TeamService {
    *
    * @param currentUser the authenticated user
    * @param teamId the team id
+   * @return null if the user left successfully, otherwise a client-facing error message
    */
   @Transactional
-  public void leaveTeam(User currentUser, Long teamId) {
-    Team team = findTeamOrThrow(teamId);
-    handleManagerLeave(currentUser, team);
+  public String leaveTeam(User currentUser, Long teamId) {
+    Optional<Team> teamOpt = teamRepository.findById(teamId);
+    if (teamOpt.isEmpty()) {
+      return "Équipe non trouvée";
+    }
+    Team team = teamOpt.get();
+    String err = handleManagerLeave(currentUser, team);
+    if (err != null) {
+      return err;
+    }
+    membershipHistoryService.saveToHistory(currentUser, team);
+    selectionMatchService.handleMemberLeftTeam(currentUser.getId(), teamId, currentUser.getId());
     removeMemberFromTeam(currentUser, team);
     if (team.getManager() == null) {
       tournamentRegistrationRepository.deleteByTeam(team);
     }
+    return null;
   }
 
-  /**
-   * Handles manager-specific logic when leaving a team.
-   *
-   * @param currentUser the leaving user
-   * @param team the team
-   */
-  private void handleManagerLeave(User currentUser, Team team) {
+  private String handleManagerLeave(User currentUser, Team team) {
     if (EntityUtils.sameUser(team.getManager(), currentUser)) {
-      handlePrimaryManagerLeave(team);
-    } else if (EntityUtils.sameUser(team.getSecondManager(), currentUser)) {
+      return handlePrimaryManagerLeave(team);
+    }
+    if (EntityUtils.sameUser(team.getSecondManager(), currentUser)) {
       removeSecondManager(team);
     }
+    return null;
   }
 
-  /**
-   * Handles the primary manager leaving: promotes second manager if present,
-   * otherwise validates no other members remain before clearing the role.
-   *
-   * @param team the team
-   */
-  private void handlePrimaryManagerLeave(Team team) {
+  private String handlePrimaryManagerLeave(Team team) {
     if (team.getSecondManager() != null) {
       promoteSecondManagerOnLeave(team);
-    } else {
-      validateNoOtherMembers(team);
-      clearManagerRole(team);
+      return null;
     }
+    String err = validateNoOtherMembers(team);
+    if (err != null) {
+      return err;
+    }
+    clearManagerRole(team);
+    return null;
   }
 
-  /**
-   * Promotes the second manager to primary manager when the primary manager leaves.
-   *
-   * @param team the team
-   */
   private void promoteSecondManagerOnLeave(Team team) {
     User promoted = team.getSecondManager();
     team.setManager(promoted);
@@ -400,45 +365,24 @@ public class TeamService {
         "Vous êtes désormais responsable principal de l'équipe " + team.getName() + ".");
   }
 
-  /**
-   * Validates that the manager is the only remaining member.
-   *
-   * @param team the team
-   */
-  private void validateNoOtherMembers(Team team) {
+  private String validateNoOtherMembers(Team team) {
     int totalMembers = getManagersCount(team) + getAcceptedMembersCount(team);
     if (totalMembers > 1) {
-      throw new IllegalStateException(
-          "Impossible de quitter : vous êtes responsable principal et il reste d'autres membres");
+      return "Impossible de quitter : vous êtes responsable principal et il reste d'autres membres";
     }
+    return null;
   }
 
-  /**
-   * Clears the primary manager role and saves the team.
-   *
-   * @param team the team
-   */
   private void clearManagerRole(Team team) {
     team.setManager(null);
     teamRepository.save(team);
   }
 
-  /**
-   * Clears the second manager of the team.
-   *
-   * @param team the team
-   */
   private void removeSecondManager(Team team) {
     team.setSecondManager(null);
     teamRepository.save(team);
   }
 
-  /**
-   * Removes the member from the team and clears their membership.
-   *
-   * @param member the user to remove
-   * @param team the team
-   */
   private void removeMemberFromTeam(User member, Team team) {
     teamMembershipRepository.findByTeamAndMember(team, member)
         .ifPresent(teamMembershipRepository::delete);
@@ -455,13 +399,6 @@ public class TeamService {
     notificationService.createNotification(user, notificationDto);
   }
 
-  /**
-   * Checks if two teams have the same by ID.
-   *
-   * @param firstTeam the first team
-   * @param secondTeam the second team
-   * @return true if both teams share the same ID
-   */
   private boolean sameTeam(Team firstTeam, Team secondTeam) {
     return firstTeam != null
         && firstTeam.getId() != null

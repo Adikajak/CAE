@@ -7,6 +7,7 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.TournamentRegistration;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.models.enums.State;
+import be.vinci.ipl.cae.demo.models.results.TournamentRegistrationResult;
 import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
 import jakarta.transaction.Transactional;
 import java.time.LocalDate;
@@ -45,126 +46,110 @@ public class TournamentRegistrationService {
    * @param tournament the tournament
    * @param team the team to register
    * @param user the authenticated user
-   * @return the created registration DTO
+   * @return result with DTO on success, or error details for the controller
    */
   @Transactional
-  public TournamentRegistrationDto registerTeam(Tournament tournament, Team team, User user) {
-    validateCanRegister(tournament, team, user);
+  public TournamentRegistrationResult registerTeam(
+      Tournament tournament, Team team, User user
+  ) {
+    String error = validateCanRegister(tournament, team, user);
+    if (error != null) {
+      boolean conflict = "La période d'inscription est finie".equals(error);
+      return TournamentRegistrationResult.fail(error, conflict);
+    }
     TournamentRegistration registration = buildRegistration(tournament, team);
-    return toDto(tournamentRegistrationRepository.save(registration));
+    return TournamentRegistrationResult.ok(
+        toDto(tournamentRegistrationRepository.save(registration)));
   }
 
   /**
    * Validates all conditions required to register a team.
    *
-   * @param tournament the tournament
-   * @param team the team
-   * @param user the user requesting the registration
+   * @return null if valid, otherwise a client-facing error message
    */
-  private void validateCanRegister(Tournament tournament, Team team, User user) {
-    validateTeamIsActive(team);
-    validateIsManager(team, user);
-    validateTournamentIsOpen(tournament);
-    validateTeamHasEnoughMembers(team);
-    validateNotAlreadyRegistered(tournament, team);
-    validateTournamentNotFull(tournament);
-  }
-
-  /**
-   * Validates that the team has at least a primary manager (is not inactive).
-   *
-   * @param team the team
-   */
-  private void validateTeamIsActive(Team team) {
-    if (team.getManager() == null) {
-      throw new IllegalStateException("Cette team n'a pas de responsable principal");
+  private String validateCanRegister(Tournament tournament, Team team, User user) {
+    String e = validateTeamIsActive(team);
+    if (e != null) {
+      return e;
     }
+    e = validateIsManager(team, user);
+    if (e != null) {
+      return e;
+    }
+    e = validateTournamentIsOpen(tournament);
+    if (e != null) {
+      return e;
+    }
+    e = validateTeamHasEnoughMembers(team);
+    if (e != null) {
+      return e;
+    }
+    e = validateNotAlreadyRegistered(tournament, team);
+    if (e != null) {
+      return e;
+    }
+    return validateTournamentNotFull(tournament);
   }
 
-  /**
-   * Validates that the user is the primary or secondary manager of the team.
-   *
-   * @param team the team
-   * @param user the user
-   */
-  private void validateIsManager(Team team, User user) {
+  private String validateTeamIsActive(Team team) {
+    if (team.getManager() == null) {
+      return "Cette team n'a pas de responsable principal";
+    }
+    return null;
+  }
+
+  private String validateIsManager(Team team, User user) {
     boolean isPrimary = team.getManager().getId().equals(user.getId());
     boolean isSecond = team.getSecondManager() != null
         && team.getSecondManager().getId().equals(user.getId());
     if (!isPrimary && !isSecond) {
-      throw new IllegalStateException(
-          "Seul le responsable principal ou secondaire peut inscrire la team");
+      return "Seul le responsable principal ou secondaire peut inscrire la team";
     }
+    return null;
   }
 
-  /**
-   * Validates that the tournament is open for registrations.
-   *
-   * @param tournament the tournament
-   */
-  private void validateTournamentIsOpen(Tournament tournament) {
-    validateRegistrationPeriodIsOpen(tournament);
+  private String validateTournamentIsOpen(Tournament tournament) {
+    String e = validateRegistrationPeriodIsOpen(tournament);
+    if (e != null) {
+      return e;
+    }
     if (tournament.getState() != State.PLANIFIED) {
-      throw new IllegalStateException("Les inscriptions ne sont pas ouvertes pour ce tournoi");
+      return "Les inscriptions ne sont pas ouvertes pour ce tournoi";
     }
+    return null;
   }
 
-  /**
-   * Validates that the registration period has not ended yet.
-   *
-   * @param tournament the tournament
-   */
-  private void validateRegistrationPeriodIsOpen(Tournament tournament) {
+  private String validateRegistrationPeriodIsOpen(Tournament tournament) {
     if (tournament.getEndInscriptionDate() != null
         && tournament.getEndInscriptionDate().isBefore(LocalDate.now())) {
-      throw new IllegalStateException("La période d'inscription est finie");
+      return "La période d'inscription est finie";
     }
+    return null;
   }
 
-  /**
-   * Validates that the team has enough members to participate.
-   *
-   * @param team the team
-   */
-  private void validateTeamHasEnoughMembers(Team team) {
+  private String validateTeamHasEnoughMembers(Team team) {
     int total = teamService.getManagersCount(team) + teamService.getAcceptedMembersCount(team);
     if (total < MIN_MEMBERS_REQUIRED) {
-      throw new IllegalStateException(
-          "La team doit avoir au moins " + MIN_MEMBERS_REQUIRED + " membres pour s'inscrire");
+      return "La team doit avoir au moins " + MIN_MEMBERS_REQUIRED + " membres pour s'inscrire";
     }
+    return null;
   }
 
-  /**
-   * Validates that the team is not already registered to the tournament.
-   *
-   * @param tournament the tournament
-   * @param team the team
-   */
-  private void validateNotAlreadyRegistered(Tournament tournament, Team team) {
+  private String validateNotAlreadyRegistered(Tournament tournament, Team team) {
     if (tournamentRegistrationRepository.existsByTournamentAndTeam(tournament, team)) {
-      throw new IllegalStateException("Cette team est déjà inscrite à ce tournoi");
+      return "Cette team est déjà inscrite à ce tournoi";
     }
+    return null;
   }
 
-  /**
-   * Validates that the tournament has not reached its maximum number of teams.
-   *
-   * @param tournament the tournament
-   */
-  private void validateTournamentNotFull(Tournament tournament) {
+  private String validateTournamentNotFull(Tournament tournament) {
     long count = tournamentRegistrationRepository.findByTournament(tournament).size();
     if (count >= tournament.getMaxTeams()) {
-      throw new IllegalStateException("Ce tournoi a atteint le nombre maximum d'équipes");
+      return "Ce tournoi a atteint le nombre maximum d'équipes";
     }
+    return null;
   }
 
-  /**
-   * Builds a TournamentRegistration entity.
-   *
-   * @param tournament the tournament
-   * @param team the team
-   * @return the registration entity
-   */
   private TournamentRegistration buildRegistration(Tournament tournament, Team team) {
     TournamentRegistration registration = new TournamentRegistration();
     registration.setTournament(tournament);

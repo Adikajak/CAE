@@ -15,21 +15,27 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
+import be.vinci.ipl.cae.demo.models.results.AuthRegisterResult;
+import be.vinci.ipl.cae.demo.models.dtos.MemberActivityDto;
+import be.vinci.ipl.cae.demo.models.dtos.MembershipHistoryDto;
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
+import be.vinci.ipl.cae.demo.models.entities.Match;
+import be.vinci.ipl.cae.demo.models.entities.MembershipHistory;
+import be.vinci.ipl.cae.demo.models.entities.ParticipationMatch;
 import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
+import be.vinci.ipl.cae.demo.models.entities.SelectionMatch;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.Team;
+import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
-import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
-import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
-import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
-import be.vinci.ipl.cae.demo.repositories.TeamRepository;
-import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
-import be.vinci.ipl.cae.demo.repositories.UnavailabilityRepository;
-import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import be.vinci.ipl.cae.demo.models.enums.StateMatch;
+import be.vinci.ipl.cae.demo.repositories.*;
+import be.vinci.ipl.cae.demo.repositories.ParticipationMatchRepository;
+import be.vinci.ipl.cae.demo.repositories.SelectionMatchRepository;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +80,23 @@ class UserServiceTest {
   @Mock
   private TournamentRegistrationRepository tournamentRegistrationRepository;
 
+  @Mock
+  private SelectionMatchRepository selectionMatchRepository;
+
+  @Mock
+  private ParticipationMatchRepository participationMatchRepository;
+
+  @Mock
+  private SelectionMatchService selectionMatchService;
+
   @InjectMocks
   private UserService userService;
+
+  @Mock
+  private MembershipHistoryRepository membershipHistoryRepository;
+
+  @Mock
+  private MatchRepository matchRepository;
 
   @BeforeEach
   void setUp() {
@@ -270,35 +291,41 @@ class UserServiceTest {
   void registerReturnsNullWhenEmailAlreadyExists() {
     when(userRepository.findByEmail("z@mail.com")).thenReturn(new User());
 
-    AuthenticatedUser result = userService.register(
+    AuthRegisterResult result = userService.register(
         "z@mail.com", "password", "tag", "Mage", "http://avatar.png");
 
-    assertNull(result);
+    assertFalse(result.success());
+    assertTrue(result.emailAlreadyExists());
+    assertNull(result.badRequestMessage());
     verify(userRepository, never()).save(any());
   }
 
   @Test
-  void registerThrowsWhenSpecialityIsInvalid() {
+  void registerReturnsInvalidPayloadWhenSpecialityIsInvalid() {
     when(userRepository.findByEmail("z@mail.com")).thenReturn(null);
     when(specialityRepository.findByName("Unknown")).thenReturn(null);
 
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-        () -> userService.register("z@mail.com", "password", "tag", "Unknown", "http://img"));
+    AuthRegisterResult result =
+        userService.register("z@mail.com", "password", "tag", "Unknown", "http://img");
 
-    assertEquals("Invalid speciality", exception.getMessage());
+    assertFalse(result.success());
+    assertFalse(result.emailAlreadyExists());
+    assertEquals("Invalid speciality", result.badRequestMessage());
   }
 
   @Test
-  void registerThrowsWhenProfilePictureIsInvalid() {
+  void registerReturnsInvalidPayloadWhenProfilePictureIsInvalid() {
     Speciality speciality = new Speciality();
     when(userRepository.findByEmail("z@mail.com")).thenReturn(null);
     when(specialityRepository.findByName("Mage")).thenReturn(speciality);
     when(profilePictureRepository.findByUrl("http://missing.png")).thenReturn(null);
 
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-        () -> userService.register("z@mail.com", "password", "tag", "Mage", "http://missing.png"));
+    AuthRegisterResult result =
+        userService.register("z@mail.com", "password", "tag", "Mage", "http://missing.png");
 
-    assertEquals("Invalid profile picture", exception.getMessage());
+    assertFalse(result.success());
+    assertFalse(result.emailAlreadyExists());
+    assertEquals("Invalid profile picture", result.badRequestMessage());
   }
 
   @Test
@@ -318,10 +345,11 @@ class UserServiceTest {
       return saved;
     });
 
-    AuthenticatedUser result = userService.register(
+    AuthRegisterResult outcome = userService.register(
         "z@mail.com", "pass", "zed", "Mage", "http://avatar.png");
 
-    assertNotNull(result);
+    assertTrue(outcome.success());
+    AuthenticatedUser result = outcome.user();
     assertEquals(101L, result.getId());
     assertEquals("z@mail.com", result.getEmail());
     assertEquals("zed", result.getTag());
@@ -437,7 +465,7 @@ class UserServiceTest {
         .thenReturn(null);
     when(teamMembershipRepository.findByMember(user)).thenReturn(Optional.empty());
 
-    userService.banUser(1L);
+    userService.banUser(1L, 99L);
 
     verify(tournamentRegistrationRepository).deleteByTeam(team);
   }
@@ -457,7 +485,7 @@ class UserServiceTest {
     when(userRepository.findById(2L)).thenReturn(Optional.of(member));
     when(teamMembershipRepository.findByMember(member)).thenReturn(Optional.of(membership));
 
-    userService.banUser(2L);
+    userService.banUser(2L, 99L);
 
     verify(tournamentRegistrationRepository, never()).deleteByTeam(team);
   }
@@ -466,7 +494,7 @@ class UserServiceTest {
   void banUserReturnsFalseWhenUserNotFound() {
     when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-    boolean result = userService.banUser(99L);
+    boolean result = userService.banUser(99L, 99L);
 
     assertFalse(result);
     verify(userRepository, never()).save(any());
@@ -488,7 +516,7 @@ class UserServiceTest {
         .thenReturn(oldest);
     when(teamMembershipRepository.findByMember(manager)).thenReturn(Optional.empty());
 
-    boolean result = userService.banUser(1L);
+    boolean result = userService.banUser(1L, 99L);
 
     assertTrue(result);
     assertEquals(oldest, team.getManager());
@@ -508,7 +536,7 @@ class UserServiceTest {
         .thenReturn(null);
     when(teamMembershipRepository.findByMember(manager)).thenReturn(Optional.empty());
 
-    boolean result = userService.banUser(1L);
+    boolean result = userService.banUser(1L, 99L);
 
     assertTrue(result);
     assertNull(team.getManager());
@@ -529,7 +557,7 @@ class UserServiceTest {
     when(userRepository.findById(1L)).thenReturn(Optional.of(manager));
     when(teamMembershipRepository.findByMember(manager)).thenReturn(Optional.empty());
 
-    boolean result = userService.banUser(1L);
+    boolean result = userService.banUser(1L, 99L);
 
     assertTrue(result);
     assertEquals(secondManager, team.getManager());
@@ -551,7 +579,7 @@ class UserServiceTest {
     when(userRepository.findById(2L)).thenReturn(Optional.of(secondManager));
     when(teamMembershipRepository.findByMember(secondManager)).thenReturn(Optional.empty());
 
-    boolean result = userService.banUser(2L);
+    boolean result = userService.banUser(2L, 99L);
 
     assertTrue(result);
     assertNull(team.getSecondManager());
@@ -566,7 +594,7 @@ class UserServiceTest {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     when(teamMembershipRepository.findByMember(user)).thenReturn(Optional.empty());
 
-    boolean result = userService.banUser(1L);
+    boolean result = userService.banUser(1L, 99L);
 
     assertTrue(result);
     assertTrue(user.isBanned());
@@ -583,7 +611,7 @@ class UserServiceTest {
     when(userRepository.findById(1L)).thenReturn(Optional.of(user));
     when(teamMembershipRepository.findByMember(user)).thenReturn(Optional.empty());
 
-    boolean result = userService.banUser(1L);
+    boolean result = userService.banUser(1L, 99L);
 
     assertTrue(result);
   }
@@ -608,5 +636,376 @@ class UserServiceTest {
 
     assertSame(user, result);
   }
-}
 
+  @Test
+  void getPastTeamsReturnsEmptyListWhenUserNotFound() {
+    when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+    List<MembershipHistoryDto> result = userService.getPastTeams(99L);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getPastTeamsReturnsListWhenUserFound() {
+    User user = new User();
+    ReflectionTestUtils.setField(user, "id", 1L);
+
+    Team team = new Team();
+    ReflectionTestUtils.setField(team, "id", 10L);
+    team.setName("Team Alpha");
+
+    MembershipHistory history = new MembershipHistory();
+    history.setMember(user);
+    history.setTeam(team);
+    history.setLeftAt(LocalDate.of(2023, 6, 1));
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(membershipHistoryRepository.findByMember(user)).thenReturn(List.of(history));
+
+    List<MembershipHistoryDto> result = userService.getPastTeams(1L);
+
+    assertEquals(1, result.size());
+    assertEquals(10L, result.get(0).teamId());
+    assertEquals("Team Alpha", result.get(0).teamName());
+    assertEquals(LocalDate.of(2023, 6, 1), result.get(0).leftAt());
+  }
+
+  @Test
+  void getUnavailabilitiesForMemberReturnsNullWhenMemberNotFound() {
+    when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+    assertNull(userService.getUnavailabilitiesForMember(new User(), 99L));
+  }
+
+  @Test
+  void getUnavailabilitiesForMemberReturnsNullWhenMemberHasNoTeam() {
+    User target = new User();
+    target.setTeam(null);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(target));
+
+    assertNull(userService.getUnavailabilitiesForMember(new User(), 1L));
+  }
+
+  @Test
+  void getUnavailabilitiesForMemberReturnsNullWhenCallerIsNotManagerNorSecond() {
+    User caller = new User();
+    ReflectionTestUtils.setField(caller, "id", 10L);
+
+    User manager = new User();
+    ReflectionTestUtils.setField(manager, "id", 1L);
+    User second = new User();
+    ReflectionTestUtils.setField(second, "id", 2L);
+
+    Team team = new Team();
+    team.setManager(manager);
+    team.setSecondManager(second);
+
+    User target = new User();
+    target.setTeam(team);
+    when(userRepository.findById(5L)).thenReturn(Optional.of(target));
+
+    assertNull(userService.getUnavailabilitiesForMember(caller, 5L));
+  }
+
+  @Test
+  void getUnavailabilitiesForMemberWorksForManager() {
+    User caller = new User();
+    ReflectionTestUtils.setField(caller, "id", 1L);
+
+    Team team = new Team();
+    team.setManager(caller);
+
+    User target = new User();
+    target.setTeam(team);
+    when(userRepository.findById(5L)).thenReturn(Optional.of(target));
+
+    List<Unavailability> unavails = List.of(new Unavailability());
+    when(unavailabilityRepository.findByUser(target)).thenReturn(unavails);
+
+    assertSame(unavails, userService.getUnavailabilitiesForMember(caller, 5L));
+  }
+
+  @Test
+  void getUnavailabilitiesForMemberWorksForSecondManager() {
+    User caller = new User();
+    ReflectionTestUtils.setField(caller, "id", 2L);
+
+    User manager = new User();
+    ReflectionTestUtils.setField(manager, "id", 1L);
+
+    Team team = new Team();
+    team.setManager(manager);
+    team.setSecondManager(caller);
+
+    User target = new User();
+    target.setTeam(team);
+    when(userRepository.findById(5L)).thenReturn(Optional.of(target));
+
+    List<Unavailability> unavails = List.of(new Unavailability());
+    when(unavailabilityRepository.findByUser(target)).thenReturn(unavails);
+
+    assertSame(unavails, userService.getUnavailabilitiesForMember(caller, 5L));
+  }
+
+  // ==================== getMemberActivity ====================
+
+  @Test
+  void getMemberActivityReturnsEmptyListWhenUserNotFound() {
+    when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+    List<MemberActivityDto> result = userService.getMemberActivity(99L);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getMemberActivityReturnsEmptyListWhenNoSelections() {
+    User user = new User();
+    ReflectionTestUtils.setField(user, "id", 1L);
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of());
+
+    List<MemberActivityDto> result = userService.getMemberActivity(1L);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getMemberActivityReturnsDtoWithTwoTeams() {
+    User user = new User();
+    ReflectionTestUtils.setField(user, "id", 1L);
+
+    Tournament tournament = new Tournament();
+    ReflectionTestUtils.setField(tournament, "id", 10L);
+    tournament.setName("Tournoi Marshall");
+
+    Match match = new Match();
+    ReflectionTestUtils.setField(match, "matchId", 5L);
+    match.setRound(1L);
+    match.setState(StateMatch.PLANIFIED);
+    match.setTournament(tournament);
+
+    Team team1 = new Team();
+    ReflectionTestUtils.setField(team1, "id", 10L);
+    team1.setName("Team Alpha");
+
+    Team team2 = new Team();
+    ReflectionTestUtils.setField(team2, "id", 20L);
+    team2.setName("Team Beta");
+
+    SelectionMatch selection = new SelectionMatch();
+    selection.setMatch(match);
+    selection.setMember(user);
+    selection.setTeam(team1);
+
+    ParticipationMatch p1 = new ParticipationMatch();
+    p1.setTeam(team1);
+    p1.setScore(null);
+
+    ParticipationMatch p2 = new ParticipationMatch();
+    p2.setTeam(team2);
+    p2.setScore(null);
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection));
+    when(participationMatchRepository.findByMatchMatchId(5L)).thenReturn(List.of(p1, p2));
+    when(matchRepository.findByTournamentId(tournament.getId())).thenReturn(List.of(match));
+
+    List<MemberActivityDto> result = userService.getMemberActivity(1L);
+
+    assertEquals(1, result.size());
+    assertEquals("Tournoi Marshall", result.get(0).tournamentName());
+    assertEquals(10L, result.get(0).team1Id());
+    assertEquals(20L, result.get(0).team2Id());
+    assertNull(result.get(0).winnerTeamId());
+  }
+
+  @Test
+  void getMemberActivityDeterminesWinnerWhenMatchEnded() {
+    User user = new User();
+    ReflectionTestUtils.setField(user, "id", 1L);
+
+    Tournament tournament = new Tournament();
+    ReflectionTestUtils.setField(tournament, "id", 10L);
+    tournament.setName("Tournoi Etoile");
+
+    Match match = new Match();
+    ReflectionTestUtils.setField(match, "matchId", 5L);
+    match.setRound(1L);
+    match.setState(StateMatch.ENDED);
+    match.setTournament(tournament);
+
+    Team team1 = new Team();
+    ReflectionTestUtils.setField(team1, "id", 10L);
+    team1.setName("Team Alpha");
+
+    Team team2 = new Team();
+    ReflectionTestUtils.setField(team2, "id", 20L);
+    team2.setName("Team Beta");
+
+    SelectionMatch selection = new SelectionMatch();
+    selection.setMatch(match);
+    selection.setMember(user);
+    selection.setTeam(team1);
+
+    ParticipationMatch p1 = new ParticipationMatch();
+    p1.setTeam(team1);
+    p1.setScore(3);
+
+    ParticipationMatch p2 = new ParticipationMatch();
+    p2.setTeam(team2);
+    p2.setScore(1);
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection));
+    when(participationMatchRepository.findByMatchMatchId(5L)).thenReturn(List.of(p1, p2));
+    when(matchRepository.findByTournamentId(tournament.getId())).thenReturn(List.of(match));
+
+    List<MemberActivityDto> result = userService.getMemberActivity(1L);
+
+    assertEquals(10L, result.get(0).winnerTeamId());
+  }
+
+  @Test
+  void getMemberActivityHandlesOneTeamOnly() {
+    User user = new User();
+    ReflectionTestUtils.setField(user, "id", 1L);
+
+    Tournament tournament = new Tournament();
+    ReflectionTestUtils.setField(tournament, "id", 10L);
+    tournament.setName("Tournoi Bye");
+
+    Match match = new Match();
+    ReflectionTestUtils.setField(match, "matchId", 5L);
+    match.setRound(1L);
+    match.setState(StateMatch.ENDED);
+    match.setTournament(tournament);
+
+    Team team1 = new Team();
+    ReflectionTestUtils.setField(team1, "id", 10L);
+    team1.setName("Team Alpha");
+
+    SelectionMatch selection = new SelectionMatch();
+    selection.setMatch(match);
+    selection.setMember(user);
+    selection.setTeam(team1);
+
+    ParticipationMatch p1 = new ParticipationMatch();
+    p1.setTeam(team1);
+    p1.setScore(null);
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection));
+    when(participationMatchRepository.findByMatchMatchId(5L)).thenReturn(List.of(p1));
+    when(matchRepository.findByTournamentId(tournament.getId())).thenReturn(List.of(match));
+
+    List<MemberActivityDto> result = userService.getMemberActivity(1L);
+
+    assertEquals(1, result.size());
+    assertEquals(10L, result.get(0).team1Id());
+    assertNull(result.get(0).team2Id());
+    assertNull(result.get(0).winnerTeamId());
+  }
+
+  @Test
+  void getMemberActivityDeterminesWinnerWhenTeam2Wins() {
+    User user = new User();
+    ReflectionTestUtils.setField(user, "id", 1L);
+
+    Tournament tournament = new Tournament();
+    ReflectionTestUtils.setField(tournament, "id", 10L);
+    tournament.setName("Tournoi Etoile");
+
+    Match match = new Match();
+    ReflectionTestUtils.setField(match, "matchId", 5L);
+    match.setRound(1L);
+    match.setState(StateMatch.ENDED);
+    match.setTournament(tournament);
+
+    Team team1 = new Team();
+    ReflectionTestUtils.setField(team1, "id", 10L);
+    team1.setName("Team Alpha");
+
+    Team team2 = new Team();
+    ReflectionTestUtils.setField(team2, "id", 20L);
+    team2.setName("Team Beta");
+
+    SelectionMatch selection = new SelectionMatch();
+    selection.setMatch(match);
+    selection.setMember(user);
+    selection.setTeam(team1);
+
+    ParticipationMatch p1 = new ParticipationMatch();
+    p1.setTeam(team1);
+    p1.setScore(1);
+
+    ParticipationMatch p2 = new ParticipationMatch();
+    p2.setTeam(team2);
+    p2.setScore(3);
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection));
+    when(participationMatchRepository.findByMatchMatchId(5L)).thenReturn(List.of(p1, p2));
+    when(matchRepository.findByTournamentId(tournament.getId())).thenReturn(List.of(match));
+
+    List<MemberActivityDto> result = userService.getMemberActivity(1L);
+
+    assertEquals(20L, result.get(0).winnerTeamId());
+  }
+
+  @Test
+  void getMemberActivityDeduplicatesAndKeepsLastSelection() {
+    User user = new User();
+    ReflectionTestUtils.setField(user, "id", 1L);
+
+    Tournament tournament = new Tournament();
+    ReflectionTestUtils.setField(tournament, "id", 10L);
+    tournament.setName("Tournoi Dedup");
+
+    Match match = new Match();
+    ReflectionTestUtils.setField(match, "matchId", 5L);
+    match.setRound(1L);
+    match.setState(StateMatch.PLANIFIED);
+    match.setTournament(tournament);
+
+    Team team1 = new Team();
+    ReflectionTestUtils.setField(team1, "id", 10L);
+    team1.setName("Team Alpha");
+
+    Team team2 = new Team();
+    ReflectionTestUtils.setField(team2, "id", 20L);
+    team2.setName("Team Beta");
+
+    SelectionMatch selection1 = new SelectionMatch();
+    selection1.setMatch(match);
+    selection1.setMember(user);
+    selection1.setTeam(team1);
+
+    SelectionMatch selection2 = new SelectionMatch();
+    selection2.setMatch(match);
+    selection2.setMember(user);
+    selection2.setTeam(team2);
+
+    ParticipationMatch p1 = new ParticipationMatch();
+    p1.setTeam(team1);
+    p1.setScore(null);
+
+    ParticipationMatch p2 = new ParticipationMatch();
+    p2.setTeam(team2);
+    p2.setScore(null);
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection1, selection2));
+    when(participationMatchRepository.findByMatchMatchId(5L)).thenReturn(List.of(p1, p2));
+    when(matchRepository.findByTournamentId(10L)).thenReturn(List.of(match));
+
+    List<MemberActivityDto> result = userService.getMemberActivity(1L);
+
+    assertEquals(1, result.size());
+    assertEquals(20L, result.get(0).selectedTeamId());
+  }
+}

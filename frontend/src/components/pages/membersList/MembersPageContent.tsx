@@ -14,7 +14,15 @@ const MembersPageContent = () => {
     <Container
       component="main"
       maxWidth="lg"
-      sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 2.5,
+        marginTop: 2,
+        marginBottom: 2,
+      }}
     >
       <Box
         sx={{

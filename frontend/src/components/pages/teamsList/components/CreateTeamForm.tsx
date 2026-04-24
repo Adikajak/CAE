@@ -20,6 +20,11 @@ type CreateTeamFormProps = {
   onSubmit: () => void;
 };
 
+/**
+ * Shows the form to create a new team.
+ * @param {CreateTeamFormProps} props - the form props
+ * @return {JSX.Element} the form
+ */
 const CreateTeamForm = ({
   newTeamName,
   acceptManagerRole,

@@ -1,8 +1,21 @@
+/**
+ * Builds HTTP headers with JSON content type and an Authorization token.
+ * @param {string} token - the JWT token
+ * @return {object} the headers object
+ */
 const createHeaders = (token: string) => ({
   'Content-Type': 'application/json',
   Authorization: token,
 });
 
+/**
+ * Throws an error if the response is not successful.
+ * Uses custom messages for status 400, 403 and 409.
+ * @param {Response} response - the fetch response to check
+ * @param {string} forbiddenMessage - error message for 403
+ * @param {string} badRequestMessage - error message for 400
+ * @param {string} conflictMessage - error message for 409
+ */
 const ensureRequestSucceeded = (
   response: Response,
   forbiddenMessage?: string,

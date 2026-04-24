@@ -52,6 +52,7 @@ const TeamDetailsPageContent = () => {
     memberList,
     totalTeamMembers,
     isPrimaryManager,
+    isSecondManager,
     canViewMemberEmail,
     currentUserId,
     loading,
@@ -65,6 +66,7 @@ const TeamDetailsPageContent = () => {
     clearSuccess,
     handleDesignateSecondManager,
     handleLeaveTeam,
+    handleExcludeMember,
   } = useContext<TeamDetailsContextType>(TeamDetailsContext);
 
   return (
@@ -118,10 +120,12 @@ const TeamDetailsPageContent = () => {
                 totalTeamMembers={totalTeamMembers}
                 currentUserId={currentUserId}
                 isPrimaryManager={isPrimaryManager}
+                isSecondManager={isSecondManager}
                 canViewMemberEmail={canViewMemberEmail}
                 actionLoading={actionLoading}
                 onDesignate={handleDesignateSecondManager}
                 onLeave={handleLeaveTeam}
+                onExclude={handleExcludeMember}
               />
             </Paper>
 

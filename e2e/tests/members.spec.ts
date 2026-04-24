@@ -37,8 +37,12 @@ test.describe('Members list', () => {
   // TC-ML4: searching "Ir" filters and shows only Iron (prefix search)
   test('TC-ML4: should filter members by tag prefix', async ({ page }) => {
     await page.getByLabel(/rechercher par tag/i).fill('Ir');
-    await expect(page.getByText('Iron')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Lynx', exact: true })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Iron', exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Lynx', exact: true }),
+    ).not.toBeVisible();
     await expect(page.getByText('Rogue')).not.toBeVisible();
     await expect(page.getByText('Pulse')).not.toBeVisible();
   });
@@ -47,7 +51,10 @@ test.describe('Members list', () => {
   test('TC-ML5: should navigate to member details when clicking a card', async ({
     page,
   }) => {
-    await page.getByText('Iron').click();
+    await page
+      .getByRole('heading', { name: 'Iron', exact: true })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/members\/\d+$/);
   });
 

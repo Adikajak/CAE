@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchAllMembers, fetchMemberById, banMember } from './membersService';
+import {
+  fetchAllMembers,
+  fetchMemberById,
+  banMember,
+  fetchMemberUnavailabilities,
+} from './membersService';
 
 describe('membersService', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -118,5 +123,41 @@ describe('membersService', () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 403 });
 
     await expect(banMember('test-token', 1)).rejects.toThrow('Erreur 403');
+  });
+
+  test('fetchMemberUnavailabilities calls the correct endpoint with token', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
+
+    await fetchMemberUnavailabilities(1, 'test-token');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/users/1/unavailabilities', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'test-token',
+      },
+    });
+  });
+
+  test('fetchMemberUnavailabilities returns empty array when API returns null', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve(null),
+    });
+
+    await expect(fetchMemberUnavailabilities(1, 'test-token')).resolves.toEqual(
+      [],
+    );
+  });
+
+  test('fetchMemberUnavailabilities throws when request fails', async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 403 });
+
+    await expect(fetchMemberUnavailabilities(1, 'test-token')).rejects.toThrow(
+      'Erreur 403',
+    );
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import TournamentPageContent from './TournamentPageContent';
 import { TournamentContext } from '../../../contexts/TournamentContext';
@@ -19,13 +19,19 @@ vi.mock('./components/TournamentFilters', () => ({
 vi.mock('./components/TournamentTable', () => ({
   default: (props: {
     isAdmin: boolean;
+    today?: string;
     isPublishing: boolean;
     isEditing: boolean;
+    isGenerating?: boolean;
+    lockedTournamentIds?: Set<number>;
+    onGenerateSchedule?: (tournamentId: number) => Promise<void>;
   }) => (
     <div>
       <div>Table admin: {String(props.isAdmin)}</div>
+      <div>Table today: {String(props.today)}</div>
       <div>Table publishing: {String(props.isPublishing)}</div>
       <div>Table editing: {String(props.isEditing)}</div>
+      <div>Table generating: {String(props.isGenerating)}</div>
     </div>
   ),
 }));
@@ -138,7 +144,7 @@ describe('TournamentPageContent', () => {
     expect(screen.getByText(/erreur : erreur 500/i)).toBeTruthy();
   });
 
-  test('shows creation form only for admins', () => {
+  test('shows create button only for admins', () => {
     const { rerender } = render(
       <TournamentContext.Provider
         value={createTournamentContextValue({ isAdmin: false })}
@@ -147,7 +153,9 @@ describe('TournamentPageContent', () => {
       </TournamentContext.Provider>,
     );
 
-    expect(screen.queryByText('Tournament create form')).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /créer un tournoi/i }),
+    ).toBeNull();
 
     rerender(
       <TournamentContext.Provider
@@ -157,7 +165,55 @@ describe('TournamentPageContent', () => {
       </TournamentContext.Provider>,
     );
 
+    expect(
+      screen.getByRole('button', { name: /créer un tournoi/i }),
+    ).toBeTruthy();
+  });
+
+  test('opens creation popup when admin clicks create button', () => {
+    renderComponent(createTournamentContextValue({ isAdmin: true }));
+
+    expect(screen.queryByText('Tournament create form')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /créer un tournoi/i }));
+
     expect(screen.getByText('Tournament create form')).toBeTruthy();
+  });
+
+  test('closes creation popup after successful tournament creation', async () => {
+    const { rerender } = render(
+      <TournamentContext.Provider
+        value={createTournamentContextValue({
+          isAdmin: true,
+          formSuccess: null,
+        })}
+      >
+        <TournamentPageContent />
+      </TournamentContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /créer un tournoi/i }));
+    expect(screen.getByRole('dialog')).toBeTruthy();
+
+    rerender(
+      <TournamentContext.Provider
+        value={createTournamentContextValue({
+          isAdmin: true,
+          formSuccess: 'Tournoi créé avec succès.',
+        })}
+      >
+        <TournamentPageContent />
+      </TournamentContext.Provider>,
+    );
+
+    expect(screen.getByRole('dialog')).toBeTruthy();
+
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('dialog')).toBeNull();
+      },
+      { timeout: 5000 },
+    );
   });
 
   test('renders help text and filters', () => {

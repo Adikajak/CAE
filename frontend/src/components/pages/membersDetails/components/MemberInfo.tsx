@@ -1,20 +1,35 @@
 import { Avatar, Box, Button, Link, Typography } from '@mui/material';
-import { UserPublicProfile } from '../../../../types';
+import { Unavailability, UserPublicProfile } from '../../../../types';
+import UnavailabilityCalendar from './UnavailabilityCalendar';
 
+/**
+ * Turns a YYYY-MM-DD date into DD/MM/YYYY.
+ * @param {string} date - the date string
+ * @return {string} the formatted date
+ */
 const formatDate = (date: string) => date.split('-').reverse().join('/');
 
 type MemberInfoProps = {
   member: UserPublicProfile;
   isAdmin: boolean;
   currentUserId?: number;
+  canViewUnavailabilities: boolean;
+  unavailabilities: Unavailability[];
   onNavigateToTeam: (teamId: number) => void;
   onOpenBanModal: () => void;
 };
 
+/**
+ * Shows the member's avatar, info and ban button.
+ * @param {MemberInfoProps} props - the component props
+ * @return {JSX.Element} the member info
+ */
 const MemberInfo = ({
   member,
   isAdmin,
   currentUserId,
+  canViewUnavailabilities,
+  unavailabilities,
   onNavigateToTeam,
   onOpenBanModal,
 }: MemberInfoProps) => {
@@ -23,19 +38,31 @@ const MemberInfo = ({
       <Box
         sx={{
           display: 'flex',
-          flexDirection: 'row',
+          flexDirection: 'column',
           alignItems: 'center',
-          gap: 3,
+          gap: 1,
         }}
       >
-        <Typography variant="h4" fontWeight="bold" sx={{ mt: 4 }}>
-          {member.tag}
-        </Typography>
-        <Avatar
-          src={member.profilePicture}
-          alt={member.tag}
-          sx={{ width: 120, height: 120 }}
-        />
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 3,
+          }}
+        >
+          <Typography variant="h4" fontWeight="bold" sx={{ mt: 4 }}>
+            {member.tag}
+          </Typography>
+          <Avatar
+            src={member.profilePicture}
+            alt={member.tag}
+            sx={{ width: 120, height: 120 }}
+          />
+        </Box>
+        {canViewUnavailabilities && (
+          <UnavailabilityCalendar unavailabilities={unavailabilities} />
+        )}
       </Box>
       <Box
         sx={{

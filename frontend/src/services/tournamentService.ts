@@ -141,6 +141,45 @@ const fetchTournamentsFiltered = async (
   return tournamentList ?? [];
 };
 
+const generateSchedule = async (
+  token: string,
+  tournamentId: number,
+  payload: { startDate: string; hoursBetweenRounds: number },
+): Promise<void> => {
+  const response = await fetch(
+    `${TOURNAMENT_BASE_URL}/${tournamentId}/matches/generate`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  ensureRequestSucceeded(
+    response,
+    undefined,
+    'Génération impossible: startDate doit être une date/heure valide (format YYYY-MM-DDTHH:mm:ss) et non passée.',
+    'Génération impossible: le tournoi doit être PLANIFIED, avec au moins 2 équipes, inscriptions terminées ou tournoi complet, et sans matchs déjà générés.',
+  );
+};
+
+const hasGeneratedMatches = async (tournamentId: number): Promise<boolean> => {
+  const response = await fetch(
+    `${TOURNAMENT_BASE_URL}/${tournamentId}/matches`,
+    {
+      method: 'GET',
+    },
+  );
+
+  ensureRequestSucceeded(response);
+
+  const matches = (await response.json()) as unknown[];
+  return matches.length > 0;
+};
+
 export {
   fetchTournaments,
   fetchTournamentById,
@@ -148,4 +187,6 @@ export {
   createTournament,
   publishTournament,
   updateTournament,
+  generateSchedule,
+  hasGeneratedMatches,
 };

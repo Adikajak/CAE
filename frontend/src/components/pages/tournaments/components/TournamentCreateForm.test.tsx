@@ -30,6 +30,9 @@ describe('TournamentCreateForm', () => {
       editing: false,
       editError: null,
       editSuccess: null,
+      generating: false,
+      generateError: null,
+      generateSuccess: null,
       refreshTournaments: vi.fn(),
       setName: vi.fn(),
       setDescription: vi.fn(),
@@ -41,6 +44,7 @@ describe('TournamentCreateForm', () => {
       submitTournamentCreation: vi.fn(),
       handlePublishTournament: vi.fn(),
       handleEditTournament: vi.fn(),
+      handleGenerateSchedule: vi.fn(),
       stateFilter: null,
       yearFilter: null,
       monthFilter: null,
@@ -53,6 +57,7 @@ describe('TournamentCreateForm', () => {
       fromDateFilter: '',
       toDateFilter: '',
       registeredTournamentIds: new Set(),
+      participatedTournamentIds: new Set(),
       setFromDateFilter: vi.fn(),
       setToDateFilter: vi.fn(),
       setStateFilter: vi.fn(),
@@ -127,6 +132,28 @@ describe('TournamentCreateForm', () => {
     });
 
     expect(contextValue.setName).toHaveBeenCalledWith('Nouveau tournoi');
+  });
+
+  test('limits description to 150 characters', () => {
+    const contextValue = createContextValue();
+    const longDescription = 'a'.repeat(180);
+
+    render(
+      <TournamentContext.Provider value={contextValue}>
+        <TournamentCreateForm />
+      </TournamentContext.Provider>,
+    );
+
+    const descriptionInput = screen.getByLabelText(
+      /description/i,
+    ) as HTMLInputElement;
+
+    fireEvent.change(descriptionInput, {
+      target: { value: longDescription },
+    });
+
+    expect(contextValue.setDescription).toHaveBeenCalledWith('a'.repeat(150));
+    expect(descriptionInput.getAttribute('maxlength')).toBe('150');
   });
 
   test('calls field setters when date and max teams change', () => {

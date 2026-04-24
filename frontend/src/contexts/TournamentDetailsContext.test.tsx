@@ -114,11 +114,19 @@ describe('TournamentDetailsContext', () => {
     state: 'PLANIFIED',
   };
 
+  /**
+   * Reads the context value and stores it for assertions.
+   * @return {null} nothing
+   */
   const ContextConsumer = () => {
     contextValue = useContext(TournamentDetailsContext);
     return null;
   };
 
+  /**
+   * Returns a user context with no authenticated user.
+   * @return {UserContextType} the context value
+   */
   const createAnonymousUserContext = (): UserContextType => ({
     authenticatedUser: undefined,
     setAuthenticatedUser: vi.fn(),
@@ -129,6 +137,12 @@ describe('TournamentDetailsContext', () => {
     refreshUser: vi.fn(),
   });
 
+  /**
+   * Returns a user context for a logged-in user with a team.
+   * @param {number} userId - the user id
+   * @param {number} teamId - the team id
+   * @return {UserContextType} the context value
+   */
   const createUserWithTeamContext = (
     userId = 10,
     teamId = 5,
@@ -150,6 +164,10 @@ describe('TournamentDetailsContext', () => {
     refreshUser: vi.fn(),
   });
 
+  /**
+   * Returns a user context for an admin user.
+   * @return {UserContextType} the context value
+   */
   const createAdminUserContext = (): UserContextType => ({
     authenticatedUser: {
       id: 99,
@@ -167,6 +185,10 @@ describe('TournamentDetailsContext', () => {
     refreshUser: vi.fn(),
   });
 
+  /**
+   * Returns a user context for a logged-in user with no team.
+   * @return {UserContextType} the context value
+   */
   const createUserWithoutTeamContext = (): UserContextType => ({
     authenticatedUser: {
       id: 42,
@@ -184,7 +206,12 @@ describe('TournamentDetailsContext', () => {
     refreshUser: vi.fn(),
   });
 
-  // Renders with tournamentId prop (used for all provider tests)
+  /**
+   * Shows the provider inside a user context for testing.
+   * @param {UserContextType} userCtx - the user context
+   * @param {number} tournamentId - the tournament id
+   * @return {void}
+   */
   const renderContext = (
     userCtx = createAnonymousUserContext(),
     tournamentId = 1,
@@ -375,6 +402,20 @@ describe('TournamentDetailsContext', () => {
 
   test('canRegister is false when tournament is not PLANIFIED', async () => {
     vi.mocked(fetchTournamentById).mockResolvedValue(prepTournament);
+
+    renderContext(createUserWithTeamContext());
+
+    await waitFor(() => {
+      expect(contextValue?.loading).toBe(false);
+      expect(contextValue?.canRegister).toBe(false);
+    });
+  });
+
+  test('canRegister is false when registration deadline has passed', async () => {
+    vi.mocked(fetchTournamentById).mockResolvedValue({
+      ...openTournament,
+      endInscriptionDate: '2000-01-01',
+    });
 
     renderContext(createUserWithTeamContext());
 

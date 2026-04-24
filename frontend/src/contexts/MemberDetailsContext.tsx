@@ -9,16 +9,23 @@ import {
 import { useParams } from 'react-router-dom';
 import {
   MemberDetailsContextType,
+  Unavailability,
   UserContextType,
   UserPublicProfile,
 } from '../types';
-import { fetchMemberById, banMember } from '../services/membersService';
+import {
+  fetchMemberById,
+  banMember,
+  fetchMemberUnavailabilities,
+} from '../services/membersService';
 import { UserContext } from './UserContext';
 
 const defaultMemberDetailsContext: MemberDetailsContextType = {
   loading: true,
   error: null,
   member: null,
+  unavailabilities: [],
+  canViewUnavailabilities: false,
   openBanModal: false,
   banError: '',
   setOpenBanModal: () => {},
@@ -29,11 +36,20 @@ const MemberDetailsContext = createContext<MemberDetailsContextType>(
   defaultMemberDetailsContext,
 );
 
+/**
+ * Gets a message from an error.
+ * @param {unknown} error - the error
+ * @return {string} the message
+ */
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return error.message;
   return 'Une erreur inconnue est survenue';
 };
 
+/**
+ * Provides member details, unavailabilities and ban actions to its children.
+ * @return {JSX.Element} the provider
+ */
 const MemberDetailsContextProvider = ({
   children,
 }: {
@@ -44,6 +60,10 @@ const MemberDetailsContextProvider = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [member, setMember] = useState<UserPublicProfile | null>(null);
+  const [unavailabilities, setUnavailabilities] = useState<Unavailability[]>(
+    [],
+  );
+  const [canViewUnavailabilities, setCanViewUnavailabilities] = useState(false);
   const [openBanModal, setOpenBanModal] = useState(false);
   const [banError, setBanError] = useState('');
 
@@ -62,7 +82,20 @@ const MemberDetailsContextProvider = ({
       const msg = getErrorMessage(fetchError);
       setError(msg === 'Erreur 404' ? 'Membre introuvable.' : msg);
     }
-  }, [parsedId]);
+    if (authenticatedUser?.token) {
+      try {
+        const unavails = await fetchMemberUnavailabilities(
+          parsedId,
+          authenticatedUser.token,
+        );
+        setUnavailabilities(unavails);
+        setCanViewUnavailabilities(true);
+      } catch {
+        setUnavailabilities([]);
+        setCanViewUnavailabilities(false);
+      }
+    }
+  }, [parsedId, authenticatedUser?.token]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,6 +122,8 @@ const MemberDetailsContextProvider = ({
     loading,
     error,
     member,
+    unavailabilities,
+    canViewUnavailabilities,
     openBanModal,
     banError,
     setOpenBanModal,

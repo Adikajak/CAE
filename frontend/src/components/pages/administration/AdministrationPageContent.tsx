@@ -33,7 +33,17 @@ const AdministrationPageContent = () => {
   if (error) return <p>Erreur : {error}</p>;
 
   return (
-    <Box sx={{ margin: 2, padding: 3, textAlign: 'center' }}>
+    <Box
+      sx={{
+        margin: 2,
+        padding: 3,
+        textAlign: 'center',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 2.5,
+        marginTop: 2,
+        marginBottom: 2,
+      }}
+    >
       <AdministrationActions
         onOpenPromoteModal={openPromoteModalAndLoadUsers}
       />

@@ -35,16 +35,18 @@ const renderWithContext = (
   value: Partial<MemberDetailsContextType>,
   isAdmin = false,
 ) => {
-  const contextValue: MemberDetailsContextType = {
+  const contextValue = {
     loading: false,
     error: null,
     member,
+    unavailabilities: [],
+    canViewUnavailabilities: false,
     openBanModal: false,
     banError: '',
     setOpenBanModal: vi.fn(),
     handleBanMember: vi.fn(),
     ...value,
-  };
+  } as MemberDetailsContextType;
 
   return render(
     <MemoryRouter>
@@ -60,7 +62,7 @@ const renderWithContext = (
 describe('MemberDetailsPageContent', () => {
   test('renders the loading state', () => {
     renderWithContext({ loading: true });
-    expect(screen.getByRole('progressbar')).toBeTruthy();
+    expect(screen.getAllByRole('progressbar')).toBeTruthy();
   });
 
   test('renders the error state', () => {
@@ -70,7 +72,7 @@ describe('MemberDetailsPageContent', () => {
 
   test('renders the loading state when member is null', () => {
     renderWithContext({ member: null });
-    expect(screen.getByRole('progressbar')).toBeTruthy();
+    expect(screen.getAllByRole('progressbar')).toBeTruthy();
   });
 
   test('renders the member tag', () => {

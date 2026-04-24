@@ -12,6 +12,7 @@ import {
   fetchTeamById,
   designateSecondManager,
   leaveTeam,
+  excludeMember,
 } from '../services/teamService';
 import { fetchTeamMembers } from '../services/teamMembershipService';
 import { fetchTeamActivity } from '../services/tournamentRegistrationService';
@@ -25,6 +26,7 @@ vi.mock('../services/teamService', () => ({
   fetchTeamById: vi.fn(),
   designateSecondManager: vi.fn(),
   leaveTeam: vi.fn(),
+  excludeMember: vi.fn(),
 }));
 
 vi.mock('../services/teamMembershipService', () => ({
@@ -143,6 +145,7 @@ describe('TeamDetailsContext', () => {
     vi.mocked(fetchTeamActivity).mockResolvedValue(mockTeamActivity);
     vi.mocked(designateSecondManager).mockResolvedValue(mockTeam);
     vi.mocked(leaveTeam).mockResolvedValue(undefined);
+    vi.mocked(excludeMember).mockResolvedValue(undefined);
   });
 
   test('exposes harmless default values and methods without a provider', async () => {
@@ -173,6 +176,9 @@ describe('TeamDetailsContext', () => {
     ).resolves.toBeUndefined();
     await expect(
       contextValue?.handleLeaveTeam() ?? Promise.resolve(),
+    ).resolves.toBeUndefined();
+    await expect(
+      contextValue?.handleExcludeMember(10) ?? Promise.resolve(),
     ).resolves.toBeUndefined();
   });
 
@@ -278,7 +284,7 @@ describe('TeamDetailsContext', () => {
     expect(fetchTeamById).toHaveBeenCalledWith(1, '');
   });
 
-  test('handleDesignateSecondManager and handleLeaveTeam do nothing without a token', async () => {
+  test('team actions do nothing without a token', async () => {
     renderTeamDetailsContext(createUserContextValue(null));
 
     await waitFor(() => expect(contextValue?.loading).toBe(false));
@@ -286,10 +292,12 @@ describe('TeamDetailsContext', () => {
     await act(async () => {
       await contextValue?.handleDesignateSecondManager(2);
       await contextValue?.handleLeaveTeam();
+      await contextValue?.handleExcludeMember(10);
     });
 
     expect(designateSecondManager).not.toHaveBeenCalled();
     expect(leaveTeam).not.toHaveBeenCalled();
+    expect(excludeMember).not.toHaveBeenCalled();
   });
 
   test('stores a loading error when fetching fails', async () => {
@@ -499,6 +507,41 @@ describe('TeamDetailsContext', () => {
 
     await waitFor(() => {
       expect(contextValue?.error).toBe('Impossible de quitter');
+      expect(contextValue?.actionLoading).toBeNull();
+    });
+  });
+
+  test('handleExcludeMember excludes a member and refreshes', async () => {
+    renderTeamDetailsContext();
+
+    await waitFor(() => expect(contextValue?.loading).toBe(false));
+
+    await act(async () => {
+      await contextValue?.handleExcludeMember(10);
+    });
+
+    await waitFor(() => {
+      expect(excludeMember).toHaveBeenCalledWith('test-token', 10);
+      expect(contextValue?.success).toBe('Le membre a été exclu de la team.');
+      expect(contextValue?.actionLoading).toBeNull();
+    });
+  });
+
+  test('handleExcludeMember stores errors', async () => {
+    vi.mocked(excludeMember).mockRejectedValueOnce(
+      new Error('Exclusion impossible'),
+    );
+
+    renderTeamDetailsContext();
+
+    await waitFor(() => expect(contextValue?.loading).toBe(false));
+
+    await act(async () => {
+      await contextValue?.handleExcludeMember(10);
+    });
+
+    await waitFor(() => {
+      expect(contextValue?.error).toBe('Exclusion impossible');
       expect(contextValue?.actionLoading).toBeNull();
     });
   });

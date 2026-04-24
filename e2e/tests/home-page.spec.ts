@@ -23,7 +23,7 @@ test.describe('Home page - unauthenticated', () => {
     await expect(page.getByRole('progressbar')).not.toBeVisible({ timeout: 5000 });
     await expect(page.getByText(/spring arena cup 2025/i)).not.toBeVisible();
     await expect(page.getByText(/spring battle series 2026/i)).toBeVisible();
-    await expect(page.getByText(/vinci easter cup 2026/i)).toBeVisible();
+    await expect(page.getByText(/vinci easter cup 2026/i)).not.toBeVisible();
     await expect(page.getByText(/elite championship 2026/i)).toBeVisible();
   });
 });

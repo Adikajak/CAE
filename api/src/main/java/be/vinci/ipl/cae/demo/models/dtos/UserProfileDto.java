@@ -15,6 +15,7 @@ public class UserProfileDto {
   private LocalDate date;
   private String teamName;
   private boolean isManager;
+  private Long teamId;
 
   /**
    * Constructor for UserProfile.
@@ -29,7 +30,8 @@ public class UserProfileDto {
    * @param isManager      the user manager
    */
   public UserProfileDto(Long id, String email, String tag, String speciality,
-                        String profilePicture, LocalDate date, String teamName, boolean isManager) {
+                        String profilePicture, LocalDate date, String teamName,
+                        Long teamId, boolean isManager) {
     this.id = id;
     this.email = email;
     this.tag = tag;
@@ -38,6 +40,7 @@ public class UserProfileDto {
     this.date = date;
     this.teamName = teamName;
     this.isManager = isManager;
+    this.teamId = teamId;
   }
 
   public Long getId() {
@@ -70,5 +73,9 @@ public class UserProfileDto {
 
   public boolean getIsManager() {
     return isManager;
+  }
+
+  public Long getTeamId() {
+    return teamId;
   }
 }

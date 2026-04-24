@@ -28,6 +28,13 @@ describe('TournamentDetailsPage', () => {
     registrationsCount: 0,
   };
 
+  const finishedTournament = {
+    ...tournament,
+    state: 'FINISHED',
+    stateDisplayName: 'Terminé',
+    winner: 'TEAM_ALPHA',
+  };
+
   const manager = {
     id: 10,
     email: 'manager@mail.com',
@@ -48,6 +55,10 @@ describe('TournamentDetailsPage', () => {
 
   let fetchMock: ReturnType<typeof vi.fn>;
 
+  /**
+   * Returns a user context with no authenticated user.
+   * @return {UserContextType} the context value
+   */
   const createAnonymousUserContext = (): UserContextType => ({
     authenticatedUser: undefined,
     setAuthenticatedUser: vi.fn(),
@@ -58,6 +69,10 @@ describe('TournamentDetailsPage', () => {
     refreshUser: vi.fn(),
   });
 
+  /**
+   * Returns a user context for the team manager.
+   * @return {UserContextType} the context value
+   */
   const createManagerUserContext = (): UserContextType => ({
     authenticatedUser: {
       id: 10,
@@ -76,6 +91,10 @@ describe('TournamentDetailsPage', () => {
     refreshUser: vi.fn(),
   });
 
+  /**
+   * Shows the page with no authenticated user.
+   * @return {void}
+   */
   const renderAnonymous = () =>
     render(
       <UserContext.Provider value={createAnonymousUserContext()}>
@@ -83,12 +102,43 @@ describe('TournamentDetailsPage', () => {
       </UserContext.Provider>,
     );
 
+  /**
+   * Shows the page as the team manager.
+   * @return {void}
+   */
   const renderAsManager = () =>
     render(
       <UserContext.Provider value={createManagerUserContext()}>
         <TournamentDetailsPage />
       </UserContext.Provider>,
     );
+
+  /**
+   * Returns a base context value with empty defaults.
+   * @return {TournamentDetailsContextType} the context value
+   */
+  const baseCtx = (): TournamentDetailsContextType => ({
+    tournament: null,
+    registrations: [],
+    loading: false,
+    error: null,
+    success: null,
+    actionLoading: null,
+    canRegister: false,
+    alreadyRegistered: false,
+    registering: false,
+    registerError: null,
+    registerSuccess: false,
+    isAdmin: false,
+    currentUserId: undefined,
+    refreshRegistrations: vi.fn(),
+    registerTeam: vi.fn(),
+    clearRegisterError: vi.fn(),
+    clearError: vi.fn(),
+    clearSuccess: vi.fn(),
+    handleRefresh: vi.fn(),
+    handlePublishTournament: vi.fn(),
+  });
 
   beforeEach(() => {
     fetchMock = vi.fn();
@@ -184,6 +234,28 @@ describe('TournamentDetailsPage', () => {
     });
   });
 
+  test('hides register button when registration deadline has passed', async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ...tournament,
+            endInscriptionDate: '2000-01-01',
+          }),
+      })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(team) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) });
+
+    renderAsManager();
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: /inscrire ma team/i }),
+      ).toBeNull();
+    });
+  });
+
   test('displays an error message when tournament fetch fails', async () => {
     fetchMock.mockResolvedValueOnce({ ok: false, status: 404 });
 
@@ -235,30 +307,8 @@ describe('TournamentDetailsPage', () => {
   });
 
   test('returns null when not loading, no error and no tournament', () => {
-    const ctx: TournamentDetailsContextType = {
-      tournament: null,
-      registrations: [],
-      loading: false,
-      error: null,
-      success: null,
-      actionLoading: null,
-      canRegister: false,
-      registering: false,
-      registerError: null,
-      registerSuccess: false,
-      isAdmin: false,
-      currentUserId: undefined,
-      refreshRegistrations: vi.fn(),
-      registerTeam: vi.fn(),
-      clearRegisterError: vi.fn(),
-      clearError: vi.fn(),
-      clearSuccess: vi.fn(),
-      handleRefresh: vi.fn(),
-      handlePublishTournament: vi.fn(),
-    };
-
     const { container } = render(
-      <TournamentDetailsContext.Provider value={ctx}>
+      <TournamentDetailsContext.Provider value={baseCtx()}>
         <TournamentDetailsPageContent />
       </TournamentDetailsContext.Provider>,
     );
@@ -267,30 +317,10 @@ describe('TournamentDetailsPage', () => {
   });
 
   test('shows success alert after successful registration', () => {
-    const ctx: TournamentDetailsContextType = {
-      tournament,
-      registrations: [],
-      loading: false,
-      error: null,
-      success: null,
-      actionLoading: null,
-      canRegister: false,
-      registering: false,
-      registerError: null,
-      registerSuccess: true,
-      isAdmin: false,
-      currentUserId: undefined,
-      refreshRegistrations: vi.fn(),
-      registerTeam: vi.fn(),
-      clearRegisterError: vi.fn(),
-      clearError: vi.fn(),
-      clearSuccess: vi.fn(),
-      handleRefresh: vi.fn(),
-      handlePublishTournament: vi.fn(),
-    };
-
     render(
-      <TournamentDetailsContext.Provider value={ctx}>
+      <TournamentDetailsContext.Provider
+        value={{ ...baseCtx(), tournament, registerSuccess: true }}
+      >
         <TournamentDetailsPageContent />
       </TournamentDetailsContext.Provider>,
     );
@@ -304,37 +334,21 @@ describe('TournamentDetailsPage', () => {
     const navigateMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
 
-    const ctx: TournamentDetailsContextType = {
-      tournament,
-      registrations: [
-        {
-          tournamentId: 1,
-          tournamentName: 'Spring Cup',
-          teamId: 5,
-          teamName: 'TEAM_ALPHA',
-        },
-      ],
-      loading: false,
-      error: null,
-      success: null,
-      actionLoading: null,
-      canRegister: false,
-      registering: false,
-      registerError: null,
-      registerSuccess: false,
-      isAdmin: false,
-      currentUserId: undefined,
-      refreshRegistrations: vi.fn(),
-      registerTeam: vi.fn(),
-      clearRegisterError: vi.fn(),
-      clearError: vi.fn(),
-      clearSuccess: vi.fn(),
-      handleRefresh: vi.fn(),
-      handlePublishTournament: vi.fn(),
-    };
-
     render(
-      <TournamentDetailsContext.Provider value={ctx}>
+      <TournamentDetailsContext.Provider
+        value={{
+          ...baseCtx(),
+          tournament,
+          registrations: [
+            {
+              tournamentId: 1,
+              tournamentName: 'Spring Cup',
+              teamId: 5,
+              teamName: 'TEAM_ALPHA',
+            },
+          ],
+        }}
+      >
         <TournamentDetailsPageContent />
       </TournamentDetailsContext.Provider>,
     );
@@ -345,30 +359,15 @@ describe('TournamentDetailsPage', () => {
   });
 
   test('shows disabled button with Inscription... text while registering', () => {
-    const ctx: TournamentDetailsContextType = {
-      tournament,
-      registrations: [],
-      loading: false,
-      error: null,
-      success: null,
-      actionLoading: null,
-      canRegister: true,
-      registering: true,
-      registerError: null,
-      registerSuccess: false,
-      isAdmin: false,
-      currentUserId: undefined,
-      refreshRegistrations: vi.fn(),
-      registerTeam: vi.fn(),
-      clearRegisterError: vi.fn(),
-      clearError: vi.fn(),
-      clearSuccess: vi.fn(),
-      handleRefresh: vi.fn(),
-      handlePublishTournament: vi.fn(),
-    };
-
     render(
-      <TournamentDetailsContext.Provider value={ctx}>
+      <TournamentDetailsContext.Provider
+        value={{
+          ...baseCtx(),
+          tournament,
+          canRegister: true,
+          registering: true,
+        }}
+      >
         <TournamentDetailsPageContent />
       </TournamentDetailsContext.Provider>,
     );
@@ -376,5 +375,121 @@ describe('TournamentDetailsPage', () => {
     const button = screen.getByRole('button', { name: /inscription\.\.\./i });
     expect(button).toBeTruthy();
     expect((button as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  test('hides afficher planning before inscription end when tournament is not full', () => {
+    render(
+      <TournamentDetailsContext.Provider
+        value={{
+          ...baseCtx(),
+          tournament: { ...tournament, endInscriptionDate: '2099-12-31' },
+          canRegister: true,
+        }}
+      >
+        <TournamentDetailsPageContent />
+      </TournamentDetailsContext.Provider>,
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /afficher planning/i }),
+    ).toBeNull();
+  });
+
+  test('redirects to dedicated bracket page when clicking afficher planning', async () => {
+    const navigateMock = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(navigateMock);
+
+    const fullRegistrations = [
+      {
+        tournamentId: 1,
+        tournamentName: 'Spring Cup',
+        teamId: 1,
+        teamName: 'TEAM_1',
+      },
+      {
+        tournamentId: 1,
+        tournamentName: 'Spring Cup',
+        teamId: 2,
+        teamName: 'TEAM_2',
+      },
+      {
+        tournamentId: 1,
+        tournamentName: 'Spring Cup',
+        teamId: 3,
+        teamName: 'TEAM_3',
+      },
+      {
+        tournamentId: 1,
+        tournamentName: 'Spring Cup',
+        teamId: 4,
+        teamName: 'TEAM_4',
+      },
+    ];
+
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(tournament),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(fullRegistrations),
+      });
+
+    renderAnonymous();
+
+    const toggleButton = await screen.findByRole('button', {
+      name: /afficher planning/i,
+    });
+
+    await userEvent.click(toggleButton);
+
+    expect(navigateMock).toHaveBeenCalledWith('/tournaments/1/bracket');
+  });
+
+  // -------------------------------------------------------------------------
+  // Winner banner
+  // -------------------------------------------------------------------------
+
+  test('shows winner banner when tournament is FINISHED and has a winner', () => {
+    render(
+      <TournamentDetailsContext.Provider
+        value={{ ...baseCtx(), tournament: finishedTournament }}
+      >
+        <TournamentDetailsPageContent />
+      </TournamentDetailsContext.Provider>,
+    );
+
+    expect(screen.getByText(/gagnant : TEAM_ALPHA/i)).toBeTruthy();
+  });
+
+  test('does not show winner banner when tournament is FINISHED but has no winner', () => {
+    render(
+      <TournamentDetailsContext.Provider
+        value={{
+          ...baseCtx(),
+          tournament: { ...finishedTournament, winner: undefined },
+        }}
+      >
+        <TournamentDetailsPageContent />
+      </TournamentDetailsContext.Provider>,
+    );
+
+    expect(screen.queryByText(/gagnant/i)).toBeNull();
+  });
+
+  test('does not show winner banner when tournament is not FINISHED', () => {
+    render(
+      <TournamentDetailsContext.Provider
+        value={{
+          ...baseCtx(),
+          tournament: { ...tournament, winner: 'TEAM_ALPHA' },
+        }}
+      >
+        <TournamentDetailsPageContent />
+      </TournamentDetailsContext.Provider>,
+    );
+
+    expect(screen.queryByText(/gagnant/i)).toBeNull();
   });
 });

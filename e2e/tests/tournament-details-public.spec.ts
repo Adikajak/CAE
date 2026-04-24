@@ -1,15 +1,32 @@
 import { expect, test } from '@playwright/test';
 import { goToTournamentDetailsPage } from './helpers';
 
+interface Tournament {
+  id: number;
+  name: string;
+  state: string;
+}
+
+let planifiedId: number;
+let planifiedName: string;
+
 // These tests run without any stored session (chromium-public).
 
 test.describe('Tournament details - unauthenticated', () => {
+  test.beforeAll(async ({ request }) => {
+    const res = await request.get('/api/tournaments');
+    const tournaments: Tournament[] = await res.json();
+    const planified = tournaments.find((t) => t.state === 'PLANIFIED');
+    planifiedId = planified!.id;
+    planifiedName = planified!.name;
+  });
+
   // TC-TD6: unauthenticated user sees the tournament info but not the register button
   test('TC-TD6: should display tournament info without register button', async ({
     page,
   }) => {
-    await goToTournamentDetailsPage(page, 6);
-    await expect(page.getByText('Vinci Easter Cup 2026')).toBeVisible();
+    await goToTournamentDetailsPage(page, planifiedId);
+    await expect(page.getByText(planifiedName)).toBeVisible();
     await expect(
       page.getByRole('button', { name: /inscrire ma team/i }),
     ).not.toBeVisible();

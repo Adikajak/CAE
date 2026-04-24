@@ -24,10 +24,12 @@ type TeamMembersTableProps = {
   totalTeamMembers: number;
   currentUserId?: number;
   isPrimaryManager: boolean;
+  isSecondManager: boolean;
   canViewMemberEmail: boolean;
   actionLoading: string | null;
   onDesignate: (memberId: number) => Promise<void>;
   onLeave: () => Promise<void>;
+  onExclude: (membershipId: number) => Promise<void>;
 };
 
 const TeamMembersTable = ({
@@ -36,10 +38,12 @@ const TeamMembersTable = ({
   totalTeamMembers,
   currentUserId,
   isPrimaryManager,
+  isSecondManager,
   canViewMemberEmail,
   actionLoading,
   onDesignate,
   onLeave,
+  onExclude,
 }: TeamMembersTableProps) => {
   const navigate = useNavigate();
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
@@ -57,6 +61,8 @@ const TeamMembersTable = ({
       await onDesignate(selectedMember!.member.id);
     } else if (confirmAction === 'leave') {
       await onLeave();
+    } else if (confirmAction === 'exclude') {
+      await onExclude(selectedMember!.membershipId!);
     }
 
     setConfirmAction(null);
@@ -86,6 +92,13 @@ const TeamMembersTable = ({
                 entry.roleLabel !== 'Responsable' ||
                 totalTeamMembers === 1 ||
                 team.secondManager !== null;
+              const canExclude =
+                // tiago exclure remake
+                entry.member.id !== currentUserId &&
+                entry.membershipId !== undefined &&
+                ((isPrimaryManager && entry.roleLabel !== 'Responsable') ||
+                  (isSecondManager && !isPrimaryManager));
+              // tiago exclure remake
 
               return (
                 <TableRow
@@ -103,7 +116,13 @@ const TeamMembersTable = ({
                     <Link
                       color="info.main"
                       sx={{ cursor: 'pointer', fontWeight: 700 }}
-                      onClick={() => navigate(`/members/${entry.member.id}`)}
+                      onClick={() =>
+                        navigate(
+                          entry.member.id === currentUserId
+                            ? '/profile'
+                            : `/members/${entry.member.id}`,
+                        )
+                      }
                     >
                       {entry.member.tag}
                     </Link>
@@ -142,6 +161,16 @@ const TeamMembersTable = ({
                           Désigner second responsable
                         </Button>
                       )}
+                      {canExclude && (
+                        <Button
+                          color="error"
+                          variant="contained"
+                          disabled={actionLoading !== null}
+                          onClick={() => openMemberAction('exclude', entry)}
+                        >
+                          Exclure
+                        </Button>
+                      )}
                       {canSeeLeaveAction && (
                         <Button
                           color="warning"
@@ -153,7 +182,7 @@ const TeamMembersTable = ({
                           Quitter la team
                         </Button>
                       )}
-                      {!canDesignate && !canSeeLeaveAction && (
+                      {!canDesignate && !canExclude && !canSeeLeaveAction && (
                         <Typography
                           variant="body2"
                           color="text.secondary"

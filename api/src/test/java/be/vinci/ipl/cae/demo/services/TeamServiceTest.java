@@ -1,17 +1,20 @@
 package be.vinci.ipl.cae.demo.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.results.TeamOperationResult;
+import be.vinci.ipl.cae.demo.models.enums.MembershipStatus;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
@@ -19,6 +22,7 @@ import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
+import be.vinci.ipl.cae.demo.services.MembershipHistoryService;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -49,6 +53,12 @@ class TeamServiceTest {
   @InjectMocks
   private TeamService teamService;
 
+  @Mock
+  private MembershipHistoryService membershipHistoryService;
+
+  @Mock
+  private SelectionMatchService selectionMatchService;
+
   // ==================== createTeam ====================
 
   @Test
@@ -62,11 +72,17 @@ class TeamServiceTest {
         .thenReturn(Optional.empty());
     when(teamRepository.save(team)).thenReturn(team);
 
-    Team result = teamService.createTeam(team, creator);
+    TeamOperationResult outcome = teamService.createTeam(team, creator);
 
+    assertTrue(outcome.success());
+    Team result = outcome.team();
     assertEquals(creator, result.getManager());
     assertEquals(team, creator.getTeam());
     verify(userRepository).save(creator);
+    verify(teamMembershipRepository).save(argThat(membership ->
+      membership.getTeam() == team
+        && membership.getMember() == creator
+        && membership.getStatus() == MembershipStatus.ACCEPTED));
   }
 
   @Test
@@ -78,10 +94,10 @@ class TeamServiceTest {
     when(teamRepository.findByNameIgnoreCase("ExistingTeam"))
         .thenReturn(Optional.of(new Team()));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.createTeam(team, creator));
+    TeamOperationResult outcome = teamService.createTeam(team, creator);
 
-    assertEquals("Le nom de cette team existe déjà", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Le nom de cette team existe déjà", outcome.errorMessage());
     verify(teamRepository, never()).save(team);
   }
 
@@ -94,10 +110,10 @@ class TeamServiceTest {
 
     when(teamRepository.findByNameIgnoreCase("NewTeam")).thenReturn(Optional.empty());
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.createTeam(team, creator));
+    TeamOperationResult outcome = teamService.createTeam(team, creator);
 
-    assertEquals("Cet utilisateur possède déjà une team", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Cet utilisateur possède déjà une team", outcome.errorMessage());
     verify(teamRepository, never()).save(team);
   }
 
@@ -111,11 +127,11 @@ class TeamServiceTest {
     when(teamMembershipRepository.findByMemberAndStatus(creator, MembershipStatus.PENDING))
         .thenReturn(Optional.of(new TeamMembership()));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.createTeam(team, creator));
+    TeamOperationResult outcome = teamService.createTeam(team, creator);
 
+    assertFalse(outcome.success());
     assertEquals("Cet utilisateur a déjà une demande d'adhésion en attente",
-        exception.getMessage());
+        outcome.errorMessage());
     verify(teamRepository, never()).save(team);
   }
 
@@ -158,9 +174,10 @@ class TeamServiceTest {
     when(userRepository.findById(2L)).thenReturn(Optional.of(member));
     when(teamRepository.save(team)).thenReturn(team);
 
-    teamService.designateSecondManager(manager, 10L, 2L);
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 10L, 2L);
 
-    assertEquals(member, team.getSecondManager());
+    assertTrue(outcome.success());
+    assertEquals(member, outcome.team().getSecondManager());
     verify(notificationService).createNotification(eq(member), any(NotificationDto.class));
   }
 
@@ -174,11 +191,11 @@ class TeamServiceTest {
 
     when(teamRepository.findById(10L)).thenReturn(Optional.of(team));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(otherUser, 10L, 3L));
+    TeamOperationResult outcome = teamService.designateSecondManager(otherUser, 10L, 3L);
 
+    assertFalse(outcome.success());
     assertEquals("Seul le responsable principal peut désigner un responsable",
-        exception.getMessage());
+        outcome.errorMessage());
   }
 
   @Test
@@ -191,11 +208,11 @@ class TeamServiceTest {
 
     when(teamRepository.findById(10L)).thenReturn(Optional.of(team));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(manager, 10L, 2L));
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 10L, 2L);
 
+    assertFalse(outcome.success());
     assertEquals("Impossible de désigner un autre responsable : la team en a déjà un",
-        exception.getMessage());
+        outcome.errorMessage());
   }
 
   @Test
@@ -209,10 +226,10 @@ class TeamServiceTest {
     when(teamRepository.findById(10L)).thenReturn(Optional.of(team));
     when(userRepository.findById(2L)).thenReturn(Optional.of(member));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(manager, 10L, 2L));
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 10L, 2L);
 
-    assertEquals("Le membre sélectionné n'appartient pas à cette team", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Le membre sélectionné n'appartient pas à cette team", outcome.errorMessage());
   }
 
   @Test
@@ -226,11 +243,11 @@ class TeamServiceTest {
     when(teamRepository.findById(10L)).thenReturn(Optional.of(team));
     when(userRepository.findById(1L)).thenReturn(Optional.of(manager));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(manager, 10L, 1L));
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 10L, 1L);
 
+    assertFalse(outcome.success());
     assertEquals("Le responsable principal ne peut pas être désigné à nouveau",
-        exception.getMessage());
+        outcome.errorMessage());
   }
 
   // ==================== getAcceptedMembersCount ====================
@@ -272,10 +289,11 @@ class TeamServiceTest {
     when(teamRepository.findById(10L)).thenReturn(Optional.of(team));
     when(teamRepository.save(team)).thenReturn(team);
 
-    teamService.renounceManagerRole(manager, 10L);
+    TeamOperationResult outcome = teamService.renounceManagerRole(manager, 10L);
 
-    assertEquals(secondManager, team.getManager());
-    assertEquals(manager, team.getSecondManager());
+    assertTrue(outcome.success());
+    assertEquals(secondManager, outcome.team().getManager());
+    assertEquals(manager, outcome.team().getSecondManager());
     verify(notificationService).createNotification(eq(manager), any(NotificationDto.class));
     verify(notificationService).createNotification(eq(secondManager), any(NotificationDto.class));
   }
@@ -290,10 +308,10 @@ class TeamServiceTest {
 
     when(teamRepository.findById(10L)).thenReturn(Optional.of(team));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.renounceManagerRole(otherUser, 10L));
+    TeamOperationResult outcome = teamService.renounceManagerRole(otherUser, 10L);
 
-    assertEquals("Seul le responsable principal peut renoncer à ce rôle", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Seul le responsable principal peut renoncer à ce rôle", outcome.errorMessage());
     verify(teamRepository, never()).save(team);
   }
 
@@ -306,11 +324,11 @@ class TeamServiceTest {
 
     when(teamRepository.findById(10L)).thenReturn(Optional.of(team));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.renounceManagerRole(manager, 10L));
+    TeamOperationResult outcome = teamService.renounceManagerRole(manager, 10L);
 
+    assertFalse(outcome.success());
     assertEquals("Impossible de renoncer : désignez d'abord un autre responsable",
-        exception.getMessage());
+        outcome.errorMessage());
     verify(teamRepository, never()).save(team);
   }
 
@@ -330,7 +348,7 @@ class TeamServiceTest {
         .thenReturn(List.of());
     when(teamMembershipRepository.findByTeamAndMember(team, manager)).thenReturn(Optional.empty());
 
-    teamService.leaveTeam(manager, 10L);
+    assertNull(teamService.leaveTeam(manager, 10L));
 
     assertNull(team.getManager());
     assertNull(manager.getTeam());
@@ -353,7 +371,7 @@ class TeamServiceTest {
     when(teamRepository.save(team)).thenReturn(team);
     when(teamMembershipRepository.findByTeamAndMember(team, manager)).thenReturn(Optional.empty());
 
-    teamService.leaveTeam(manager, 10L);
+    assertNull(teamService.leaveTeam(manager, 10L));
 
     assertEquals(secondManager, team.getManager());
     assertNull(team.getSecondManager());
@@ -380,12 +398,9 @@ class TeamServiceTest {
     when(teamMembershipRepository.findByTeamAndStatus(team, MembershipStatus.ACCEPTED))
         .thenReturn(List.of(acceptedMember));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.leaveTeam(manager, 10L));
-
     assertEquals(
         "Impossible de quitter : vous êtes responsable principal et il reste d'autres membres",
-        exception.getMessage());
+        teamService.leaveTeam(manager, 10L));
     verify(teamRepository, never()).save(team);
     verify(userRepository, never()).save(manager);
   }
@@ -406,7 +421,7 @@ class TeamServiceTest {
     when(teamMembershipRepository.findByTeamAndMember(team, secondManager))
         .thenReturn(Optional.of(membership));
 
-    teamService.leaveTeam(secondManager, 10L);
+    assertNull(teamService.leaveTeam(secondManager, 10L));
 
     assertNull(team.getSecondManager());
     assertNull(secondManager.getTeam());
@@ -433,7 +448,7 @@ class TeamServiceTest {
     when(teamMembershipRepository.findByTeamAndMember(team, member))
         .thenReturn(Optional.of(membership));
 
-    teamService.leaveTeam(member, 10L);
+    assertNull(teamService.leaveTeam(member, 10L));
 
     assertNull(member.getTeam());
     verify(teamMembershipRepository).delete(membership);
@@ -455,7 +470,7 @@ class TeamServiceTest {
         .thenReturn(List.of());
     when(teamMembershipRepository.findByTeamAndMember(team, manager)).thenReturn(Optional.empty());
 
-    teamService.leaveTeam(manager, 10L);
+    assertNull(teamService.leaveTeam(manager, 10L));
 
     verify(tournamentRegistrationRepository).deleteByTeam(team);
   }
@@ -478,7 +493,7 @@ class TeamServiceTest {
     when(teamMembershipRepository.findByTeamAndMember(team, member))
         .thenReturn(Optional.of(membership));
 
-    teamService.leaveTeam(member, 10L);
+    assertNull(teamService.leaveTeam(member, 10L));
 
     verify(tournamentRegistrationRepository, never()).deleteByTeam(team);
   }
@@ -519,10 +534,10 @@ class TeamServiceTest {
     User user = buildUser(1L);
     when(teamRepository.findById(99L)).thenReturn(Optional.empty());
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(user, 99L, 2L));
+    TeamOperationResult outcome = teamService.designateSecondManager(user, 99L, 2L);
 
-    assertEquals("Équipe non trouvée", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Équipe non trouvée", outcome.errorMessage());
   }
 
   @Test
@@ -534,10 +549,10 @@ class TeamServiceTest {
     when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
     when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(manager, 1L, 99L));
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 1L, 99L);
 
-    assertEquals("Membre introuvable", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Membre introuvable", outcome.errorMessage());
   }
 
   @Test
@@ -553,10 +568,10 @@ class TeamServiceTest {
     when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
     when(userRepository.findById(2L)).thenReturn(Optional.of(member));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(manager, 1L, 2L));
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 1L, 2L);
 
-    assertEquals("Le membre sélectionné n'appartient pas à cette team", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Le membre sélectionné n'appartient pas à cette team", outcome.errorMessage());
   }
 
   @Test
@@ -574,10 +589,10 @@ class TeamServiceTest {
     when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
     when(userRepository.findById(2L)).thenReturn(Optional.of(member));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(manager, 1L, 2L));
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 1L, 2L);
 
-    assertEquals("Le membre sélectionné n'appartient pas à cette team", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Le membre sélectionné n'appartient pas à cette team", outcome.errorMessage());
   }
 
   @Test
@@ -594,10 +609,10 @@ class TeamServiceTest {
     when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
     when(userRepository.findById(2L)).thenReturn(Optional.of(member));
 
-    IllegalStateException exception = assertThrows(IllegalStateException.class,
-        () -> teamService.designateSecondManager(manager, 1L, 2L));
+    TeamOperationResult outcome = teamService.designateSecondManager(manager, 1L, 2L);
 
-    assertEquals("Le membre sélectionné n'appartient pas à cette team", exception.getMessage());
+    assertFalse(outcome.success());
+    assertEquals("Le membre sélectionné n'appartient pas à cette team", outcome.errorMessage());
   }
 
   private User buildUser(Long id) {

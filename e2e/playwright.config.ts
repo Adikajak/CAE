@@ -24,7 +24,7 @@ export default defineConfig({
         storageState: 'playwright/.auth/user.json',
       },
       dependencies: ['setup'],
-      testIgnore: /auth\.setup\.ts|login\.spec\.ts|register\.spec\.ts|profile-public\.spec\.ts|teams-public\.spec\.ts|members-public\.spec\.ts|tournament-details-public\.spec\.ts|member-details-public\.spec\.ts/,
+      testIgnore: /auth\.setup\.ts|login\.spec\.ts|register\.spec\.ts|profile-public\.spec\.ts|teams-public\.spec\.ts|members-public\.spec\.ts|tournament-details-public\.spec\.ts|member-details-public\.spec\.ts|match-detail-public\.spec\.ts|tournaments-admin\.spec\.ts|tournament-admin-flows\.spec\.ts|selection\.spec\.ts|selection-planified\.spec\.ts|match-contest\.spec\.ts/,
     },
     // Authenticated as admin (ines@mail.com)
     {
@@ -34,13 +34,33 @@ export default defineConfig({
         storageState: 'playwright/.auth/admin.json',
       },
       dependencies: ['setup'],
-      testIgnore: /auth\.setup\.ts|login\.spec\.ts|register\.spec\.ts|profile\.spec\.ts|profile-public\.spec\.ts|teams\.spec\.ts|members\.spec\.ts|tournament-details\.spec\.ts|teams-public\.spec\.ts|members-public\.spec\.ts|tournament-details-public\.spec\.ts|member-details\.spec\.ts|member-details-public\.spec\.ts|notification\.spec\.ts|notification\.spec\.ts/,
+      testIgnore: /auth\.setup\.ts|login\.spec\.ts|register\.spec\.ts|profile\.spec\.ts|profile-public\.spec\.ts|teams\.spec\.ts|members\.spec\.ts|tournament-details\.spec\.ts|tournament-user-flows\.spec\.ts|teams-public\.spec\.ts|members-public\.spec\.ts|tournament-details-public\.spec\.ts|member-details\.spec\.ts|member-details-public\.spec\.ts|match-detail\.spec\.ts|match-detail-public\.spec\.ts|selection\.spec\.ts|selection-planified\.spec\.ts|match-contest\.spec\.ts|notification\.spec\.ts|bracket\.spec\.ts/,
+    },
+    // Authenticated as TEAM_DELTA manager (seb@mail.com) — for selection tests
+    {
+      name: 'chromium-manager',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/manager.json',
+      },
+      dependencies: ['setup'],
+      testMatch: /selection\.spec\.ts|match-contest\.spec\.ts/,
+    },
+    // Tibo — TEAM_OMEGA manager + admin (same storage as admin) for PLANIFIED selection
+    {
+      name: 'chromium-omega',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'playwright/.auth/admin.json',
+      },
+      dependencies: ['setup'],
+      testMatch: /selection-planified\.spec\.ts/,
     },
     // No authentication — for login/register/unauthenticated tests
     {
       name: 'chromium-public',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /login\.spec\.ts|register\.spec\.ts|profile-public\.spec\.ts|teams-public\.spec\.ts|members-public\.spec\.ts|tournament-details-public\.spec\.ts|member-details-public\.spec\.ts/,
+      testMatch: /login\.spec\.ts|register\.spec\.ts|profile-public\.spec\.ts|teams-public\.spec\.ts|members-public\.spec\.ts|tournament-details-public\.spec\.ts|member-details-public\.spec\.ts|match-detail-public\.spec\.ts|bracket-public\.spec\.ts/,
     },
   ],
 });

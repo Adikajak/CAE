@@ -102,6 +102,7 @@ interface TeamDetailsContextType {
   futureActivity: TeamActivity[];
   handleDesignateSecondManager: (memberId: number) => Promise<void>;
   handleLeaveTeam: () => Promise<void>;
+  handleExcludeMember: (membershipId: number) => Promise<void>;
 }
 
 interface ProfileContextType {
@@ -224,6 +225,7 @@ interface Profile {
   tag: string;
   speciality: string;
   teamName?: string;
+  teamId?: number;
   profilePicture: string;
   date: string;
   isManager?: boolean;
@@ -245,6 +247,8 @@ interface MemberDetailsContextType {
   loading: boolean;
   error: string | null;
   member: UserPublicProfile | null;
+  unavailabilities: Unavailability[];
+  canViewUnavailabilities: boolean;
   openBanModal: boolean;
   banError: string;
   setOpenBanModal: (open: boolean) => void;
@@ -291,6 +295,45 @@ interface TournamentRegistration {
   teamName: string;
 }
 
+interface Match {
+  matchId: number;
+  round: number;
+  totalRounds?: number;
+  startTime: string;
+  state: string;
+  team1Name?: string;
+  team1Id?: number;
+  team2Name?: string;
+  team2Id?: number;
+  byeTeamId?: number;
+  team1Score?: number;
+  team2Score?: number;
+  adminId?: number;
+  tournamentId?: number;
+  tournamentName?: string;
+  scoreUpdatedAt?: string;
+  team1MotifRefuse?: string;
+  team2MotifRefuse?: string;
+  groupedFromBye?: boolean;
+  team1Forfeit?: boolean;
+  team2Forfeit?: boolean;
+}
+
+interface ScheduleBracketProps {
+  matches: Match[];
+  onSuccess: () => void;
+  tournamentId: number;
+  currentTeamId?: number;
+  isAdmin?: boolean;
+}
+
+interface SideColumnLayout {
+  round: number;
+  matches: Match[];
+  x: number;
+  yPositions: number[];
+}
+
 interface TournamentDetailsContextType {
   tournament: Tournament | null;
   registrations: TournamentRegistration[];
@@ -304,6 +347,7 @@ interface TournamentDetailsContextType {
   registerSuccess: boolean;
   isAdmin: boolean;
   currentUserId: number | undefined;
+  alreadyRegistered: boolean;
   refreshRegistrations: () => Promise<void>;
   registerTeam: () => Promise<void>;
   clearRegisterError: () => void;
@@ -351,6 +395,9 @@ interface TournamentContextType {
   editing: boolean;
   editError: string | null;
   editSuccess: string | null;
+  generating: boolean;
+  generateError: string | null;
+  generateSuccess: string | null;
   refreshTournaments: () => Promise<void>;
   setName: (value: string) => void;
   setDescription: (value: string) => void;
@@ -368,6 +415,7 @@ interface TournamentContextType {
     tournament: Tournament,
     payload: CreateTournamentPayload,
   ) => Promise<void>;
+  handleGenerateSchedule: (tournamentId: number) => Promise<void>;
   // Filters — client-side
   stateFilter: string | null;
   yearFilter: number | null;
@@ -383,6 +431,8 @@ interface TournamentContextType {
   playerTagFilter: string;
   // Registered tournaments for current user's team
   registeredTournamentIds: Set<number>;
+  // Tournaments where current user was selected in a match
+  participatedTournamentIds: Set<number>;
   // Setters
   setStateFilter: (value: string | null) => void;
   setYearFilter: (value: number | null) => void;
@@ -414,6 +464,36 @@ interface Unavailability {
   endDate: string;
 }
 
+interface SelectionMatch {
+  matchId: number;
+  teamId: number;
+  memberId: number;
+  memberTag: string;
+  memberSpeciality: string;
+}
+
+interface ParticipationMatch {
+  matchId: number;
+  teamId: number;
+  statusSelection: number;
+  score?: number | null;
+}
+
+interface SelectionContextType {
+  match: Match | null;
+  memberships: TeamMembership[];
+  selections: SelectionMatch[];
+  statusSelection: number;
+  unavailableMemberIds: Set<number>;
+  loading: boolean;
+  error: string | null;
+  actionError: string | null;
+  isSelected: (memberId: number) => boolean;
+  canModify: boolean;
+  handleToggle: (memberId: number) => Promise<void>;
+  clearActionError: () => void;
+}
+
 interface AvatarOption {
   id: string;
   label: string;
@@ -429,6 +509,38 @@ interface NavbarContextType {
   openProfileMenu: (event: MouseEvent<HTMLElement>) => void;
   closeProfileMenu: () => void;
 }
+
+interface MatchDetailContextType {
+  match: Match | null;
+  team1: Team | null;
+  team2: Team | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  matchEnded: boolean;
+  isManagerOfAnyTeam: boolean;
+  canSeeTeam1: boolean;
+  canSeeTeam2: boolean;
+}
+
+type HomePageContextType = {
+  tournaments: Tournament[] | null;
+  loading: boolean;
+  error: string | null;
+};
+
+type NotificationContextType = {
+  notifications: Notification[];
+  error: string | null;
+  decidedIds: Set<number>;
+  markAsRead: (id: number) => Promise<void>;
+  handleAccept: (membershipId: number, notificationId: number) => Promise<void>;
+  handleDecline: (
+    declineId: number,
+    declineNotificationId: number,
+    reason: string,
+  ) => Promise<string | null>;
+};
 
 export type {
   NavbarContextType,
@@ -453,15 +565,24 @@ export type {
   Profile,
   Tournament,
   TournamentRegistration,
+  Match,
+  ScheduleBracketProps,
+  SideColumnLayout,
   CreateTournamentPayload,
   PublishTournamentPayload,
   TournamentContextType,
   TournamentCreationContextType,
   TournamentDetailsContextType,
   Unavailability,
+  SelectionMatch,
+  SelectionContextType,
+  ParticipationMatch,
   AvatarOption,
   UserPublicProfile,
   MembersContextType,
   MemberDetailsContextType,
   TeamActivity,
+  MatchDetailContextType,
+  HomePageContextType,
+  NotificationContextType,
 };

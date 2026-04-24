@@ -1,10 +1,11 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.TournamentDto;
+import be.vinci.ipl.cae.demo.models.entities.SelectionMatch;
 import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.TournamentRegistration;
-import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.models.enums.State;
+import be.vinci.ipl.cae.demo.repositories.SelectionMatchRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -23,6 +24,7 @@ public class TournamentService {
   private final TournamentRepository tournamentRepository;
   private final TournamentRegistrationRepository tournamentRegistrationRepository;
   private final UserRepository userRepository;
+  private final SelectionMatchRepository selectionMatchRepository;
 
   /**
    * Constructs the tournament service.
@@ -30,14 +32,17 @@ public class TournamentService {
    * @param tournamentRepository the tournament repository
    * @param tournamentRegistrationRepository the tournament registration repository
    * @param userRepository the user repository
+   * @param selectionMatchRepository the selection match repository
    */
   public TournamentService(
       TournamentRepository tournamentRepository,
       TournamentRegistrationRepository tournamentRegistrationRepository,
-      UserRepository userRepository) {
+      UserRepository userRepository,
+      SelectionMatchRepository selectionMatchRepository) {
     this.tournamentRepository = tournamentRepository;
     this.tournamentRegistrationRepository = tournamentRegistrationRepository;
     this.userRepository = userRepository;
+    this.selectionMatchRepository = selectionMatchRepository;
   }
 
   /**
@@ -175,19 +180,43 @@ public class TournamentService {
   }
 
   /**
-   * Returns all tournaments where a player with the given tag is in a registered team.
+   * Returns all tournaments where a player with the given tag was selected in a match.
    *
    * @param tag the player tag to search
    * @param isAdmin whether the caller is an admin
    * @return list of matching tournament DTOs
    */
   public List<TournamentDto> getTournamentsByPlayerTag(String tag, boolean isAdmin) {
-    Stream<TournamentRegistration> registrations = userRepository.findByTagIgnoreCase(tag).stream()
-        .map(User::getTeam)
-        .filter(team -> team != null)
+    return selectionsToDtos(selectionsByTag(tag), isAdmin);
+  }
+
+  /**
+   * Returns all tournaments where a player with the given tag was selected with the given team.
+   *
+   * @param teamName the team name to search
+   * @param tag the player tag to search
+   * @param isAdmin whether the caller is an admin
+   * @return list of matching tournament DTOs
+   */
+  public List<TournamentDto> getTournamentsByTeamNameAndPlayerTag(
+      String teamName, String tag, boolean isAdmin) {
+    return selectionsToDtos(
+        selectionsByTag(tag).filter(sel -> sel.getTeam().getName().equalsIgnoreCase(teamName)),
+        isAdmin);
+  }
+
+  private Stream<SelectionMatch> selectionsByTag(String tag) {
+    return userRepository.findByTagIgnoreCase(tag).stream()
+        .flatMap(user -> selectionMatchRepository.findByMember(user).stream());
+  }
+
+  private List<TournamentDto> selectionsToDtos(Stream<SelectionMatch> selections, boolean isAdmin) {
+    return selections
+        .map(sel -> sel.getMatch().getTournament())
         .distinct()
-        .flatMap(team -> tournamentRegistrationRepository.findByTeam(team).stream());
-    return registrationsToDtos(registrations, isAdmin);
+        .filter(t -> isAdmin || t.getState() != State.IN_PREPARATION)
+        .map(this::toTournamentDto)
+        .toList();
   }
 
   private List<TournamentDto> registrationsToDtos(

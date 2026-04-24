@@ -1,10 +1,17 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { ProfileContext } from '../../../../contexts/ProfileContext';
-import { ProfileContextType } from '../../../../types';
+import { UserContext } from '../../../../contexts/UserContext';
+import { ProfileContextType, UserContextType } from '../../../../types';
 import ProfileInfo from './ProfileInfo';
 
-const createMockContext = (
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return { ...actual, useNavigate: vi.fn() };
+});
+
+const createMockProfileContext = (
   overrides: Partial<ProfileContextType> = {},
 ): ProfileContextType => ({
   profile: {
@@ -57,16 +64,42 @@ const createMockContext = (
   ...overrides,
 });
 
-const renderWithContext = (overrides: Partial<ProfileContextType> = {}) =>
+const createMockUserContext = (teamId?: number): UserContextType => ({
+  authenticatedUser: {
+    id: 1,
+    email: 'user@user.com',
+    tag: 'user1',
+    token: 'test-token',
+    teamId,
+  },
+  registerUser: vi.fn(),
+  loginUser: vi.fn(),
+  clearUser: vi.fn(),
+  refreshUser: vi.fn(),
+  jwtData: vi
+    .fn()
+    .mockReturnValue({ id: 1, email: 'user@user.com', isAdmin: false }),
+});
+
+const renderWithContext = (
+  profileOverrides: Partial<ProfileContextType> = {},
+  teamId?: number,
+) =>
   render(
-    <ProfileContext.Provider value={createMockContext(overrides)}>
-      <ProfileInfo />
-    </ProfileContext.Provider>,
+    <MemoryRouter>
+      <UserContext.Provider value={createMockUserContext(teamId)}>
+        <ProfileContext.Provider
+          value={createMockProfileContext(profileOverrides)}
+        >
+          <ProfileInfo />
+        </ProfileContext.Provider>
+      </UserContext.Provider>
+    </MemoryRouter>,
   );
 
 describe('ProfileInfo', () => {
   test('renders tag, speciality, team and formatted date', () => {
-    renderWithContext();
+    renderWithContext({}, 1);
     expect(screen.getByText('user1')).toBeTruthy();
     expect(screen.getByText('Mage')).toBeTruthy();
     expect(screen.getByText('Team 1')).toBeTruthy();
@@ -136,5 +169,13 @@ describe('ProfileInfo', () => {
       },
     });
     expect(screen.getByText('—')).toBeTruthy();
+  });
+
+  test('navigates to team page when team name is clicked', () => {
+    const navigate = vi.fn();
+    vi.mocked(useNavigate).mockReturnValue(navigate);
+    renderWithContext({}, 1);
+    fireEvent.click(screen.getByText('Team 1'));
+    expect(navigate).toHaveBeenCalledWith('/teams/1');
   });
 });

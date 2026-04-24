@@ -1,8 +1,9 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
-import be.vinci.ipl.cae.demo.models.entities.NotificationType;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.enums.AdministrationActionType;
+import be.vinci.ipl.cae.demo.models.enums.NotificationType;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -41,16 +42,6 @@ public class AdministrationService {
   }
 
   /**
-   * Local enum for notification type to send based on the admin action.
-   */
-  private enum ActionType {
-    DEMOTED,
-    PROMOTED,
-    // Defensive value to keep the default branch testable and future-proof.
-    UNKNOWN
-  }
-
-  /**
    * Promote a user to admin.
    *
    * @param userId the user id
@@ -70,7 +61,7 @@ public class AdministrationService {
     userEntity.setAdmin(true);
     userRepository.save(userEntity);
 
-    sendNotification(ActionType.PROMOTED, userEntity);
+    sendNotification(AdministrationActionType.PROMOTED, userEntity);
     return true;
   }
 
@@ -80,10 +71,10 @@ public class AdministrationService {
    *
    * @param userId   the user id to demote
    * @param callerId the id of the authenticated admin performing the action
-   * @return true if the user was demoted, false if the user does not exist or is not admin
-   * @throws IllegalStateException if the caller tries to demote themselves and is the last admin
+   * @return {@code true} if demoted, {@code false} if user missing or not admin,
+   *     {@code null} if the caller is the last admin and tries to demote themselves
    */
-  public boolean demoteFromAdmin(Long userId, Long callerId) {
+  public Boolean demoteFromAdmin(Long userId, Long callerId) {
     Optional<User> user = userRepository.findById(userId);
     if (user.isEmpty()) {
       return false;
@@ -97,18 +88,18 @@ public class AdministrationService {
     if (userId.equals(callerId)) {
       long adminCount = userRepository.countByIsAdminTrue();
       if (adminCount <= 1) {
-        throw new IllegalStateException("Cannot demote yourself when you are the last admin");
+        return null;
       }
     }
 
     userEntity.setAdmin(false);
     userRepository.save(userEntity);
 
-    sendNotification(ActionType.DEMOTED, userEntity);
+    sendNotification(AdministrationActionType.DEMOTED, userEntity);
     return true;
   }
 
-  private void sendNotification(ActionType type, User user) {
+  private void sendNotification(AdministrationActionType type, User user) {
     NotificationDto notificationDto = new NotificationDto();
 
     switch (type) {
@@ -121,7 +112,9 @@ public class AdministrationService {
         notificationDto.setObject("Vous avez été rétrogradé.");
         notificationDto.setMessage("Votre statut d'administrateur a été révoqué.");
       }
-      default -> throw new IllegalStateException("ActionType inattendu: " + type);
+      default -> {
+        return;
+      }
     }
 
     notificationDto.setType(NotificationType.GENERAL);

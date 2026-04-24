@@ -1,41 +1,14 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext } from 'react';
 import { Box, Container, Typography, CircularProgress } from '@mui/material';
 import { UserContext } from '../../contexts/UserContext';
-import { UserContextType, Tournament } from '../../types';
-import backgroundImage from '../../assets/images/Background_image3.png';
+import { UserContextType } from '../../types';
 import logoCae from '../../assets/images/logo_cae.png';
 import TournamentTable from './tournaments/components/TournamentTable';
-import { fetchTournaments } from '../../services/tournamentService';
+import { HomePageContext } from '../../contexts/HomePageContext';
 
 const HomePage = () => {
   const { authenticatedUser } = useContext<UserContextType>(UserContext);
-  const [tournaments, setTournaments] = useState<Tournament[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadTournamentsByStates = async () => {
-      try {
-        setLoading(true);
-        const tournaments = await fetchTournaments();
-        const filtered = tournaments
-          .filter((data) => ['PLANIFIED', 'ONGOING'].includes(data.state))
-          .sort(
-            (a, b) =>
-              new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
-          );
-        setTournaments(filtered);
-        setError(null);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : 'Une erreur est survenue',
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadTournamentsByStates();
-  }, []);
+  const { tournaments, loading, error } = useContext(HomePageContext);
 
   return (
     <Box
@@ -51,13 +24,6 @@ const HomePage = () => {
         sx={{
           position: 'absolute',
           overflow: 'hidden',
-          inset: 0,
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          transform: 'scale(1)',
-          zIndex: 0,
         }}
       />
       <Container maxWidth="sm" sx={{ mt: 0, position: 'relative', zIndex: 1 }}>

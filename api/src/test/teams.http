@@ -113,6 +113,18 @@ Authorization: {{managerToken}}
 PATCH {{baseUrl}}/teams/1/second-manager/8
 Authorization: {{managerToken}}
 
+## PATCH /teams/{teamId}/manager/renounce
+## Prérequis: Rogue (id=2) est co-manager de TEAM_ALPHA suite au test Designate ci-dessus
+### [KO 400] Renounce — utilisateur non-manager de l'équipe essaie de céder le rôle
+## memberWithoutATeamToken n'est pas manager de TEAM_ALPHA (il est manager de Team Test)
+PATCH {{baseUrl}}/teams/1/manager/renounce
+Authorization: {{memberWithoutATeamToken}}
+
+### [OK 200] Renounce — Lynx (manager principal) cède le rôle à Rogue (co-manager)
+## Après ce test: Rogue est manager principal, il n'y a plus de co-manager
+PATCH {{baseUrl}}/teams/1/manager/renounce
+Authorization: {{managerToken}}
+
 ## PATCH /teams/{teamId}/leave
 ### [OK 204] Leave — simple member (Pulse leaves TEAM_ALPHA)
 PATCH {{baseUrl}}/teams/1/leave
@@ -135,4 +147,5 @@ Authorization: {{memberWithoutATeamToken}}
 ### [KO 400] Leave — non-existent team
 PATCH {{baseUrl}}/teams/999999/leave
 Authorization: {{adminToken}}
+
 
