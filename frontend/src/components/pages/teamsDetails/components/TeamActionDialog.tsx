@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import { TeamMemberRow } from '../../../../types';
 
-type ConfirmAction = 'designate' | 'leave' | null;
+type ConfirmAction = 'designate' | 'leave' | 'exclude' | null;
 
 type TeamActionDialogProps = {
   confirmAction: ConfirmAction;
@@ -37,6 +37,7 @@ const TeamActionDialog = ({
       <DialogTitle>
         {confirmAction === 'designate' && 'Confirmer la désignation'}
         {confirmAction === 'leave' && 'Confirmer le départ'}
+        {confirmAction === 'exclude' && "Confirmer l'exclusion"}
       </DialogTitle>
       <DialogContent>
         {confirmAction === 'designate' && selectedMember && (
@@ -52,6 +53,12 @@ const TeamActionDialog = ({
             {selectedMember.roleLabel === 'Responsable' &&
               totalTeamMembers === 1 &&
               ' Il ne restera aucun membre donc la team deviendra inactive. Cette action est définitive.'}
+          </Typography>
+        )}
+        {confirmAction === 'exclude' && selectedMember && (
+          <Typography>
+            Êtes-vous sûr de vouloir exclure {selectedMember.member.tag} de la
+            team ?
           </Typography>
         )}
       </DialogContent>

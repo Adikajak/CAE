@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState, useCallback } from 'react';
+import { useState, useContext } from 'react';
 import {
   Box,
   Button,
@@ -12,99 +12,54 @@ import {
   TextField,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import {
-  UserContextType,
-  Notification as NotificationType,
-} from '../../../types';
 import { UserContext } from '../../../contexts/UserContext';
-import {
-  fetchNotifications,
-  markNotificationAsRead,
-  acceptTeamInvitation,
-  declineTeamInvitation,
-} from '../../../services/notificationService';
+import { UserContextType } from '../../../types';
+import { NotificationContext } from '../../../contexts/NotificationContext';
 
 const NotificationPage = () => {
   const { authenticatedUser } = useContext<UserContextType>(UserContext);
-  const [notifications, setNotifications] = useState<NotificationType[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    notifications,
+    error,
+    decidedIds,
+    markAsRead,
+    handleAccept,
+    handleDecline,
+  } = useContext(NotificationContext);
   const [declineId, setDeclineId] = useState<number | null>(null);
   const [declineNotificationId, setDeclineNotificationId] = useState<
     number | null
   >(null);
   const [declineError, setDeclineError] = useState<string | null>(null);
-  const [decidedIds, setDecidedIds] = useState<Set<number>>(new Set());
   const [reason, setReason] = useState('');
-  const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const navigate = useNavigate();
 
-  const fetchNotificationsData = useCallback(async () => {
-    /* c8 ignore next */
-    if (!authenticatedUser) return;
-    try {
-      const data = await fetchNotifications(authenticatedUser.token);
-      setNotifications(data);
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError('Une erreur inconnue est survenue');
-    }
-  }, [authenticatedUser]);
-
-  useEffect(() => {
-    if (!authenticatedUser) {
-      navigate('/login');
-      return;
-    }
-    fetchNotificationsData();
-  }, [authenticatedUser, navigate, fetchNotificationsData]);
-
-  const markAsRead = async (id: number) => {
-    try {
-      await markNotificationAsRead(authenticatedUser!.token, id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.notificationId === id ? { ...n, isRead: true } : n)),
-      );
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError('Une erreur inconnue est survenue');
-    }
-  };
-
-  const handleAccept = async (membershipId: number, notificationId: number) => {
-    try {
-      await acceptTeamInvitation(authenticatedUser!.token, membershipId);
-      await markAsRead(notificationId);
-      fetchNotificationsData();
-      setDecidedIds((prev) => new Set(prev).add(membershipId));
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError('Une erreur inconnue est survenue');
-    }
-  };
-
-  const handleDecline = async () => {
-    /* c8 ignore next */
-    if (!declineId || !declineNotificationId) return;
-    if (!reason.trim()) {
-      setDeclineError('Veuillez entrer une raison.');
-      return;
-    }
-    setDeclineError(null);
-    try {
-      await declineTeamInvitation(authenticatedUser!.token, declineId, reason);
-      await markAsRead(declineNotificationId);
-      setDeclineId(null);
-      setReason('');
-      fetchNotificationsData();
-      setDecidedIds((prev) => new Set(prev).add(declineId!));
-    } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
-      else setError('Une erreur inconnue est survenue');
-    }
-  };
-
-  if (!authenticatedUser)
+  if (!authenticatedUser) {
+    navigate('/login');
     return <p>Vous devez être connecté pour voir cette page.</p>;
+  }
+
+  const onDeclineConfirm = async () => {
+    if (!declineId || !declineNotificationId) return;
+    const validationError = await handleDecline(
+      declineId,
+      declineNotificationId,
+      reason,
+    );
+    if (validationError) {
+      setDeclineError(validationError);
+      return;
+    }
+    setDeclineId(null);
+    setReason('');
+  };
+
+  const closeDeclineDialog = () => {
+    setDeclineId(null);
+    setDeclineError(null);
+    setReason('');
+  };
 
   return (
     <Box
@@ -113,6 +68,10 @@ const NotificationPage = () => {
         padding: 3,
         display: 'flex',
         flexDirection: 'column',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 2.5,
+        marginTop: 2,
+        marginBottom: 2,
       }}
     >
       <h1>Notifications</h1>
@@ -126,6 +85,7 @@ const NotificationPage = () => {
           {notifications.map((n) => (
             <Box
               key={n.notificationId}
+              className="notification-item"
               sx={{
                 padding: 2,
                 border: '1px solid grey',
@@ -154,13 +114,14 @@ const NotificationPage = () => {
                   {expandedId === n.notificationId ? '▲' : '▼'}
                 </Typography>
               </Box>
-              {/* Expanded details */}
+
               {expandedId === n.notificationId && (
                 <Box sx={{ marginTop: 1 }}>
                   <Typography>{n.message}</Typography>
                   <Typography variant="caption" color="text.secondary">
                     {new Date(n.createdAt).toLocaleString()}
                   </Typography>
+
                   {!n.isRead && n.type !== 'TEAM_INVITATION' && (
                     <Box sx={{ marginTop: 1 }}>
                       <Button
@@ -172,6 +133,7 @@ const NotificationPage = () => {
                       </Button>
                     </Box>
                   )}
+
                   {n.type === 'TEAM_INVITATION' &&
                     !n.isRead &&
                     !decidedIds.has(n.membershipId!) && (
@@ -206,12 +168,7 @@ const NotificationPage = () => {
         </Box>
       )}
 
-      <Dialog
-        open={declineId !== null}
-        onClose={() => {
-          setDeclineId(null), setDeclineError(null), setReason('');
-        }}
-      >
+      <Dialog open={declineId !== null} onClose={closeDeclineDialog}>
         <DialogTitle>Refuser la demande</DialogTitle>
         <DialogContent>
           {declineError && <Alert severity="error">{declineError}</Alert>}
@@ -229,16 +186,8 @@ const NotificationPage = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => {
-              setDeclineId(null);
-              setDeclineError(null);
-              setReason('');
-            }}
-          >
-            Annuler
-          </Button>
-          <Button variant="contained" color="error" onClick={handleDecline}>
+          <Button onClick={closeDeclineDialog}>Annuler</Button>
+          <Button variant="contained" color="error" onClick={onDeclineConfirm}>
             Confirmer le refus
           </Button>
         </DialogActions>

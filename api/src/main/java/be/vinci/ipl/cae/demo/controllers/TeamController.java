@@ -6,11 +6,13 @@ import be.vinci.ipl.cae.demo.models.dtos.TeamResponseDto;
 import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.results.TeamOperationResult;
 import be.vinci.ipl.cae.demo.services.TeamService;
 import be.vinci.ipl.cae.demo.services.TournamentRegistrationService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -83,6 +85,7 @@ public class TeamController {
    * @return the created team
    * @throws ResponseStatusException if a team with the same name already exists
    */
+  @PreAuthorize("isAuthenticated()")
   @PostMapping({"", "/"})
   @ResponseStatus(HttpStatus.CREATED)
   public TeamResponseDto createTeam(
@@ -93,12 +96,11 @@ public class TeamController {
     Team team = new Team();
     team.setName(request.getName());
 
-    try {
-      Team createdTeam = teamService.createTeam(team, user);
-      return toResponse(createdTeam);
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+    TeamOperationResult created = teamService.createTeam(team, user);
+    if (!created.success()) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, created.errorMessage());
     }
+    return toResponse(created.team());
   }
 
   /**
@@ -109,6 +111,7 @@ public class TeamController {
    * @param memberId the member id to promote
    * @return updated team
    */
+  @PreAuthorize("isAuthenticated()")
   @PatchMapping("/{teamId}/second-manager/{memberId}")
   public TeamResponseDto designateSecondManager(
       Authentication authentication,
@@ -116,11 +119,8 @@ public class TeamController {
       @PathVariable Long memberId
   ) {
     User currentUser = (User) authentication.getPrincipal();
-    try {
-      return toResponse(teamService.designateSecondManager(currentUser, teamId, memberId));
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-    }
+    return teamMutationOrBadRequest(
+        teamService.designateSecondManager(currentUser, teamId, memberId));
   }
 
   /**
@@ -130,17 +130,14 @@ public class TeamController {
    * @param teamId the team id
    * @return updated team
    */
+  @PreAuthorize("isAuthenticated()")
   @PatchMapping("/{teamId}/manager/renounce")
   public TeamResponseDto renounceManagerRole(
       Authentication authentication,
       @PathVariable Long teamId
   ) {
     User currentUser = (User) authentication.getPrincipal();
-    try {
-      return toResponse(teamService.renounceManagerRole(currentUser, teamId));
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-    }
+    return teamMutationOrBadRequest(teamService.renounceManagerRole(currentUser, teamId));
   }
 
   /**
@@ -149,6 +146,7 @@ public class TeamController {
    * @param authentication authenticated user
    * @param teamId the team id
    */
+  @PreAuthorize("isAuthenticated()")
   @PatchMapping("/{teamId}/leave")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void leaveTeam(
@@ -156,10 +154,9 @@ public class TeamController {
       @PathVariable Long teamId
   ) {
     User currentUser = (User) authentication.getPrincipal();
-    try {
-      teamService.leaveTeam(currentUser, teamId);
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+    String leaveError = teamService.leaveTeam(currentUser, teamId);
+    if (leaveError != null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, leaveError);
     }
   }
 
@@ -175,6 +172,13 @@ public class TeamController {
         .orElseThrow(
             () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team non trouvée"));
     return tournamentRegistrationService.getTeamActivity(team);
+  }
+
+  private TeamResponseDto teamMutationOrBadRequest(TeamOperationResult result) {
+    if (!result.success()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, result.errorMessage());
+    }
+    return toResponse(result.team());
   }
 
   private TeamResponseDto toResponse(Team team, boolean includeEmail) {
@@ -230,6 +234,7 @@ public class TeamController {
         user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
         user.getDate(),
         currentTeam != null ? currentTeam.getName() : null,
+        null,
         isManager
     );
   }

@@ -10,12 +10,11 @@ const RegisterFormContainer = () => {
     <Box
       sx={{
         width: '100%',
-        padding: 3,
-        borderRadius: 4,
+        padding: '1.5em',
         boxShadow: 4,
+        borderRadius: 4,
         textAlign: 'center',
         backgroundColor: theme.palette.background.paper,
-        border: `1px solid ${theme.palette.divider}`,
       }}
     >
       <Typography variant="h4" component="h1" sx={{ mb: 2, fontWeight: 700 }}>

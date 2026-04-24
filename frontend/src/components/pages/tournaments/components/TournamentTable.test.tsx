@@ -50,30 +50,30 @@ describe('TournamentTable', () => {
     expect(screen.getByText(/aucun tournoi actuellement/i)).toBeTruthy();
   });
 
-  test('renders the expected table columns', () => {
-    render(<TournamentTable tournamentList={tournaments} />);
-
-    expect(screen.getByText('Nom')).toBeTruthy();
-    expect(screen.getByText('Description')).toBeTruthy();
-    expect(screen.getByText('État')).toBeTruthy();
-    expect(screen.getByText('Date de début')).toBeTruthy();
-    expect(screen.getByText('Date de fin')).toBeTruthy();
-    expect(screen.getByText('Début des inscriptions')).toBeTruthy();
-    expect(screen.getByText('Fin des inscriptions')).toBeTruthy();
-    expect(screen.getByText('Nombre de teams inscrites')).toBeTruthy();
-  });
-
-  test('renders a tournament row with formatted dates and registrationsCount', () => {
+  test('renders tournament cards with the requested info', () => {
     render(<TournamentTable tournamentList={tournaments} />);
 
     expect(screen.getByText('Spring Clash')).toBeTruthy();
-    expect(screen.getByText('Tournoi du printemps')).toBeTruthy();
-    expect(screen.getByText('En préparation')).toBeTruthy();
-    expect(screen.getByText('10/04/2026')).toBeTruthy();
-    expect(screen.getByText('12/04/2026')).toBeTruthy();
-    expect(screen.getByText('01/03/2026')).toBeTruthy();
-    expect(screen.getByText('31/03/2026')).toBeTruthy();
-    expect(screen.getByText('3 / 16')).toBeTruthy();
+    expect(
+      screen.getByText(/début des inscriptions : 01\/03\/2026/i),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/fin des inscriptions : 31\/03\/2026/i),
+    ).toBeTruthy();
+    expect(screen.getByText(/teams inscrites : 3\/16/i)).toBeTruthy();
+  });
+
+  test('renders formatted dates in cards', () => {
+    render(<TournamentTable tournamentList={tournaments} />);
+
+    expect(screen.getByText('Spring Clash')).toBeTruthy();
+    expect(
+      screen.getByText(/début des inscriptions :\s*01\/03\/2026/i),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/fin des inscriptions :\s*31\/03\/2026/i),
+    ).toBeTruthy();
+    expect(screen.getByText(/3\/16/)).toBeTruthy();
   });
 
   test('navigates to tournament detail page when clicking a row', async () => {
@@ -416,5 +416,239 @@ describe('TournamentTable', () => {
     );
 
     expect(screen.getAllByText('Spring Clash').length).toBeGreaterThan(0);
+  });
+
+  test('enables generate planning when registration period is over', () => {
+    const onGenerateSchedule = vi.fn().mockResolvedValue(undefined);
+    const planifiedTournament = [
+      {
+        ...tournaments[0],
+        id: 7,
+        name: 'Plan Cup',
+        state: 'PLANIFIED',
+        endInscriptionDate: '2026-04-09',
+      },
+    ];
+
+    render(
+      <TournamentTable
+        tournamentList={planifiedTournament}
+        isAdmin
+        today="2026-04-10"
+        now={new Date('2026-04-10T10:00:00')}
+        onGenerateSchedule={onGenerateSchedule}
+      />,
+    );
+
+    expect(
+      (
+        screen.getByRole('button', {
+          name: /générer planning/i,
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false);
+  });
+
+  test('enables generate planning when max teams are reached', () => {
+    const onGenerateSchedule = vi.fn().mockResolvedValue(undefined);
+    const planifiedTournament = [
+      {
+        ...tournaments[0],
+        id: 70,
+        name: 'Full Cup',
+        state: 'PLANIFIED',
+        endInscriptionDate: '2026-04-20',
+        registrationsCount: 16,
+        maxTeams: 16,
+      },
+    ];
+
+    render(
+      <TournamentTable
+        tournamentList={planifiedTournament}
+        isAdmin
+        today="2026-04-10"
+        now={new Date('2026-04-10T10:00:00')}
+        onGenerateSchedule={onGenerateSchedule}
+      />,
+    );
+
+    expect(
+      (
+        screen.getByRole('button', {
+          name: /générer planning/i,
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false);
+  });
+
+  test('disables generate planning once the tournament is locked', () => {
+    const onGenerateSchedule = vi.fn().mockResolvedValue(undefined);
+    const planifiedTournament = [
+      {
+        ...tournaments[0],
+        id: 8,
+        name: 'Locked Cup',
+        state: 'PLANIFIED',
+        startDate: '2026-04-10',
+      },
+    ];
+
+    render(
+      <TournamentTable
+        tournamentList={planifiedTournament}
+        isAdmin
+        today="2026-04-10"
+        lockedTournamentIds={new Set([8])}
+        onGenerateSchedule={onGenerateSchedule}
+      />,
+    );
+
+    expect(
+      (
+        screen.getByRole('button', {
+          name: /générer planning/i,
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  test('disables generate planning when fewer than 2 teams are registered', () => {
+    const onGenerateSchedule = vi.fn().mockResolvedValue(undefined);
+    const emptyTournament = [
+      {
+        ...tournaments[0],
+        id: 9,
+        name: 'Empty Cup',
+        state: 'PLANIFIED',
+        endInscriptionDate: '2026-03-31',
+        registrationsCount: 0,
+      },
+    ];
+
+    render(
+      <TournamentTable
+        tournamentList={emptyTournament}
+        isAdmin
+        today="2026-04-10"
+        onGenerateSchedule={onGenerateSchedule}
+      />,
+    );
+
+    expect(
+      (
+        screen.getByRole('button', {
+          name: /générer planning/i,
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  test('disables generate planning when registration is still open and tournament is not full', () => {
+    const onGenerateSchedule = vi.fn().mockResolvedValue(undefined);
+    const futureTournament = [
+      {
+        ...tournaments[0],
+        id: 10,
+        name: 'Future Cup',
+        state: 'PLANIFIED',
+        endInscriptionDate: '2026-04-15',
+        registrationsCount: 8,
+        maxTeams: 16,
+      },
+    ];
+
+    render(
+      <TournamentTable
+        tournamentList={futureTournament}
+        isAdmin
+        today="2026-04-10"
+        onGenerateSchedule={onGenerateSchedule}
+      />,
+    );
+
+    expect(
+      (
+        screen.getByRole('button', {
+          name: /générer planning/i,
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  test('disables generate planning when tournament startDate is already passed', () => {
+    const onGenerateSchedule = vi.fn().mockResolvedValue(undefined);
+    const pastStartTournament = [
+      {
+        ...tournaments[0],
+        id: 11,
+        name: 'Past Start Cup',
+        state: 'PLANIFIED',
+        startDate: '2026-04-09',
+        endInscriptionDate: '2026-04-08',
+        registrationsCount: 10,
+        maxTeams: 16,
+      },
+    ];
+
+    render(
+      <TournamentTable
+        tournamentList={pastStartTournament}
+        isAdmin
+        today="2026-04-10"
+        now={new Date('2026-04-10T14:00:00')}
+        onGenerateSchedule={onGenerateSchedule}
+      />,
+    );
+
+    expect(
+      (
+        screen.getByRole('button', {
+          name: /générer planning/i,
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
+  });
+
+  test('card is not highlighted when registered but not participated', () => {
+    const registeredIds = new Set([1]);
+    render(
+      <TournamentTable
+        tournamentList={tournaments}
+        registeredTournamentIds={registeredIds}
+        participatedTournamentIds={new Set()}
+      />,
+    );
+
+    const card = document.querySelector('[data-highlighted]');
+    expect(card?.getAttribute('data-highlighted')).toBe('false');
+  });
+
+  test('card is not highlighted when participated but not registered', () => {
+    const participatedIds = new Set([1]);
+    render(
+      <TournamentTable
+        tournamentList={tournaments}
+        registeredTournamentIds={new Set()}
+        participatedTournamentIds={participatedIds}
+      />,
+    );
+
+    const card = document.querySelector('[data-highlighted]');
+    expect(card?.getAttribute('data-highlighted')).toBe('false');
+  });
+
+  test('card is highlighted when both registered and participated', () => {
+    const ids = new Set([1]);
+    render(
+      <TournamentTable
+        tournamentList={tournaments}
+        registeredTournamentIds={ids}
+        participatedTournamentIds={ids}
+      />,
+    );
+
+    const card = document.querySelector('[data-highlighted]');
+    expect(card?.getAttribute('data-highlighted')).toBe('true');
   });
 });

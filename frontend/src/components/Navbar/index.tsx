@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import {
   AppBar,
@@ -37,20 +37,40 @@ const NavBar = () => {
     closeProfileMenu,
   } = useContext<NavbarContextType>(NavbarContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const navButtonSx = {
-    color: '#F6F7FF',
-    fontWeight: 700,
-    letterSpacing: 0.2,
-    textTransform: 'none',
-    borderRadius: 1.5,
-    px: 1.5,
-    py: 0.4,
-    minWidth: 'auto',
-    '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    },
-  };
+  const isRouteActive = (path: string) =>
+    path === '/'
+      ? location.pathname === '/'
+      : location.pathname === path || location.pathname.startsWith(`${path}/`);
+
+  const navButtonSx = (active: boolean) =>
+    ({
+      position: 'relative',
+      color: active ? '#FFD96A' : '#F6F7FF',
+      fontWeight: 700,
+      letterSpacing: 0.2,
+      textTransform: 'none',
+      borderRadius: 1.5,
+      px: 1.5,
+      py: 0,
+      minWidth: 'auto',
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        left: 12,
+        right: 12,
+        bottom: -5,
+        height: 2,
+        borderRadius: 999,
+        backgroundColor: '#F9A825',
+        opacity: active ? 1 : 0,
+        transition: 'opacity 160ms ease',
+      },
+      '&:hover': {
+        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+      },
+    }) as const;
 
   return (
     <AppBar
@@ -87,16 +107,32 @@ const NavBar = () => {
         </Button>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Button sx={navButtonSx} onClick={() => navigate('/')}>
+          <Button
+            sx={navButtonSx(isRouteActive('/'))}
+            onClick={() => navigate('/')}
+            aria-current={isRouteActive('/') ? 'page' : undefined}
+          >
             Accueil
           </Button>
-          <Button sx={navButtonSx} onClick={() => navigate('/tournaments')}>
+          <Button
+            sx={navButtonSx(isRouteActive('/tournaments'))}
+            onClick={() => navigate('/tournaments')}
+            aria-current={isRouteActive('/tournaments') ? 'page' : undefined}
+          >
             Tournois
           </Button>
-          <Button sx={navButtonSx} onClick={() => navigate('/members')}>
+          <Button
+            sx={navButtonSx(isRouteActive('/members'))}
+            onClick={() => navigate('/members')}
+            aria-current={isRouteActive('/members') ? 'page' : undefined}
+          >
             Membres
           </Button>
-          <Button sx={navButtonSx} onClick={() => navigate('/teams')}>
+          <Button
+            sx={navButtonSx(isRouteActive('/teams'))}
+            onClick={() => navigate('/teams')}
+            aria-current={isRouteActive('/teams') ? 'page' : undefined}
+          >
             Teams
           </Button>
         </Box>
@@ -187,8 +223,15 @@ const NavBar = () => {
               {isAdmin && (
                 <Button
                   color="inherit"
-                  sx={{ color: '#FFD96A', fontWeight: 700, ml: 0.5 }}
+                  sx={{
+                    ...navButtonSx(isRouteActive('/administration')),
+                    color: '#FFD96A',
+                    ml: 0.5,
+                  }}
                   onClick={() => navigate('/administration')}
+                  aria-current={
+                    isRouteActive('/administration') ? 'page' : undefined
+                  }
                 >
                   ADMIN
                 </Button>

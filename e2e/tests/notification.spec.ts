@@ -1,12 +1,22 @@
 import { expect, test } from '@playwright/test';
 import { goToNotificationPage } from './helpers';
 
+const loginViaApi = async (
+  request: import('@playwright/test').APIRequestContext,
+  email: string,
+) => {
+  const response = await request.post('/api/auths/login', {
+    data: { email, password: 'password' },
+  });
+  expect(response.ok()).toBeTruthy();
+  return (await response.json()) as { id: number; token: string };
+};
+
 test.describe('Notifications', () => {
   test.use({ storageState: 'playwright/.auth/user.json' });
 
   test.beforeEach(async ({ page }) => {
     await goToNotificationPage(page);
-    
   });
 
   // TC-N1: Page loads
@@ -42,17 +52,37 @@ test.describe('Notifications', () => {
   });
 
   // TC-N5: Mark as read
-  test('TC-N5: should mark notification as read', async ({ page }) => {
-    // Click the first unread non-invitation notification title directly
-    const generalNotification = page
-        .getByRole('heading', { level: 6 })
-        .filter({ hasNot: page.getByText(/demande/i) })
-        .first();
+  test('TC-N5: should mark notification as read', async ({ page, request }) => {
+    const admin = await loginViaApi(
+      request,
+      process.env.ADMIN_EMAIL ?? 'tibo@mail.com',
+    );
+    const lea = await loginViaApi(request, 'lea@mail.com');
+    const notificationObject = `E2E notification ${Date.now()}`;
 
+    const createResponse = await request.post('/api/notifications/', {
+      headers: { Authorization: admin.token },
+      data: {
+        userId: lea.id,
+        object: notificationObject,
+        message: 'Notification E2E à marquer comme lue.',
+        type: 'GENERAL',
+      },
+    });
+    expect(createResponse.ok()).toBeTruthy();
+
+    await page.reload();
+
+    const generalNotification = page.getByRole('heading', {
+      name: notificationObject,
+      exact: true,
+    });
     await expect(generalNotification).toBeVisible({ timeout: 5000 });
     await generalNotification.click();
 
-    const markAsReadButton = page.getByRole('button', { name: /MARQUER COMME LU/i });
+    const markAsReadButton = page.getByRole('button', {
+      name: /marquer comme lu/i,
+    });
     await expect(markAsReadButton).toBeVisible();
     await markAsReadButton.click();
     await expect(markAsReadButton).not.toBeVisible();
@@ -132,5 +162,4 @@ test.describe('Notifications', () => {
     ).not.toBeVisible();
   });
 
-  
 });

@@ -16,6 +16,9 @@ import be.vinci.ipl.cae.demo.models.enums.State;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TournamentRegistration;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.entities.Match;
+import be.vinci.ipl.cae.demo.models.entities.SelectionMatch;
+import be.vinci.ipl.cae.demo.repositories.SelectionMatchRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
 import be.vinci.ipl.cae.demo.repositories.TournamentRepository;
 import be.vinci.ipl.cae.demo.repositories.UserRepository;
@@ -41,6 +44,9 @@ class TournamentServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private SelectionMatchRepository selectionMatchRepository;
 
   @InjectMocks
   private TournamentService tournamentService;
@@ -537,21 +543,81 @@ class TournamentServiceTest {
     assertEquals(State.IN_PREPARATION, result.getFirst().getState());
   }
 
+  // ==================== getTournamentsByTeamNameAndPlayerTag ====================
+
+  @Test
+  void getTournamentsByTeamNameAndPlayerTagReturnsTournamentsWherePlayerWasSelectedWithTeam() {
+    Tournament tournament = buildTournament(40L, "Combined Cup", "Tournoi combiné");
+    tournament.setState(State.PLANIFIED);
+    User user = new User();
+    Team team = new Team();
+    team.setName("TEAM_ALPHA");
+    Match match = new Match();
+    match.setTournament(tournament);
+    SelectionMatch selection = new SelectionMatch();
+    selection.setMatch(match);
+    selection.setTeam(team);
+    selection.setMember(user);
+
+    when(userRepository.findByTagIgnoreCase("Flash")).thenReturn(List.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection));
+    when(tournamentRegistrationRepository.countByTournament(tournament)).thenReturn(1);
+
+    List<TournamentDto> result =
+        tournamentService.getTournamentsByTeamNameAndPlayerTag("TEAM_ALPHA", "Flash", false);
+
+    assertEquals(1, result.size());
+    assertEquals("Combined Cup", result.getFirst().getName());
+  }
+
+  @Test
+  void getTournamentsByTeamNameAndPlayerTagExcludesSelectionsWithDifferentTeam() {
+    Tournament tournament = buildTournament(41L, "Other Cup", "Autre tournoi");
+    tournament.setState(State.PLANIFIED);
+    User user = new User();
+    Team otherTeam = new Team();
+    otherTeam.setName("OTHER_TEAM");
+    Match match = new Match();
+    match.setTournament(tournament);
+    SelectionMatch selection = new SelectionMatch();
+    selection.setMatch(match);
+    selection.setTeam(otherTeam);
+    selection.setMember(user);
+
+    when(userRepository.findByTagIgnoreCase("Flash")).thenReturn(List.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection));
+
+    List<TournamentDto> result =
+        tournamentService.getTournamentsByTeamNameAndPlayerTag("TEAM_ALPHA", "Flash", false);
+
+    assertEquals(0, result.size());
+  }
+
+  @Test
+  void getTournamentsByTeamNameAndPlayerTagReturnsEmptyWhenTagNotFound() {
+    when(userRepository.findByTagIgnoreCase("Unknown")).thenReturn(List.of());
+
+    List<TournamentDto> result =
+        tournamentService.getTournamentsByTeamNameAndPlayerTag("TEAM_ALPHA", "Unknown", false);
+
+    assertEquals(0, result.size());
+  }
+
   // ==================== getTournamentsByPlayerTag ====================
 
   @Test
-  void getTournamentsByPlayerTagReturnsTournamentsForRegisteredPlayer() {
+  void getTournamentsByPlayerTagReturnsTournamentsWherePlayerWasSelected() {
     Tournament tournament = buildTournament(22L, "Tag Cup", "Tournoi tag");
     tournament.setState(State.PLANIFIED);
-    Team team = new Team();
     User user = new User();
-    user.setTeam(team);
-    TournamentRegistration registration = new TournamentRegistration();
-    registration.setTournament(tournament);
+    Match match = new Match();
+    match.setTournament(tournament);
+    SelectionMatch selection = new SelectionMatch();
+    selection.setMatch(match);
+    selection.setMember(user);
 
     when(userRepository.findByTagIgnoreCase("Flash")).thenReturn(List.of(user));
-    when(tournamentRegistrationRepository.findByTeam(team))
-        .thenReturn(List.of(registration));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of(selection));
     when(tournamentRegistrationRepository.countByTournament(tournament)).thenReturn(1);
 
     List<TournamentDto> result =
@@ -562,13 +628,24 @@ class TournamentServiceTest {
   }
 
   @Test
-  void getTournamentsByPlayerTagIgnoresUsersWithoutTeam() {
-    User userWithoutTeam = new User();
+  void getTournamentsByPlayerTagReturnsEmptyWhenPlayerHasNoSelections() {
+    User user = new User();
 
-    when(userRepository.findByTagIgnoreCase("Ghost")).thenReturn(List.of(userWithoutTeam));
+    when(userRepository.findByTagIgnoreCase("Ghost")).thenReturn(List.of(user));
+    when(selectionMatchRepository.findByMember(user)).thenReturn(List.of());
 
     List<TournamentDto> result =
         tournamentService.getTournamentsByPlayerTag("Ghost", false);
+
+    assertEquals(0, result.size());
+  }
+
+  @Test
+  void getTournamentsByPlayerTagReturnsEmptyWhenTagNotFound() {
+    when(userRepository.findByTagIgnoreCase("Unknown")).thenReturn(List.of());
+
+    List<TournamentDto> result =
+        tournamentService.getTournamentsByPlayerTag("Unknown", false);
 
     assertEquals(0, result.size());
   }

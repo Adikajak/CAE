@@ -1,4 +1,4 @@
-package be.vinci.ipl.cae.demo.models.entities;
+package be.vinci.ipl.cae.demo.models.enums;
 
 /**
  * Enum representing the type of a notification.

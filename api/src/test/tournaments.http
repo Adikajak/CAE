@@ -75,6 +75,20 @@ Content-Type: application/json
   "state": "IN_PREPARATION"
 }
 
+### [KO 400] Create tournament — champs requis absents (name manquant)
+POST {{baseUrl}}/tournaments
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+  "description": "Tournoi sans nom",
+  "startDate": "2026-07-10",
+  "endDate": "2026-07-12",
+  "startInscriptionDate": "2026-06-01",
+  "endInscriptionDate": "2026-06-25",
+  "maxTeams": 8
+}
+
 ### [OK 201] Create tournament — admin
 # @name createTournament
 POST {{baseUrl}}/tournaments
@@ -95,6 +109,21 @@ Content-Type: application/json
 > {%
 client.global.set("createdTournamentId", response.body.id);
 %}
+
+### [KO 409] Create tournament — nom déjà utilisé
+POST {{baseUrl}}/tournaments
+Authorization: {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Admin Masters",
+  "description": "Tournoi en doublon",
+  "startDate": "2027-01-10",
+  "endDate": "2027-01-12",
+  "startInscriptionDate": "2026-12-01",
+  "endInscriptionDate": "2026-12-25",
+  "maxTeams": 8
+}
 
 ## GET /tournaments/{id}
 ### [KO 404] Get created tournament (IN_PREPARATION) — unauthenticated visitor (hidden)

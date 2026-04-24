@@ -4,6 +4,13 @@ import { goToTeamDetailsPage } from './helpers';
 // Lea is logged in automatically via playwright/.auth/user.json (chromium-user).
 
 test.describe('Team details', () => {
+  test.beforeEach(({}, testInfo) => {
+    test.skip(
+      testInfo.project.name !== 'chromium-user',
+      'Team details authenticated tests use the Lea user state.',
+    );
+  });
+
   // TC-TDTE1: the page displays the team title and members table columns
   test('TC-TDTE1: should display team header and members table columns', async ({
     page,
@@ -23,17 +30,20 @@ test.describe('Team details', () => {
     ).toBeVisible();
   });
 
-  // TC-TDTE2: as main manager, lea sees the warning that she must designate
-  // a second manager before leaving the team
-    test('TC-TDTE2: should show leave button for primary manager', async ({
+  // TC-TDTE2: as main manager, Lea cannot leave before designating
+  // a second manager
+  test('TC-TDTE2: should disable leave button for primary manager without second manager', async ({
     page,
   }) => {
     await goToTeamDetailsPage(page, 1);
 
-      // Verify the leave button exists
-    const leaveButton = page.locator('button:has-text("Quitter la team")');
+    await expect(
+      page.getByText(/désignez d'abord un second responsable/i),
+    ).toBeVisible();
+
+    const leaveButton = page.getByRole('button', { name: /quitter la team/i });
     await expect(leaveButton).toBeVisible();
-      // The assertion for disabled state has been removed
+    await expect(leaveButton).toBeDisabled();
   });
 
   // TC-TDTE3: the activity block displays past/ongoing/future sections
@@ -48,15 +58,15 @@ test.describe('Team details', () => {
     await expect(page.getByText('Futurs')).toBeVisible();
   });
 
-  // TC-TDTE4: clicking on a member tag navigates to member details
-  test('TC-TDTE4: should navigate to member details when clicking Lynx', async ({
+  // TC-TDTE4: clicking on another member's tag navigates to their member details page
+  // (clicking Lynx = Lea herself would redirect to /profile)
+  test('TC-TDTE4: should navigate to member details when clicking Rogue', async ({
     page,
   }) => {
     await goToTeamDetailsPage(page, 1);
 
-    // Find the table row with Lynx, then click on the tag cell
-    const lynxRow = page.getByRole('row').filter({ hasText: 'Lynx' });
-    await lynxRow.getByText('Lynx').click();
+    const rogueRow = page.getByRole('row').filter({ hasText: 'Rogue' });
+    await rogueRow.getByText('Rogue').click();
     await expect(page).toHaveURL(/\/members\/\d+$/);
   });
 });

@@ -126,6 +126,37 @@ const goToNotificationPage = async (page: Page) => {
   ).toBeVisible();
 };
 
+const goToMatchDetailPage = async (
+  page: Page,
+  tournamentId: number,
+  matchId: number,
+) => {
+  await page.goto(`/tournaments/${tournamentId}/matches/${matchId}/selections`);
+  await expect(page).toHaveURL(
+    new RegExp(`/tournaments/${tournamentId}/matches/${matchId}/selections$`),
+  );
+  await expect(
+    page.getByRole('heading', { name: /détail du match/i }),
+  ).toBeVisible();
+};
+
+const goToSelectionPage = async (
+  page: Page,
+  tournamentId: number,
+  matchId: number,
+  teamId: number,
+) => {
+  await page.goto(
+    `/tournaments/${tournamentId}/matches/${matchId}/selections/${teamId}`,
+  );
+  await expect(page).toHaveURL(
+    new RegExp(
+      `/tournaments/${tournamentId}/matches/${matchId}/selections/${teamId}$`,
+    ),
+  );
+  await expect(page.getByText(/membres sélectionnés/i)).toBeVisible();
+};
+
 const goToHomePage = async (page: Page) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/$/);
@@ -138,7 +169,9 @@ export {
   chooseFirstAvatar,
   createTeamWith,
   goToLoginPage,
+  goToMatchDetailPage,
   goToMembersPage,
+  goToSelectionPage,
   goToTeamDetailsPage,
   goToProfilePage,
   goToRegisterPage,

@@ -1,5 +1,30 @@
-import { describe, expect, test } from 'vitest';
-import { toLocalDateInputValue } from './dateUtils';
+import { describe, expect, test, vi, afterEach } from 'vitest';
+import { toLocalDateInputValue, formatDateTime } from './dateUtils';
+
+describe('formatDateTime', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('formats a datetime string to French locale with hour', () => {
+    const result = formatDateTime('2026-04-23T13:05:00');
+    expect(result).toBe('23/04/2026 à 13h05');
+  });
+
+  test('pads single-digit minutes with a leading zero', () => {
+    const result = formatDateTime('2026-01-05T09:03:00');
+    expect(result).toBe('05/01/2026 à 09h03');
+  });
+
+  test('returns the raw string when Date throws', () => {
+    vi.spyOn(globalThis, 'Date').mockImplementationOnce(() => {
+      throw new Error('invalid');
+    });
+
+    const result = formatDateTime('not-a-date');
+    expect(result).toBe('not-a-date');
+  });
+});
 
 describe('toLocalDateInputValue', () => {
   test('converts a Date to YYYY-MM-DD format', () => {

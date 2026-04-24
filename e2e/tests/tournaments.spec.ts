@@ -41,35 +41,43 @@ const selectVisibleOption = async (
   }
 };
 
+const tournamentHeading = (page: Page, name: string) =>
+  page.getByRole('heading', { name, exact: true });
+
 test.describe('Tournaments list', () => {
   test.beforeEach(async ({ page }) => {
     await goToTournamentsPage(page);
   });
 
-  // TC-TR1: the page displays the title and key table columns
-  test('TC-TR1: should display title and tournament table headers', async ({
+  // TC-TR1: the page displays the title, filters and seeded tournament cards
+  test('TC-TR1: should display title, filters and tournament cards', async ({
     page,
   }) => {
     await expect(page.getByRole('heading', { name: /tournois/i })).toBeVisible();
-    const table = page.locator('table').first();
-    await expect(table.getByRole('columnheader').first()).toBeVisible();
-    await expect(
-      table.locator('thead th:has-text("Nom")').first(),
-    ).toBeVisible();
-    await expect(
-      table.locator('thead th:has-text("Description")').first(),
-    ).toBeVisible();
-    await expect(
-      table.locator('thead th:has-text("État")').first(),
-    ).toBeVisible();
+    await expect(page.getByLabel(/nom du tournoi/i)).toBeVisible();
+    await expect(page.getByLabel(/nom de team participante/i)).toBeVisible();
+    await expect(page.getByLabel(/tag d'un joueur inscrit/i)).toBeVisible();
+    await expect(page.locator('div[role="combobox"]', { hasText: 'État' })).toBeVisible();
+    await expect(page.locator('div[role="combobox"]', { hasText: 'Disponibilité' })).toBeVisible();
+    await expect(page.locator('div[role="combobox"]', { hasText: 'Jour' })).toBeVisible();
+    await expect(page.locator('div[role="combobox"]', { hasText: 'Mois' })).toBeVisible();
+    await expect(page.getByLabel(/année/i)).toBeVisible();
+    await expect(page.locator('div[role="combobox"]', { hasText: 'Durée' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /période/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /réinitialiser/i })).toBeVisible();
+
+    await expect(tournamentHeading(page, 'Elite Championship 2026')).toBeVisible();
+    await expect(page.getByText(/début des inscriptions : 11\/04\/2026/i)).toBeVisible();
+    await expect(page.getByText(/fin des inscriptions : 13\/05\/2026/i)).toBeVisible();
+    await expect(page.getByText('Teams inscrites : 9/10').first()).toBeVisible();
   });
 
   // TC-TR2: seeded tournaments are listed and the user can open one
   test('TC-TR2: should navigate to tournament details when clicking a row', async ({
     page,
   }) => {
-    await expect(page.getByRole('cell', { name: 'Elite Championship 2026' })).toBeVisible();
-    await page.getByRole('row').filter({ hasText: 'Elite Championship 2026' }).getByRole('cell').first().click();
+    await expect(tournamentHeading(page, 'Elite Championship 2026')).toBeVisible();
+    await tournamentHeading(page, 'Elite Championship 2026').click();
     await expect(page).toHaveURL(/\/tournaments\/\d+$/);
   });
 
@@ -78,7 +86,8 @@ test.describe('Tournaments list', () => {
     page,
   }) => {
     await page.getByLabel(/nom du tournoi/i).fill('Elite Championship 2026');
-    await expect(page.getByRole('cell', { name: 'Elite Championship 2026' })).toBeVisible();
+    await expect(tournamentHeading(page, 'Elite Championship 2026')).toBeVisible();
+    await expect(tournamentHeading(page, 'Spring Arena Cup 2025')).toHaveCount(0);
   });
 
   // TC-TR5: filtering by state keeps only the matching state entries
@@ -87,25 +96,21 @@ test.describe('Tournaments list', () => {
     await selectVisibleOption(page, { name: 'Terminé' });
 
     await expect(
-      page.getByRole('row').filter({ hasText: 'Spring Arena Cup 2025' }),
-    ).toHaveCount(1);
-    await expect(
-      page.getByRole('row').filter({ hasText: 'Elite Championship 2026' }),
-    ).toHaveCount(0);
+      tournamentHeading(page, 'Spring Arena Cup 2025'),
+    ).toBeVisible();
+    await expect(tournamentHeading(page, 'Elite Championship 2026')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /réinitialiser/i })).toBeEnabled();
   });
 
   // TC-TR6: duration filter can isolate a seeded tournament
   test('TC-TR6: should filter tournaments by duration', async ({ page }) => {
     await openFilterSelect(page, 'Durée');
-    await selectVisibleOption(page, { value: '8' });
+    await selectVisibleOption(page, { value: '9' });
 
     await expect(
-      page.getByRole('row').filter({ hasText: 'Spring Battle Series 2026' }),
-    ).toHaveCount(1);
-    await expect(
-      page.getByRole('row').filter({ hasText: 'Elite Championship 2026' }),
-    ).toHaveCount(0);
+      tournamentHeading(page, 'Spring Battle Series 2026'),
+    ).toBeVisible();
+    await expect(tournamentHeading(page, 'Elite Championship 2026')).toHaveCount(0);
   });
 
   // TC-TR7: period filter can exclude all current seeded tournaments
@@ -163,5 +168,24 @@ test.describe('Tournaments list', () => {
     await expect(page.getByLabel(/tag d'un joueur inscrit/i)).toHaveValue('');
     await expect(page.getByLabel(/année/i)).toHaveValue('');
     await expect(resetButton).toBeDisabled();
+  });
+
+  // TC-TR9: filter then reset and open a tournament card
+  test('TC-TR9: should reset filters after search then open a tournament card', async ({
+    page,
+  }) => {
+    await page.getByLabel(/nom du tournoi/i).fill('Elite Championship');
+    await expect(tournamentHeading(page, 'Elite Championship 2026')).toBeVisible();
+    await expect(tournamentHeading(page, 'Spring Battle Series 2026')).toHaveCount(0);
+
+    const resetButton = page.getByRole('button', { name: /réinitialiser/i });
+    await expect(resetButton).toBeEnabled();
+    await resetButton.click();
+
+    await expect(page.getByLabel(/nom du tournoi/i)).toHaveValue('');
+    await expect(tournamentHeading(page, 'Elite Championship 2026')).toBeVisible();
+
+    await tournamentHeading(page, 'Elite Championship 2026').click();
+    await expect(page).toHaveURL(/\/tournaments\/\d+$/);
   });
 });

@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import {
+  Card,
+  CardContent,
   Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   Box,
   Typography,
   Button,
+  Tooltip,
 } from '@mui/material';
 import {
   CreateTournamentPayload,
@@ -24,6 +26,8 @@ type TournamentTableProps = {
   tournamentList: Tournament[] | null;
   showOnlyName?: boolean;
   isAdmin?: boolean;
+  today?: string;
+  now?: Date;
   onPublishTournament?: (
     tournamentId: number,
     payload: PublishTournamentPayload,
@@ -34,7 +38,11 @@ type TournamentTableProps = {
     payload: CreateTournamentPayload,
   ) => Promise<void>;
   isEditing?: boolean;
+  onGenerateSchedule?: (tournamentId: number) => Promise<void>;
+  isGenerating?: boolean;
+  lockedTournamentIds?: Set<number>;
   registeredTournamentIds?: Set<number>;
+  participatedTournamentIds?: Set<number>;
 };
 
 const formatDate = (date: string) => date.split('-').reverse().join('/');
@@ -45,6 +53,59 @@ const canPublishTournament = (tournament: Tournament): boolean => {
 
 const canEditTournament = (tournament: Tournament): boolean => {
   return tournament.state === 'IN_PREPARATION';
+};
+
+const isGenerationWindowOpen = (tournament: Tournament, today: string) => {
+  const todayDate = new Date(`${today}T00:00:00`);
+  const endInscriptionDate = new Date(
+    `${tournament.endInscriptionDate}T00:00:00`,
+  );
+
+  const isRegistrationClosed = todayDate > endInscriptionDate;
+  const isTournamentFull = tournament.registrationsCount >= tournament.maxTeams;
+
+  return isRegistrationClosed || isTournamentFull;
+};
+
+const isTournamentStartDateTimePassed = (
+  tournamentStartDate: string,
+  now: Date,
+) => {
+  const startDateTime = new Date(`${tournamentStartDate}T13:00:00`);
+  return now.getTime() > startDateTime.getTime();
+};
+
+const canGenerateSchedule = (
+  tournament: Tournament,
+  today: string,
+  now: Date,
+): boolean => {
+  return (
+    tournament.state === 'PLANIFIED' &&
+    isGenerationWindowOpen(tournament, today) &&
+    !isTournamentStartDateTimePassed(tournament.startDate, now) &&
+    tournament.registrationsCount >= 2
+  );
+};
+
+const getGenerateScheduleDisabledReason = (
+  tournament: Tournament,
+  today: string,
+  now: Date,
+): string | null => {
+  if (tournament.state !== 'PLANIFIED') {
+    return 'Le tournoi doit être en état Planifié';
+  }
+  if (!isGenerationWindowOpen(tournament, today)) {
+    return "Génération possible après la fin des inscriptions ou quand le nombre max d'équipes est atteint";
+  }
+  if (isTournamentStartDateTimePassed(tournament.startDate, now)) {
+    return 'Génération impossible: la date de début du tournoi est déjà passée';
+  }
+  if (tournament.registrationsCount < 2) {
+    return 'Minimum 2 équipes inscrites requises';
+  }
+  return null;
 };
 
 const getStatusConfig = (state: string) => {
@@ -72,17 +133,27 @@ const TournamentTable = ({
   tournamentList,
   showOnlyName = false,
   isAdmin = false,
+  today,
+  now,
   onPublishTournament,
   isPublishing = false,
   onEditTournament,
   isEditing = false,
+  onGenerateSchedule,
+  isGenerating = false,
+  lockedTournamentIds,
   registeredTournamentIds,
+  participatedTournamentIds,
 }: TournamentTableProps) => {
   const navigate = useNavigate();
   const [pendingPublish, setPendingPublish] = useState<PendingPublish | null>(
     null,
   );
   const [pendingEdit, setPendingEdit] = useState<Tournament | null>(null);
+  const currentNow = now ?? new Date();
+  const currentDate =
+    today ??
+    `${currentNow.getFullYear()}-${String(currentNow.getMonth() + 1).padStart(2, '0')}-${String(currentNow.getDate()).padStart(2, '0')}`;
 
   if (!tournamentList || tournamentList.length === 0) {
     return (
@@ -146,112 +217,165 @@ const TournamentTable = ({
     );
   }
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell align="center">Nom</TableCell>
-            <TableCell align="center">Description</TableCell>
-            <TableCell align="center">État</TableCell>
-            <TableCell align="center">Date de début</TableCell>
-            <TableCell align="center">Date de fin</TableCell>
-            <TableCell align="center">Début des inscriptions</TableCell>
-            <TableCell align="center">Fin des inscriptions</TableCell>
-            <TableCell align="center">Nombre de teams inscrites</TableCell>
-            <TableCell align="center">Max équipes</TableCell>
-            {isAdmin && <TableCell align="center">Actions</TableCell>}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {tournamentList?.map((tournament) => {
-            const isRegistered =
-              registeredTournamentIds?.has(tournament.id) ?? false;
-            return (
-              <TableRow
-                key={tournament.id}
-                hover
-                sx={{
-                  cursor: 'pointer',
-                  backgroundColor: isRegistered
-                    ? 'rgba(2, 136, 209, 0.1)'
-                    : undefined,
-                }}
-                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr',
+          sm: 'repeat(2, minmax(0, 1fr))',
+          md: 'repeat(3, minmax(0, 1fr))',
+        },
+        gap: 2,
+        width: '100%',
+      }}
+    >
+      {tournamentList.map((tournament) => {
+        const isRegistered =
+          registeredTournamentIds?.has(tournament.id) ?? false;
+        const hasParticipated =
+          participatedTournamentIds?.has(tournament.id) ?? false;
+        const isGenerationLocked =
+          lockedTournamentIds?.has(tournament.id) ?? false;
+
+        return (
+          <Card
+            key={tournament.id}
+            data-highlighted={
+              isRegistered && hasParticipated ? 'true' : 'false'
+            }
+            sx={{
+              cursor: 'pointer',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              border: '1px solid rgba(0,0,0,0.08)',
+              backgroundColor:
+                isRegistered && hasParticipated
+                  ? 'rgba(227, 242, 253, 0.7)'
+                  : '#FFFFFF',
+              '&:hover': {
+                transform: 'translateY(-3px)',
+                boxShadow: 6,
+              },
+            }}
+            onClick={() => navigate(`/tournaments/${tournament.id}`)}
+          >
+            <CardContent>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>
+                {tournament.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Début des inscriptions :{' '}
+                {formatDate(tournament.startInscriptionDate)}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 1.5 }}
               >
-                <TableCell align="center">{tournament.name}</TableCell>
-                <TableCell align="center">{tournament.description}</TableCell>
-                <TableCell align="center">
-                  {tournament.stateDisplayName}
-                </TableCell>
-                <TableCell align="center">
-                  {formatDate(tournament.startDate)}
-                </TableCell>
-                <TableCell align="center">
-                  {formatDate(tournament.endDate)}
-                </TableCell>
-                <TableCell align="center">
-                  {formatDate(tournament.startInscriptionDate)}
-                </TableCell>
-                <TableCell align="center">
-                  {formatDate(tournament.endInscriptionDate)}
-                </TableCell>
-                <TableCell align="center">
-                  {tournament.registrationsCount} / {tournament.maxTeams}
-                </TableCell>
-                <TableCell align="center">{tournament.maxTeams}</TableCell>
-                {isAdmin && (
-                  <TableCell align="center">
-                    <Box
-                      sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}
-                    >
+                Fin des inscriptions :{' '}
+                {formatDate(tournament.endInscriptionDate)}
+              </Typography>
+              <Typography variant="body1" fontWeight={600}>
+                Teams inscrites : {tournament.registrationsCount}/
+                {tournament.maxTeams}
+              </Typography>
+
+              {isAdmin && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: 'flex',
+                    gap: 1,
+                    justifyContent: 'flex-end',
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="small"
+                    disabled={!canEditTournament(tournament) || isEditing}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPendingEdit(tournament);
+                    }}
+                  >
+                    Modifier
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    disabled={!canPublishTournament(tournament) || isPublishing}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPendingPublish({
+                        id: tournament.id,
+                        name: tournament.name,
+                        payload: {
+                          name: tournament.name,
+                          description: tournament.description,
+                          startDate: tournament.startDate,
+                          endDate: tournament.endDate,
+                          startInscriptionDate: tournament.startInscriptionDate,
+                          endInscriptionDate: tournament.endInscriptionDate,
+                          maxTeams: tournament.maxTeams,
+                          state: 'PLANIFIED',
+                        },
+                      });
+                    }}
+                  >
+                    Publier
+                  </Button>
+                  <Tooltip
+                    title={
+                      !canGenerateSchedule(tournament, currentDate, currentNow)
+                        ? getGenerateScheduleDisabledReason(
+                            tournament,
+                            currentDate,
+                            currentNow,
+                          )
+                        : isGenerating
+                          ? 'Génération en cours...'
+                          : ''
+                    }
+                  >
+                    <span>
                       <Button
                         variant="outlined"
-                        color="secondary"
+                        color="success"
                         size="small"
-                        disabled={!canEditTournament(tournament) || isEditing}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPendingEdit(tournament);
+                        sx={{
+                          '&.Mui-disabled': {
+                            color: 'rgba(0, 0, 0, 0.26)',
+                            borderColor: 'rgba(0, 0, 0, 0.12)',
+                            backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                            cursor: 'not-allowed',
+                            opacity: 0.6,
+                          },
                         }}
-                      >
-                        Modifier
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
                         disabled={
-                          !canPublishTournament(tournament) || isPublishing
+                          !canGenerateSchedule(
+                            tournament,
+                            currentDate,
+                            currentNow,
+                          ) ||
+                          isGenerating ||
+                          isGenerationLocked
                         }
                         onClick={(e) => {
                           e.stopPropagation();
-                          setPendingPublish({
-                            id: tournament.id,
-                            name: tournament.name,
-                            payload: {
-                              name: tournament.name,
-                              description: tournament.description,
-                              startDate: tournament.startDate,
-                              endDate: tournament.endDate,
-                              startInscriptionDate:
-                                tournament.startInscriptionDate,
-                              endInscriptionDate: tournament.endInscriptionDate,
-                              maxTeams: tournament.maxTeams,
-                              state: 'PLANIFIED',
-                            },
-                          });
+                          onGenerateSchedule?.(tournament.id);
                         }}
                       >
-                        Publier
+                        {isGenerating ? 'Génération...' : 'Générer planning'}
                       </Button>
-                    </Box>
-                  </TableCell>
-                )}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                    </span>
+                  </Tooltip>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
       {pendingEdit && (
         <EditTournamentDialog
           key={pendingEdit.id}
@@ -281,7 +405,7 @@ const TournamentTable = ({
           }
         }}
       />
-    </TableContainer>
+    </Box>
   );
 };
 

@@ -7,11 +7,14 @@ import {
   MemberDetailsContextProvider,
 } from './MemberDetailsContext';
 import { MemberDetailsContextType } from '../types';
-import { fetchMemberById } from '../services/membersService';
+import {
+  fetchMemberById,
+  banMember,
+  fetchMemberUnavailabilities,
+} from '../services/membersService';
 import { act } from '@testing-library/react';
 import { UserContext } from './UserContext';
 import { UserContextType } from '../types';
-import { banMember } from '../services/membersService';
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -21,6 +24,7 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../services/membersService', () => ({
   fetchMemberById: vi.fn(),
   banMember: vi.fn(),
+  fetchMemberUnavailabilities: vi.fn(),
 }));
 
 describe('MemberDetailsContext', () => {
@@ -75,6 +79,7 @@ describe('MemberDetailsContext', () => {
     vi.mocked(useParams).mockReturnValue({ memberId: '1' });
     vi.mocked(fetchMemberById).mockResolvedValue(member);
     vi.mocked(banMember).mockResolvedValue(undefined);
+    vi.mocked(fetchMemberUnavailabilities).mockResolvedValue([]);
   });
 
   test('exposes harmless default values without a provider', async () => {
@@ -202,5 +207,40 @@ describe('MemberDetailsContext', () => {
     });
 
     expect(banMember).not.toHaveBeenCalled();
+  });
+
+  test('loads unavailabilities when authenticated user is present', async () => {
+    const unavails = [
+      { id: 1, startDate: '2026-05-01', endDate: '2026-05-05' },
+    ];
+    vi.mocked(fetchMemberUnavailabilities).mockResolvedValueOnce(unavails);
+
+    renderMemberDetailsContext();
+
+    await waitFor(() => {
+      expect(contextValue?.unavailabilities).toEqual(unavails);
+      expect(contextValue?.canViewUnavailabilities).toBe(true);
+    });
+  });
+
+  test('handles 403 silently and sets canViewUnavailabilities to false', async () => {
+    vi.mocked(fetchMemberUnavailabilities).mockRejectedValueOnce(
+      new Error('Erreur 403'),
+    );
+
+    renderMemberDetailsContext();
+
+    await waitFor(() => {
+      expect(contextValue?.unavailabilities).toEqual([]);
+      expect(contextValue?.canViewUnavailabilities).toBe(false);
+    });
+  });
+
+  test('does not fetch unavailabilities when not authenticated', async () => {
+    renderMemberDetailsContext(false);
+
+    await waitFor(() => expect(contextValue?.loading).toBe(false));
+
+    expect(fetchMemberUnavailabilities).not.toHaveBeenCalled();
   });
 });

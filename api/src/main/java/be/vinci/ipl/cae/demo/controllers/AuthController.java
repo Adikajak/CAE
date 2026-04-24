@@ -4,6 +4,7 @@ import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
 import be.vinci.ipl.cae.demo.models.dtos.Credentials;
 import be.vinci.ipl.cae.demo.models.dtos.UserDto;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.results.AuthRegisterResult;
 import be.vinci.ipl.cae.demo.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -68,22 +69,20 @@ public class AuthController {
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
-    AuthenticatedUser user;
-    try {
-      user = userService.register(
-          userDto.getEmail(),
-          userDto.getPassword(),
-          userDto.getTag(),
-          userDto.getSpeciality(),
-          userDto.getProfilePicture());
-    } catch (IllegalArgumentException e) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-    }
+    AuthRegisterResult outcome = userService.register(
+        userDto.getEmail(),
+        userDto.getPassword(),
+        userDto.getTag(),
+        userDto.getSpeciality(),
+        userDto.getProfilePicture());
 
-    if (user == null) {
+    if (outcome.success()) {
+      return outcome.user();
+    }
+    if (outcome.emailAlreadyExists()) {
       throw new ResponseStatusException(HttpStatus.CONFLICT);
     }
-    return user;
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, outcome.badRequestMessage());
   }
 
   /**

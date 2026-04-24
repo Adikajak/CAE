@@ -1,11 +1,15 @@
 import { useContext } from 'react';
-import { Box, Button } from '@mui/material';
-import { ProfileContextType } from '../../../../types';
+import { Box, Button, Link } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { ProfileContextType, UserContextType } from '../../../../types';
 import { ProfileContext } from '../../../../contexts/ProfileContext';
+import { UserContext } from '../../../../contexts/UserContext';
 
 const ProfileInfo = () => {
   const { profile, setOpenSpecialityModal, setOpenPictureModal } =
     useContext<ProfileContextType>(ProfileContext);
+  const { authenticatedUser } = useContext<UserContextType>(UserContext);
+  const navigate = useNavigate();
 
   const formattedDate = profile?.date
     ? profile.date.split('-').reverse().join('/')
@@ -37,7 +41,18 @@ const ProfileInfo = () => {
         </Button>
       </p>
       <p>
-        <strong>Team :</strong> {profile?.teamName || 'Aucune team'}
+        <strong>Team :</strong>{' '}
+        {profile?.teamName && authenticatedUser?.teamId ? (
+          <Link
+            sx={{ cursor: 'pointer' }}
+            color="info.main"
+            onClick={() => navigate(`/teams/${authenticatedUser.teamId}`)}
+          >
+            {profile.teamName}
+          </Link>
+        ) : (
+          'Aucune team'
+        )}
       </p>
       <p>
         <strong>Date d'inscription :</strong> {formattedDate}

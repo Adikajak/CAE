@@ -6,6 +6,10 @@ import { TeamsListContextType } from '../../../types';
 import CreateTeamForm from './components/CreateTeamForm';
 import TeamsTable from './components/TeamsTable';
 
+/**
+ * Shows the teams list with the create team form and join buttons.
+ * @return {JSX.Element} the page content
+ */
 const TeamsListPageContent = () => {
   const {
     sortedTeams,
@@ -35,7 +39,15 @@ const TeamsListPageContent = () => {
     <Container
       component="main"
       maxWidth="lg"
-      sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        backgroundColor: '#F0F0F0',
+        borderRadius: 2.5,
+        marginTop: 2,
+        marginBottom: 2,
+      }}
     >
       <Box
         sx={{

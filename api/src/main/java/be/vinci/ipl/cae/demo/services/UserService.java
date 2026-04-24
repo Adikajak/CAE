@@ -1,15 +1,24 @@
 package be.vinci.ipl.cae.demo.services;
 
 import be.vinci.ipl.cae.demo.models.dtos.AuthenticatedUser;
+import be.vinci.ipl.cae.demo.models.dtos.MemberActivityDto;
+import be.vinci.ipl.cae.demo.models.dtos.MembershipHistoryDto;
 import be.vinci.ipl.cae.demo.models.dtos.NotificationDto;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
-import be.vinci.ipl.cae.demo.models.entities.NotificationType;
+import be.vinci.ipl.cae.demo.models.entities.Match;
 import be.vinci.ipl.cae.demo.models.entities.ProfilePicture;
 import be.vinci.ipl.cae.demo.models.entities.Speciality;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.Unavailability;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.enums.NotificationType;
+import be.vinci.ipl.cae.demo.models.enums.StateMatch;
+import be.vinci.ipl.cae.demo.models.results.AuthRegisterResult;
+import be.vinci.ipl.cae.demo.repositories.MatchRepository;
+import be.vinci.ipl.cae.demo.repositories.MembershipHistoryRepository;
+import be.vinci.ipl.cae.demo.repositories.ParticipationMatchRepository;
 import be.vinci.ipl.cae.demo.repositories.ProfilePictureRepository;
+import be.vinci.ipl.cae.demo.repositories.SelectionMatchRepository;
 import be.vinci.ipl.cae.demo.repositories.SpecialityRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamMembershipRepository;
 import be.vinci.ipl.cae.demo.repositories.TeamRepository;
@@ -23,6 +32,7 @@ import jakarta.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,7 +67,11 @@ public class UserService {
   private final TeamRepository teamRepository;
   private final TeamMembershipRepository teamMembershipRepository;
   private final TournamentRegistrationRepository tournamentRegistrationRepository;
-
+  private final MembershipHistoryRepository membershipHistoryRepository;
+  private final SelectionMatchRepository selectionMatchRepository;
+  private final ParticipationMatchRepository participationMatchRepository;
+  private final MatchRepository matchRepository;
+  private final SelectionMatchService selectionMatchService;
   /**
    * Constructor.
    *
@@ -69,11 +83,18 @@ public class UserService {
    */
 
   public UserService(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository,
-      UnavailabilityRepository unavailabilityRepository,
-      SpecialityRepository specialityRepository, NotificationService notificationService,
-      ProfilePictureRepository profilePictureRepository, TeamRepository teamRepository,
-      TeamMembershipRepository teamMembershipRepository,
-      TournamentRegistrationRepository tournamentRegistrationRepository) {
+                     UnavailabilityRepository unavailabilityRepository,
+                     SpecialityRepository specialityRepository,
+                     NotificationService notificationService,
+                     ProfilePictureRepository profilePictureRepository,
+                     TeamRepository teamRepository,
+                     TeamMembershipRepository teamMembershipRepository,
+                     MembershipHistoryRepository membershipHistoryRepository,
+                     TournamentRegistrationRepository tournamentRegistrationRepository,
+                     SelectionMatchRepository selectionMatchRepository,
+                     ParticipationMatchRepository participationMatchRepository,
+                     MatchRepository matchRepository,
+                     SelectionMatchService selectionMatchService) {
     this.passwordEncoder = passwordEncoder;
     this.userRepository = userRepository;
     this.specialityRepository = specialityRepository;
@@ -83,6 +104,11 @@ public class UserService {
     this.teamRepository = teamRepository;
     this.teamMembershipRepository = teamMembershipRepository;
     this.tournamentRegistrationRepository = tournamentRegistrationRepository;
+    this.membershipHistoryRepository = membershipHistoryRepository;
+    this.selectionMatchRepository = selectionMatchRepository;
+    this.participationMatchRepository = participationMatchRepository;
+    this.matchRepository = matchRepository;
+    this.selectionMatchService = selectionMatchService;
   }
 
   /**
@@ -173,11 +199,11 @@ public class UserService {
     }
 
     return createJwtToken(
-      user.getId(),
-      email,
-      user.getTag(),
-      user.isAdmin(),
-      user.getTeam() == null ? null : user.getTeam().getId()
+        user.getId(),
+        email,
+        user.getTag(),
+        user.isAdmin(),
+        user.getTeam() == null ? null : user.getTeam().getId()
     );
   }
 
@@ -189,29 +215,30 @@ public class UserService {
    * @param tag the user tag
    * @param specialityName the speciality name
    * @param profilePicture the profile picture URL
-   * @return the authenticated user if the registration is successful, null otherwise
+   * @return outcome with JWT on success, email conflict, or invalid payload
    */
-  public AuthenticatedUser register(String email, String password, String tag,
-      String specialityName, String profilePicture) {
+  public AuthRegisterResult register(String email, String password, String tag,
+                                      String specialityName, String profilePicture) {
     User user = userRepository.findByEmail(email);
     if (user != null) {
-      return null;
+      return AuthRegisterResult.emailTaken();
     }
 
     Speciality speciality = specialityRepository.findByName(specialityName);
     if (speciality == null) {
-      throw new IllegalArgumentException("Invalid speciality");
+      return AuthRegisterResult.invalidPayload("Invalid speciality");
     }
 
     ProfilePicture profilePictureEntity = profilePictureRepository.findByUrl(profilePicture);
     if (profilePictureEntity == null) {
-      throw new IllegalArgumentException("Invalid profile picture");
+      return AuthRegisterResult.invalidPayload("Invalid profile picture");
     }
 
     User newUser = createOne(email, password, false, tag, profilePictureEntity,
         speciality);
 
-    return createJwtToken(newUser.getId(), email, newUser.getTag(), false, null);
+    return AuthRegisterResult.ok(
+        createJwtToken(newUser.getId(), email, newUser.getTag(), false, null));
   }
 
   /**
@@ -236,7 +263,7 @@ public class UserService {
    * @return the created user
    */
   public User createOne(String email, String password, boolean isAdmin, String tag,
-      ProfilePicture profilePicture, Speciality speciality) {
+                        ProfilePicture profilePicture, Speciality speciality) {
     String hashedPassword = passwordEncoder.encode(password);
 
     User user = new User();
@@ -306,7 +333,10 @@ public class UserService {
     unavailability.setUser(user);
     unavailability.setStartDate(request.startDate());
     unavailability.setEndDate(request.endDate());
-    return unavailabilityRepository.save(unavailability);
+    Unavailability saved = unavailabilityRepository.save(unavailability);
+    selectionMatchService.handleMemberUnavailable(
+        user.getId(), request.startDate(), request.endDate());
+    return saved;
   }
 
   /**
@@ -369,7 +399,7 @@ public class UserService {
    * @return true if the user was banned, false if not found
    */
   @Transactional
-  public boolean banUser(Long userId) {
+  public boolean banUser(Long userId, Long callerId) {
     Optional<User> optionalUser = userRepository.findById(userId);
     if (optionalUser.isEmpty()) {
       return false;
@@ -404,6 +434,7 @@ public class UserService {
         tournamentRegistrationRepository.deleteByTeam(team);
       }
     }
+    selectionMatchService.handleMemberBanned(userId, callerId);
     teamMembershipRepository.findByMember(user)
         .ifPresent(teamMembershipRepository::delete);
 
@@ -422,5 +453,122 @@ public class UserService {
   public User findByEmail(String email) {
     return userRepository.findByEmail(email);
   }
-}
 
+  /**
+   * Get the past team memberships of a user.
+   *
+   * @param userId the user ID
+   * @return list of past membership DTOs, or null if user not found
+   */
+  public List<MembershipHistoryDto> getPastTeams(Long userId) {
+    Optional<User> optionalUser = userRepository.findById(userId);
+    if (optionalUser.isEmpty()) {
+      return List.of();
+    }
+    return membershipHistoryRepository.findByMember(optionalUser.get()).stream()
+        .map(h -> new MembershipHistoryDto(
+            h.getTeam().getId(),
+            h.getTeam().getName(),
+            h.getLeftAt()
+        ))
+        .toList();
+  }
+
+  /**
+   * Returns the unavailabilities of a member if the caller is their manager or second manager.
+   *
+   * @param member   the authenticated user making the request.
+   * @param targetId the id of the member whose unavailabilities are requested.
+   * @return the unavailabilities, or null if access is denied.
+   */
+  public Iterable<Unavailability> getUnavailabilitiesForMember(User member, Long targetId) {
+    Optional<User> targetOpt = userRepository.findById(targetId);
+    if (targetOpt.isEmpty()) {
+      return null;
+    }
+    User target = targetOpt.get();
+    Team team = target.getTeam();
+    if (team == null) {
+      return null;
+    }
+    boolean isManager = team.getManager() != null
+        && team.getManager().getId().equals(member.getId());
+    boolean isSecond = team.getSecondManager() != null
+        && team.getSecondManager().getId().equals(member.getId());
+    if (!isManager && !isSecond) {
+      return null;
+    }
+    return unavailabilityRepository.findByUser(target);
+  }
+
+  /**
+   * Get the match activity of a member.
+   *
+   * @param userId the user ID
+   * @return list of match activity DTOs
+   */
+  public List<MemberActivityDto> getMemberActivity(Long userId) {
+    Optional<User> optionalUser = userRepository.findById(userId);
+    if (optionalUser.isEmpty()) {
+      return List.of();
+    }
+    return selectionMatchRepository.findByMember(optionalUser.get()).stream()
+        .map(s -> {
+          var match = s.getMatch();
+          var tournament = match.getTournament();
+          Long selectedTeamId = s.getTeam().getId();
+          // On récupère team1 et team2
+          Long team1Id = null;
+          String team1Name = null;
+          Long team2Id = null;
+          String team2Name = null;
+          Integer team1Score = null;
+          Integer team2Score = null;
+          var parts = participationMatchRepository.findByMatchMatchId(match.getMatchId());
+          if (parts.size() >= 2) {
+            team1Id = parts.get(0).getTeam().getId();
+            team1Name = parts.get(0).getTeam().getName();
+            team2Id = parts.get(1).getTeam().getId();
+            team2Name = parts.get(1).getTeam().getName();
+            team1Score = parts.get(0).getScore();
+            team2Score = parts.get(1).getScore();
+          } else if (parts.size() == 1) {
+            team1Id = parts.get(0).getTeam().getId();
+            team1Name = parts.get(0).getTeam().getName();
+          }
+          // Déterminer le gagnant
+          Long winnerTeamId = null;
+          if (match.getState() == StateMatch.ENDED
+              && team1Score != null && team2Score != null) {
+            winnerTeamId = team1Score > team2Score ? team1Id : team2Id;
+          }
+          long totalRounds = matchRepository.findByTournamentId(tournament.getId()).stream()
+              .mapToLong(Match::getRound)
+              .max()
+              .orElse(1L);
+          return new MemberActivityDto(
+              tournament.getId(),
+              tournament.getName(),
+              match.getRound(),
+              totalRounds,
+              match.getMatchId(),
+              selectedTeamId,
+              team1Id,
+              team1Name,
+              team2Id,
+              team2Name,
+              winnerTeamId,
+              match.getState()
+          );
+        })
+        .collect(java.util.stream.Collectors.toMap(
+            MemberActivityDto::matchId,
+            dto -> dto,
+            (existing, replacement) -> replacement
+        ))
+        .values()
+        .stream()
+        .toList();
+  }
+
+}

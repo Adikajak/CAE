@@ -79,6 +79,22 @@ describe('TeamActionDialog', () => {
     expect(screen.queryByText(/team deviendra inactive/i)).toBeNull();
   });
 
+  test('shows the exclude title and message with the member tag', () => {
+    render(
+      <TeamActionDialog
+        confirmAction="exclude"
+        selectedMember={selectedMember}
+        totalTeamMembers={3}
+        actionLoading={null}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/confirmer l'exclusion/i)).toBeTruthy();
+    expect(screen.getByText(/exclure archer de la team/i)).toBeTruthy();
+  });
+
   test('shows the inactive team warning when the manager is the last member', () => {
     render(
       <TeamActionDialog

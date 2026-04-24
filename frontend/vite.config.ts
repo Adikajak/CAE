@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: './src/setupTests.ts',
+      // testTimeout: 20000,
     },
 
     plugins: [

@@ -1,6 +1,6 @@
 package be.vinci.ipl.cae.demo.models.dtos;
 
-import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
+import be.vinci.ipl.cae.demo.models.enums.MembershipStatus;
 
 /**
  * DTO for TeamMembership responses.

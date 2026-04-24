@@ -84,13 +84,13 @@ public class AdminController {
   @DeleteMapping("/{userId}")
   @ResponseStatus(HttpStatus.OK)
   public void demoteFromAdmin(@PathVariable Long userId, @AuthenticationPrincipal User caller) {
-    try {
-      boolean demoted = administrationService.demoteFromAdmin(userId, caller.getId());
-      if (!demoted) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or not admin");
-      }
-    } catch (IllegalStateException e) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage(), e);
+    Boolean demoted = administrationService.demoteFromAdmin(userId, caller.getId());
+    if (demoted == null) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+          "Cannot demote yourself when you are the last admin");
+    }
+    if (!demoted) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found or not admin");
     }
   }
 
@@ -117,6 +117,7 @@ public class AdminController {
         user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
         user.getDate(),
         user.getTeam() != null ? user.getTeam().getName() : null,
+        null,
         isManager
     );
     //CPD-ON

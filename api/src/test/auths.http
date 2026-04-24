@@ -95,3 +95,29 @@ Content-Type: application/json
   "email": "manager@manager.com",
   "password": "Manager1234"
 }
+
+### [KO 400] Register invalide: tag manquant
+POST {{baseUrl}}/auths/register
+Content-Type: application/json
+
+{
+  "email": "notable@missing.com",
+  "password": "Admin1234",
+  "speciality": "Architecte",
+  "profile_picture": "https://api.dicebear.com/7.x/bottts/svg?seed=apple"
+}
+
+### [KO 400] Login invalide: mot de passe absent
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "admin@admin.com"
+}
+
+### [KO 401] Refresh sans token
+GET {{baseUrl}}/auths/refresh
+
+### [OK 200] Refresh avec token valide
+GET {{baseUrl}}/auths/refresh
+Authorization: {{token}}

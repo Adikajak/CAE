@@ -19,9 +19,11 @@ import {
   fetchTournamentsFiltered,
   publishTournament,
   updateTournament,
+  generateSchedule,
 } from '../services/tournamentService';
 import { fetchTeamById } from '../services/teamService';
 import { fetchTeamActivity } from '../services/tournamentRegistrationService';
+import { fetchMemberActivity } from '../services/activityService';
 import { UserContext } from './UserContext';
 import { toLocalDateInputValue } from '../utils/dateUtils';
 import { validateTournamentForm } from '../utils/tournamentFormValidation';
@@ -50,6 +52,9 @@ const defaultTournamentContext: TournamentContextType = {
   editing: false,
   editError: null,
   editSuccess: null,
+  generating: false,
+  generateError: null,
+  generateSuccess: null,
   refreshTournaments: async () => {},
   setName: () => {},
   setDescription: () => {},
@@ -61,6 +66,7 @@ const defaultTournamentContext: TournamentContextType = {
   submitTournamentCreation: async () => {},
   handlePublishTournament: async () => {},
   handleEditTournament: async () => {},
+  handleGenerateSchedule: async () => {},
   stateFilter: null,
   yearFilter: null,
   monthFilter: null,
@@ -73,6 +79,7 @@ const defaultTournamentContext: TournamentContextType = {
   teamNameFilter: '',
   playerTagFilter: '',
   registeredTournamentIds: new Set(),
+  participatedTournamentIds: new Set(),
   setStateFilter: () => {},
   setYearFilter: () => {},
   setMonthFilter: () => {},
@@ -131,7 +138,8 @@ const tournamentIncludesDayOfWeek = (
 
 const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
   const { authenticatedUser, jwtData } = useContext(UserContext);
-  const today = useMemo(() => toLocalDateInputValue(new Date()), []);
+  const [currentNow, setCurrentNow] = useState(() => new Date());
+  const today = useMemo(() => toLocalDateInputValue(currentNow), [currentNow]);
   const isAdmin = Boolean(authenticatedUser && jwtData()?.isAdmin);
 
   const [loading, setLoading] = useState(true);
@@ -144,6 +152,9 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
   >(null);
   const [isManager, setIsManager] = useState(false);
   const [registeredTournamentIds, setRegisteredTournamentIds] = useState<
+    Set<number>
+  >(new Set());
+  const [participatedTournamentIds, setParticipatedTournamentIds] = useState<
     Set<number>
   >(new Set());
 
@@ -166,6 +177,10 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
   const [editError, setEditError] = useState<string | null>(null);
   const [editSuccess, setEditSuccess] = useState<string | null>(null);
 
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [generateSuccess, setGenerateSuccess] = useState<string | null>(null);
+
   const [stateFilter, setStateFilter] = useState<string | null>(null);
   const [yearFilter, setYearFilter] = useState<number | null>(null);
   const [monthFilter, setMonthFilter] = useState<number | null>(null);
@@ -179,6 +194,16 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
   const [toDateFilter, setToDateFilter] = useState('');
   const [teamNameFilter, setTeamNameFilter] = useState('');
   const [playerTagFilter, setPlayerTagFilter] = useState('');
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentNow(new Date());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
     if (!formSuccess) {
@@ -221,6 +246,20 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
       window.clearTimeout(timeoutId);
     };
   }, [editSuccess]);
+
+  useEffect(() => {
+    if (!generateSuccess) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setGenerateSuccess(null);
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [generateSuccess]);
 
   const resetForm = useCallback(() => {
     setName('');
@@ -377,6 +416,45 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
     [authenticatedUser, refreshTournaments],
   );
 
+  const handleGenerateSchedule = useCallback(
+    async (tournamentId: number): Promise<void> => {
+      if (!authenticatedUser?.token) return;
+
+      setGenerating(true);
+      setGenerateError(null);
+      setGenerateSuccess(null);
+
+      try {
+        const tournament = tournamentList?.find((t) => t.id === tournamentId);
+
+        if (!tournament) {
+          setGenerateError(
+            'Tournoi introuvable pour la génération du planning.',
+          );
+          return;
+        }
+
+        const startDate = `${tournament.startDate}T13:00:00`;
+
+        await generateSchedule(authenticatedUser.token, tournamentId, {
+          startDate,
+          hoursBetweenRounds: 5,
+        });
+        setGenerateSuccess('Planning généré avec succès.');
+        await refreshTournaments();
+      } catch (generateActionError: unknown) {
+        const errorMessage =
+          generateActionError instanceof Error
+            ? generateActionError.message
+            : 'Une erreur est survenue lors de la génération du planning.';
+        setGenerateError(errorMessage);
+      } finally {
+        setGenerating(false);
+      }
+    },
+    [authenticatedUser, refreshTournaments, tournamentList],
+  );
+
   useEffect(() => {
     const loadTournaments = async () => {
       setLoading(true);
@@ -417,6 +495,21 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
       })
       .catch(() => setRegisteredTournamentIds(new Set()));
   }, [authenticatedUser?.teamId]);
+
+  useEffect(() => {
+    if (!authenticatedUser?.id || !authenticatedUser.token) {
+      setParticipatedTournamentIds(new Set());
+      return;
+    }
+
+    fetchMemberActivity(authenticatedUser.id, authenticatedUser.token)
+      .then((matches) =>
+        setParticipatedTournamentIds(
+          new Set(matches.map((m) => m.tournamentId)),
+        ),
+      )
+      .catch(() => setParticipatedTournamentIds(new Set()));
+  }, [authenticatedUser?.id, authenticatedUser?.token]);
 
   useEffect(() => {
     const trimmedTeamName = teamNameFilter.trim();
@@ -617,6 +710,9 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
     editing,
     editError,
     editSuccess,
+    generating,
+    generateError,
+    generateSuccess,
     refreshTournaments,
     setName,
     setDescription,
@@ -628,6 +724,7 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
     submitTournamentCreation,
     handlePublishTournament,
     handleEditTournament,
+    handleGenerateSchedule,
     stateFilter,
     yearFilter,
     monthFilter,
@@ -640,6 +737,7 @@ const TournamentContextProvider = ({ children }: { children: ReactNode }) => {
     teamNameFilter,
     playerTagFilter,
     registeredTournamentIds,
+    participatedTournamentIds,
     setStateFilter,
     setYearFilter,
     setMonthFilter,

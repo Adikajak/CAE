@@ -31,6 +31,7 @@ const defaultTournamentDetailsContext: TournamentDetailsContextType = {
   error: null,
   success: null,
   actionLoading: null,
+  alreadyRegistered: false,
   canRegister: false,
   registering: false,
   registerError: null,
@@ -50,11 +51,31 @@ const TournamentDetailsContext = createContext<TournamentDetailsContextType>(
   defaultTournamentDetailsContext,
 );
 
+/**
+ * Gets a message from an error.
+ * @param {unknown} error - the error
+ * @return {string} the message
+ */
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return error.message;
   return 'Une erreur inconnue est survenue';
 };
 
+/**
+ * Returns today's date as a YYYY-MM-DD string.
+ * @return {string} today's date
+ */
+const getToday = () => {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
+};
+
+/**
+ * Provides tournament details, registrations, and related actions to its children.
+ * @return {JSX.Element} the provider
+ */
 const TournamentDetailsContextProvider = ({
   tournamentId,
   children,
@@ -139,11 +160,15 @@ const TournamentDetailsContextProvider = ({
   const isTournamentFull =
     tournament !== null && registrations.length >= tournament.maxTeams;
 
+  const isRegistrationClosed =
+    tournament !== null && getToday() > tournament.endInscriptionDate;
+
   const canRegister =
     isManager &&
     tournament?.state === 'PLANIFIED' &&
     !alreadyRegistered &&
-    !isTournamentFull;
+    !isTournamentFull &&
+    !isRegistrationClosed;
 
   const registerTeam = useCallback(async () => {
     if (!authenticatedUser?.token || !tournament) return;
@@ -197,6 +222,7 @@ const TournamentDetailsContextProvider = ({
     error,
     success,
     actionLoading,
+    alreadyRegistered,
     canRegister,
     registering,
     registerError,

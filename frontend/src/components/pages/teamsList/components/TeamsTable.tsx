@@ -21,6 +21,11 @@ type TeamsTableProps = {
   onJoin: (teamId: number) => void;
 };
 
+/**
+ * Shows the list of teams in a table with join buttons.
+ * @param {TeamsTableProps} props - the table props
+ * @return {JSX.Element} the table
+ */
 const TeamsTable = ({
   teams,
   loading,

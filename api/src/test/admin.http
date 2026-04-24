@@ -1,4 +1,6 @@
-### Login de l'admin seedé en base et récupération du token
+@baseUrl = http://localhost:3000
+
+### Login admin seedé en base — récupération du token
 # @name loginAdmin
 POST {{baseUrl}}/auths/login
 Content-Type: application/json
@@ -8,25 +10,76 @@ Content-Type: application/json
   "password": "password"
 }
 
-### Appel à l'endpoint admin avec le token renvoyé par le login
+> {%
+client.global.set("adminToken", response.body.token);
+%}
+
+### Login utilisateur non-admin — récupération du token
+# @name loginNonAdmin
+POST {{baseUrl}}/auths/login
+Content-Type: application/json
+
+{
+  "email": "manager@manager.com",
+  "password": "Manager1234"
+}
+
+> {%
+client.global.set("nonAdminToken", response.body.token);
+%}
+
+## GET /administrators
+### [OK 200] Liste tous les admins — admin authentifié
 GET {{baseUrl}}/administrators
 Authorization: {{adminToken}}
 
-### Récupérer la liste des utilisateurs non-administrateurs
+### [KO 401] Liste admins — non authentifié
+GET {{baseUrl}}/administrators
+
+### [KO 403] Liste admins — utilisateur non-admin
+GET {{baseUrl}}/administrators
+Authorization: {{nonAdminToken}}
+
+## GET /administrators/non-admins
+### [OK 200] Liste les non-admins — admin authentifié
 GET {{baseUrl}}/administrators/non-admins
 Authorization: {{adminToken}}
 
-### Promouvoir un utilisateur en administrateur (remplacer {userId} par un ID réel)
-# Exemple: POST {{baseUrl}}/administrators/2
+### [KO 401] Liste non-admins — non authentifié
+GET {{baseUrl}}/administrators/non-admins
+
+### [KO 403] Liste non-admins — utilisateur non-admin
+GET {{baseUrl}}/administrators/non-admins
+Authorization: {{nonAdminToken}}
+
+## POST /administrators/{userId} — Promouvoir un utilisateur en admin
+### [OK 200] Promouvoir un utilisateur en admin (remplacer 2 par un ID non-admin réel)
 POST {{baseUrl}}/administrators/2
 Authorization: {{adminToken}}
-Content-Type: application/json
 
-### Rétrograder un administrateur (remplacer {userId} par un ID réel, ≠ du sien)
-# Exemple: DELETE {{baseUrl}}/administrators/2
+### [KO 401] Promouvoir — non authentifié
+POST {{baseUrl}}/administrators/2
+
+### [KO 403] Promouvoir — utilisateur non-admin
+POST {{baseUrl}}/administrators/2
+Authorization: {{nonAdminToken}}
+
+### [KO 404] Promouvoir — utilisateur inexistant
+POST {{baseUrl}}/administrators/999999
+Authorization: {{adminToken}}
+
+## DELETE /administrators/{userId} — Rétrograder un admin
+### [OK 200] Rétrograder un admin (remplacer 2 par un ID admin ≠ du sien)
 DELETE {{baseUrl}}/administrators/2
 Authorization: {{adminToken}}
 
-### Tentative de rétrogradation de soi-même (doit retourner 403 Forbidden)
+### [KO 401] Rétrograder — non authentifié
+DELETE {{baseUrl}}/administrators/2
+
+### [KO 403] Rétrograder — utilisateur non-admin (nonAdminToken essaie de rétrograder un admin)
+DELETE {{baseUrl}}/administrators/1
+Authorization: {{nonAdminToken}}
+
+### [KO 403] Rétrograder soi-même quand on est le seul admin (doit retourner 403 Forbidden)
 DELETE {{baseUrl}}/administrators/1
 Authorization: {{adminToken}}

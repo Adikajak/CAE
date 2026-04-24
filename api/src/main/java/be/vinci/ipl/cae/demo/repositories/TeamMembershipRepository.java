@@ -1,9 +1,9 @@
 package be.vinci.ipl.cae.demo.repositories;
 
-import be.vinci.ipl.cae.demo.models.entities.MembershipStatus;
 import be.vinci.ipl.cae.demo.models.entities.Team;
 import be.vinci.ipl.cae.demo.models.entities.TeamMembership;
 import be.vinci.ipl.cae.demo.models.entities.User;
+import be.vinci.ipl.cae.demo.models.enums.MembershipStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;

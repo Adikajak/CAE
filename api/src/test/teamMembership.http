@@ -44,6 +44,9 @@ Authorization: {{managerToken}}
 
 ## GET /teams/memberships/me — Current user membership
 
+### [KO 401] My membership — non authentifié
+GET {{baseUrl}}/teams/memberships/me
+
 ### [OK 200] My membership — memberWithoutATeam2 has a PENDING request
 GET {{baseUrl}}/teams/memberships/me
 Authorization: {{memberWithoutATeam2}}
@@ -120,7 +123,28 @@ Authorization: {{managerToken}}
 PATCH {{baseUrl}}/teams/memberships/5/refuse?reason=Tag+already+used
 Authorization: {{memberWithoutATeam2}}
 
+### [KO 404] Refuse — membership inexistant
+PATCH {{baseUrl}}/teams/memberships/999999/refuse?reason=test
+Authorization: {{memberWithoutATeamToken}}
+
 ### [OK 200] Refuse — manager refuses managerToken's request with a reason
 PATCH {{baseUrl}}/teams/memberships/5/refuse?reason=Tag+already+used
+Authorization: {{memberWithoutATeamToken}}
+
+## DELETE /teams/memberships/{membershipId} — Exclure un membre accepté
+## Prérequis: memberWithoutATeam2 est ACCEPTED dans Team Test (membership id=4)
+### [KO 401] Delete — non authentifié
+DELETE {{baseUrl}}/teams/memberships/4
+
+### [KO 403] Delete — utilisateur non manager (memberWithoutATeam2 essaie de s'exclure lui-même)
+DELETE {{baseUrl}}/teams/memberships/4
+Authorization: {{memberWithoutATeam2}}
+
+### [KO 404] Delete — membership inexistant
+DELETE {{baseUrl}}/teams/memberships/999999
+Authorization: {{memberWithoutATeamToken}}
+
+### [OK 204] Delete — manager exclut memberWithoutATeam2 de Team Test
+DELETE {{baseUrl}}/teams/memberships/4
 Authorization: {{memberWithoutATeamToken}}
 

@@ -61,6 +61,9 @@ public class TournamentController {
     if (!isAdmin && state == State.IN_PREPARATION) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Filtre non autorisé");
     }
+    if (teamName != null && !teamName.isBlank() && playerTag != null && !playerTag.isBlank()) {
+      return tournamentService.getTournamentsByTeamNameAndPlayerTag(teamName, playerTag, isAdmin);
+    }
     if (teamName != null && !teamName.isBlank()) {
       return tournamentService.getTournamentsByTeamName(teamName, isAdmin);
     }

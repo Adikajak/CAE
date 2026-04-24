@@ -56,9 +56,18 @@ const selectSx = {
 
 const textFieldSx = {
   ...selectSx,
-  '& input::placeholder': { color: 'primary.main', opacity: 1 },
+  '& .MuiInputBase-input': { textAlign: 'center' },
+  '& input::placeholder': {
+    color: 'primary.main',
+    opacity: 1,
+    textAlign: 'center',
+  },
 };
 
+/**
+ * Shows all filter controls for the tournament list.
+ * @return {JSX.Element} the filter bar
+ */
 const TournamentFilters = () => {
   const {
     tournamentList,
@@ -100,12 +109,21 @@ const TournamentFilters = () => {
   const [pendingFrom, setPendingFrom] = useState('');
   const [pendingTo, setPendingTo] = useState('');
 
+  /**
+   * Opens the date range popover.
+   * @param {React.MouseEvent<HTMLElement>} e - the click event
+   * @return {void}
+   */
   const openPeriodPopover = (e: React.MouseEvent<HTMLElement>) => {
     setPendingFrom(fromDateFilter);
     setPendingTo(toDateFilter);
     setPeriodAnchor(e.currentTarget);
   };
 
+  /**
+   * Saves the pending date range and closes the popover.
+   * @return {void}
+   */
   const applyPeriod = () => {
     setFromDateFilter(pendingFrom);
     setToDateFilter(pendingTo);
@@ -125,11 +143,11 @@ const TournamentFilters = () => {
     <Box sx={{ mb: 2 }}>
       <Stack direction="row" gap={1} alignItems="center" sx={{ pb: 0.5 }}>
         <TextField
-          placeholder="Nom du tournoi"
+          placeholder="Tournoi"
           value={tournamentNameFilter}
           onChange={(e) => setTournamentNameFilter(e.target.value)}
           size="small"
-          sx={{ flex: '1 1 100px', ...textFieldSx }}
+          sx={{ flex: '1 1 65px', ...textFieldSx }}
           inputProps={{
             style: { fontSize: '0.8rem' },
             'aria-label': 'Nom du tournoi',
@@ -137,12 +155,12 @@ const TournamentFilters = () => {
         />
 
         <TextField
-          placeholder="Nom de la team inscrite"
+          placeholder="Team"
           value={teamNameFilter}
           onChange={(e) => setTeamNameFilter(e.target.value)}
           size="small"
           disabled={isTeamNameDisabled}
-          sx={{ flex: '1 1 130px', ...textFieldSx }}
+          sx={{ flex: '1 1 60px', ...textFieldSx }}
           inputProps={{
             style: { fontSize: '0.8rem' },
             'aria-label': 'Nom de team participante',
@@ -150,19 +168,19 @@ const TournamentFilters = () => {
         />
 
         <TextField
-          placeholder="Tag du joueur inscrit"
+          placeholder="Tag"
           value={playerTagFilter}
           onChange={(e) => setPlayerTagFilter(e.target.value)}
           size="small"
           disabled={isPlayerTagDisabled}
-          sx={{ flex: '1 1 110px', ...textFieldSx }}
+          sx={{ flex: '1 1 40px', ...textFieldSx }}
           inputProps={{
             style: { fontSize: '0.8rem' },
             'aria-label': "Tag d'un joueur inscrit",
           }}
         />
 
-        <FormControl size="small" sx={{ flex: '1 1 80px' }}>
+        <FormControl size="small" sx={{ flex: '1 1 65px' }}>
           <Select
             displayEmpty
             value={stateFilter ?? ''}
@@ -191,7 +209,7 @@ const TournamentFilters = () => {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ flex: '1 1 90px' }}>
+        <FormControl size="small" sx={{ flex: '1 1 130px' }}>
           <Select
             displayEmpty
             value={availabilityFilter ?? ''}

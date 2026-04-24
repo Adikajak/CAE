@@ -1,7 +1,8 @@
 package be.vinci.ipl.cae.demo.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,7 @@ import be.vinci.ipl.cae.demo.models.entities.Tournament;
 import be.vinci.ipl.cae.demo.models.entities.TournamentRegistration;
 import be.vinci.ipl.cae.demo.models.entities.User;
 import be.vinci.ipl.cae.demo.models.enums.State;
+import be.vinci.ipl.cae.demo.models.results.TournamentRegistrationResult;
 import be.vinci.ipl.cae.demo.repositories.TournamentRegistrationRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -58,29 +60,31 @@ class TournamentRegistrationServiceTest {
   }
 
   @Test
-  void registerTeamThrowsWhenTeamHasNoManager() {
+  void registerTeamFailsWhenTeamHasNoManager() {
     activeTeam.setManager(null);
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager);
 
-    assertEquals("Cette team n'a pas de responsable principal", ex.getMessage());
+    assertFalse(r.success());
+    assertEquals("Cette team n'a pas de responsable principal", r.errorMessage());
   }
 
   @Test
-  void registerTeamThrowsWhenUserIsNotPrimaryManager() {
+  void registerTeamFailsWhenUserIsNotPrimaryManager() {
     User otherUser = new User();
     ReflectionTestUtils.setField(otherUser, "id", 99L);
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, otherUser));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, otherUser);
 
+    assertFalse(r.success());
     assertEquals("Seul le responsable principal ou secondaire peut inscrire la team",
-        ex.getMessage());
+        r.errorMessage());
   }
 
   @Test
-  void registerTeamThrowsWhenUserIsNeitherPrimaryNorSecondManager() {
+  void registerTeamFailsWhenUserIsNeitherPrimaryNorSecondManager() {
     User secondManager = new User();
     ReflectionTestUtils.setField(secondManager, "id", 2L);
     activeTeam.setSecondManager(secondManager);
@@ -88,55 +92,61 @@ class TournamentRegistrationServiceTest {
     User otherUser = new User();
     ReflectionTestUtils.setField(otherUser, "id", 99L);
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, otherUser));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, otherUser);
 
+    assertFalse(r.success());
     assertEquals("Seul le responsable principal ou secondaire peut inscrire la team",
-        ex.getMessage());
+        r.errorMessage());
   }
 
   @Test
-  void registerTeamThrowsWhenTournamentIsNotPlanified() {
+  void registerTeamFailsWhenTournamentIsNotPlanified() {
     openTournament.setState(State.IN_PREPARATION);
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager);
 
-    assertEquals("Les inscriptions ne sont pas ouvertes pour ce tournoi", ex.getMessage());
+    assertFalse(r.success());
+    assertEquals("Les inscriptions ne sont pas ouvertes pour ce tournoi", r.errorMessage());
   }
 
   @Test
-  void registerTeamThrowsWhenRegistrationPeriodIsFinished() {
+  void registerTeamFailsWhenRegistrationPeriodIsFinished() {
     openTournament.setEndInscriptionDate(LocalDate.now().minusDays(1));
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager);
 
-    assertEquals("La période d'inscription est finie", ex.getMessage());
+    assertFalse(r.success());
+    assertEquals("La période d'inscription est finie", r.errorMessage());
+    assertTrue(r.conflict());
   }
 
   @Test
-  void registerTeamThrowsWhenTeamHasNotEnoughMembers() {
+  void registerTeamFailsWhenTeamHasNotEnoughMembers() {
     when(teamService.getManagersCount(activeTeam)).thenReturn(1);
     when(teamService.getAcceptedMembersCount(activeTeam)).thenReturn(2);
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager);
 
-    assertEquals("La team doit avoir au moins 4 membres pour s'inscrire", ex.getMessage());
+    assertFalse(r.success());
+    assertEquals("La team doit avoir au moins 4 membres pour s'inscrire", r.errorMessage());
   }
 
   @Test
-  void registerTeamThrowsWhenTeamIsAlreadyRegistered() {
+  void registerTeamFailsWhenTeamIsAlreadyRegistered() {
     when(teamService.getManagersCount(activeTeam)).thenReturn(1);
     when(teamService.getAcceptedMembersCount(activeTeam)).thenReturn(3);
     when(tournamentRegistrationRepository.existsByTournamentAndTeam(openTournament, activeTeam))
         .thenReturn(true);
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager);
 
-    assertEquals("Cette team est déjà inscrite à ce tournoi", ex.getMessage());
+    assertFalse(r.success());
+    assertEquals("Cette team est déjà inscrite à ce tournoi", r.errorMessage());
   }
 
   @Test
@@ -151,10 +161,11 @@ class TournamentRegistrationServiceTest {
             new TournamentRegistration(), new TournamentRegistration(),
             new TournamentRegistration(), new TournamentRegistration()));
 
-    IllegalStateException ex = assertThrows(IllegalStateException.class,
-        () -> tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager));
+    TournamentRegistrationResult r =
+        tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager);
 
-    assertEquals("Ce tournoi a atteint le nombre maximum d'équipes", ex.getMessage());
+    assertFalse(r.success());
+    assertEquals("Ce tournoi a atteint le nombre maximum d'équipes", r.errorMessage());
   }
 
   @Test
@@ -174,9 +185,11 @@ class TournamentRegistrationServiceTest {
     when(tournamentRegistrationRepository.save(any(TournamentRegistration.class)))
         .thenReturn(saved);
 
-    TournamentRegistrationDto result =
+    TournamentRegistrationResult outcome =
         tournamentRegistrationService.registerTeam(openTournament, activeTeam, secondManager);
 
+    assertTrue(outcome.success());
+    TournamentRegistrationDto result = outcome.registration();
     assertEquals(100L, result.tournamentId());
     assertEquals("Spring Cup", result.tournamentName());
     assertEquals(10L, result.teamId());
@@ -197,9 +210,11 @@ class TournamentRegistrationServiceTest {
     when(tournamentRegistrationRepository.save(any(TournamentRegistration.class)))
         .thenReturn(saved);
 
-    TournamentRegistrationDto result =
+    TournamentRegistrationResult outcome =
         tournamentRegistrationService.registerTeam(openTournament, activeTeam, manager);
 
+    assertTrue(outcome.success());
+    TournamentRegistrationDto result = outcome.registration();
     assertEquals(100L, result.tournamentId());
     assertEquals("Spring Cup", result.tournamentName());
     assertEquals(10L, result.teamId());

@@ -1,5 +1,7 @@
 package be.vinci.ipl.cae.demo.controllers;
 
+import be.vinci.ipl.cae.demo.models.dtos.MemberActivityDto;
+import be.vinci.ipl.cae.demo.models.dtos.MembershipHistoryDto;
 import be.vinci.ipl.cae.demo.models.dtos.PasswordUpdateDto;
 import be.vinci.ipl.cae.demo.models.dtos.UnavailabilityRequestDto;
 import be.vinci.ipl.cae.demo.models.dtos.UserProfileDto;
@@ -12,7 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +51,7 @@ public class UserController {
    * @param authentication the Spring Security authentication object.
    * @return the user profile.
    */
+  @PreAuthorize("isAuthenticated()")
   @GetMapping("/me")
   public UserProfileDto getMyProfile(Authentication authentication) {
     User user = (User) authentication.getPrincipal();
@@ -64,6 +69,7 @@ public class UserController {
    * @param authentication the Spring Security authentication object.
    * @param passwordUpdate the old and new passwords.
    */
+  @PreAuthorize("isAuthenticated()")
   @PatchMapping("/me/password")
   public void updatePassword(Authentication authentication,
                              @RequestBody PasswordUpdateDto passwordUpdate) {
@@ -84,6 +90,7 @@ public class UserController {
    * @param authentication the Spring Security authentication object.
    * @return the list of unavailabilities.
    */
+  @PreAuthorize("isAuthenticated()")
   @GetMapping("/me/unavailabilities")
   public Iterable<Unavailability> getUnavailabilities(Authentication authentication) {
     User user = (User) authentication.getPrincipal();
@@ -97,6 +104,7 @@ public class UserController {
    * @param request        the unavailability dates.
    * @return the created unavailability.
    */
+  @PreAuthorize("isAuthenticated()")
   @PostMapping("/me/unavailabilities")
   @ResponseStatus(HttpStatus.CREATED)
   public Unavailability addUnavailability(
@@ -113,6 +121,7 @@ public class UserController {
    * @param authentication the Spring Security authentication object.
    * @param body           the request body containing the speciality name.
    */
+  @PreAuthorize("isAuthenticated()")
   @PatchMapping("/me/speciality")
   public void updateSpeciality(Authentication authentication,
                                @RequestBody Map<String, String> body) {
@@ -129,6 +138,7 @@ public class UserController {
    * @param authentication the Spring Security authentication object.
    * @param body the request body containing the profile picture URL.
    */
+  @PreAuthorize("isAuthenticated()")
   @PatchMapping("/me/profile-picture")
   public void updateProfilePicture(Authentication authentication,
                                    @RequestBody Map<String, String> body) {
@@ -164,6 +174,25 @@ public class UserController {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
     return toPublicProfile(user);
+  }
+
+  /**
+   * Get the unavailabilities of a member (only for their manager or second manager).
+   *
+   * @param member the authenticated user.
+   * @param id the target member id.
+   * @return the list of unavailabilities.
+   */
+  @GetMapping("/{id}/unavailabilities")
+  @PreAuthorize("isAuthenticated()")
+  public Iterable<Unavailability> getMemberUnavailabilities(
+      @AuthenticationPrincipal User member,
+      @PathVariable Long id) {
+    Iterable<Unavailability> result = userService.getUnavailabilitiesForMember(member, id);
+    if (result == null) {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
+    return result;
   }
 
   /**
@@ -210,6 +239,7 @@ public class UserController {
         user.getProfilePicture() != null ? user.getProfilePicture().getUrl() : null,
         user.getDate(),
         team != null ? team.getName() : null,
+        team != null ? team.getId() : null,
         isManager
     );
     //CPD-ON
@@ -221,6 +251,7 @@ public class UserController {
    * @param authentication the authenticated admin
    * @param id the user ID to ban
    */
+  @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/ban")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void banUser(Authentication authentication, @PathVariable Long id) {
@@ -228,9 +259,37 @@ public class UserController {
     if (!requester.isAdmin()) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
-    boolean success = userService.banUser(id);
+    boolean success = userService.banUser(id, requester.getId());
     if (!success) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
+  }
+
+  /**
+   * Get the past teams of a user.
+   *
+   * @param id the user id
+   * @return the list of past team memberships
+   */
+  @GetMapping("/{id}/past-teams")
+  public List<MembershipHistoryDto> getPastTeams(@PathVariable Long id) {
+    if (userService.findUser(id).isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+    return userService.getPastTeams(id);
+  }
+
+  /**
+   * Get the match activity of a member.
+   *
+   * @param id the user id
+   * @return the list of match activities
+   */
+  @GetMapping("/{id}/member-activity")
+  public List<MemberActivityDto> getMemberActivity(@PathVariable Long id) {
+    if (userService.findUser(id).isEmpty()) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    }
+    return userService.getMemberActivity(id);
   }
 }

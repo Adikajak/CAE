@@ -89,7 +89,10 @@ describe('TournamentPage', () => {
   let navigateMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    fetchMock = vi.fn();
+    fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([]),
+    });
     navigateMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     vi.mocked(useNavigate).mockReturnValue(navigateMock);
@@ -119,11 +122,15 @@ describe('TournamentPage', () => {
     });
 
     expect(screen.getByText('Spring Clash')).toBeTruthy();
-    expect(screen.getByText('Tournoi du printemps')).toBeTruthy();
-    expect(screen.getByText('En préparation')).toBeTruthy();
-  });
+    expect(
+      screen.getByText(/début des inscriptions\s*:\s*01\/03\/2026/i),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(/fin des inscriptions\s*:\s*31\/03\/2026/i),
+    ).toBeTruthy();
+  }, 15000);
 
-  test('renders registrationsCount/maxTeams in the table', async () => {
+  test('renders registrationsCount/maxTeams in tournament cards', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(initialTournaments),
@@ -136,10 +143,10 @@ describe('TournamentPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('3 / 16')).toBeTruthy();
+      expect(
+        screen.getByText(/teams inscrites\s*:\s*3\s*\/\s*16/i),
+      ).toBeTruthy();
     });
-
-    expect(screen.getByText('Nombre de teams inscrites')).toBeTruthy();
   });
 
   test('navigates to tournament detail page when clicking a row', async () => {
@@ -229,7 +236,7 @@ describe('TournamentPage', () => {
     expect(screen.queryByRole('columnheader', { name: 'État' })).toBeNull();
   });
 
-  test('renders the creation form for an admin user', async () => {
+  test('renders the creation dialog for an admin user after clicking create', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(initialTournaments),
@@ -241,14 +248,17 @@ describe('TournamentPage', () => {
       </UserContext.Provider>,
     );
 
+    const openCreateButton = await screen.findByRole('button', {
+      name: /créer un tournoi/i,
+    });
+    fireEvent.click(openCreateButton);
+
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /créer un tournoi/i }),
-      ).toBeTruthy();
+      expect(screen.getByRole('dialog')).toBeTruthy();
     });
 
     expect(screen.getByRole('textbox', { name: /^nom$/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /créer/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^créer$/i })).toBeTruthy();
   });
 
   test('prevents creating a tournament with past dates', async () => {
@@ -263,10 +273,13 @@ describe('TournamentPage', () => {
       </UserContext.Provider>,
     );
 
+    const openCreateButton = await screen.findByRole('button', {
+      name: /créer un tournoi/i,
+    });
+    fireEvent.click(openCreateButton);
+
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { name: /créer un tournoi/i }),
-      ).toBeTruthy();
+      expect(screen.getByRole('dialog')).toBeTruthy();
     });
 
     const today = getTodayLocalDate();
@@ -303,7 +316,14 @@ describe('TournamentPage', () => {
     expect((endInscriptionDateInput as HTMLInputElement).checkValidity()).toBe(
       false,
     );
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const createCalls = fetchMock.mock.calls.filter(([url, init]) => {
+      const requestUrl = typeof url === 'string' ? url : String(url);
+      const method = (init as RequestInit | undefined)?.method;
+      return requestUrl.includes('/api/tournaments/') && method === 'POST';
+    });
+
+    expect(createCalls).toHaveLength(0);
   });
 
   test('displays the loading state while tournaments are being fetched', () => {
@@ -329,7 +349,7 @@ describe('TournamentPage', () => {
     });
   });
 
-  test('renders the state column and tournament display name in the table', async () => {
+  test('uses card layout without state table column', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve(initialTournaments),
@@ -342,9 +362,9 @@ describe('TournamentPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('columnheader', { name: 'État' })).toBeTruthy();
+      expect(screen.getByText('Spring Clash')).toBeTruthy();
     });
 
-    expect(screen.getByText('En préparation')).toBeTruthy();
+    expect(screen.queryByRole('columnheader', { name: 'État' })).toBeNull();
   });
 });

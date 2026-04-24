@@ -19,10 +19,15 @@ import theme from './themes.ts';
 import AdministrationPage from './components/pages/administration/AdministrationPage.tsx';
 import TournamentPage from './components/pages/tournaments/TournamentPage.tsx';
 import TournamentDetailsPage from './components/pages/tournamentsDetails/TournamentDetailsPage.tsx';
+import TournamentBracketPage from './components/pages/tournamentsDetails/TournamentBracketPage.tsx';
+import SelectionPage from './components/pages/tournamentsDetails/SelectionPage.tsx';
+import MatchSelectionPage from './components/pages/tournamentsDetails/MatchSelectionPage.tsx';
 import MembersPage from './components/pages/membersList/MembersPage.tsx';
 import MemberDetailsPage from './components/pages/membersDetails/MemberDetailsPage.tsx';
 import { TournamentContextProvider } from './contexts/TournamentContext.tsx';
 import { NavbarContextProvider } from './contexts/NavbarContext.tsx';
+import { HomePageProvider } from './contexts/HomePageContext.tsx';
+import { NotificationContextProvider } from './contexts/NotificationContext.tsx';
 
 const router = createBrowserRouter([
   {
@@ -31,7 +36,11 @@ const router = createBrowserRouter([
     children: [
       {
         path: '',
-        element: <HomePage />,
+        element: (
+          <HomePageProvider>
+            <HomePage />
+          </HomePageProvider>
+        ),
       },
       {
         path: 'register',
@@ -44,7 +53,11 @@ const router = createBrowserRouter([
       { path: 'profile', element: <ProfilePage /> },
       {
         path: 'notifications',
-        element: <NotificationPage />,
+        element: (
+          <NotificationContextProvider>
+            <NotificationPage />
+          </NotificationContextProvider>
+        ),
       },
       {
         path: 'teams',
@@ -73,6 +86,18 @@ const router = createBrowserRouter([
       {
         path: 'tournaments/:tournamentId',
         element: <TournamentDetailsPage />,
+      },
+      {
+        path: 'tournaments/:tournamentId/bracket',
+        element: <TournamentBracketPage />,
+      },
+      {
+        path: 'tournaments/:tournamentId/matches/:matchId/selections/:teamId',
+        element: <SelectionPage />,
+      },
+      {
+        path: 'tournaments/:tournamentId/matches/:matchId/selections',
+        element: <MatchSelectionPage />,
       },
     ],
   },

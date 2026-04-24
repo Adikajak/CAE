@@ -50,10 +50,12 @@ describe('TeamMembersTable', () => {
     totalTeamMembers: 3,
     currentUserId: 1,
     isPrimaryManager: true,
+    isSecondManager: false,
     canViewMemberEmail: false,
     actionLoading: null,
     onDesignate: vi.fn(),
     onLeave: vi.fn(),
+    onExclude: vi.fn(),
   };
 
   test('renders the tag and speciality of each member', () => {
@@ -85,6 +87,117 @@ describe('TeamMembersTable', () => {
     expect(
       screen.getByRole('button', { name: /désigner second responsable/i }),
     ).toBeTruthy();
+  });
+
+  test('shows the exclude button for the primary manager on member rows', () => {
+    render(<TeamMembersTable {...defaultProps} />);
+
+    expect(screen.getByRole('button', { name: /exclure/i })).toBeTruthy();
+  });
+
+  test('shows the exclude button for the second manager on member rows', () => {
+    render(
+      <TeamMembersTable
+        {...defaultProps}
+        isPrimaryManager={false}
+        isSecondManager={true}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /exclure/i })).toBeTruthy();
+  });
+
+  test('shows the exclude button for the primary manager on second manager row', () => {
+    // tiago exclure remake
+    const secondManager = {
+      id: 3,
+      email: 'second@test.com',
+      tag: 'healer',
+      speciality: 'Healer',
+      profilePicture: '',
+      date: '',
+    };
+    const teamWithSecond: Team = {
+      ...team,
+      secondManager,
+      managersCount: 2,
+      membersCount: 1,
+    };
+    const memberListWithSecond = [
+      { membershipId: 11, member: manager, roleLabel: 'Responsable' as const },
+      {
+        membershipId: 12,
+        member: secondManager,
+        roleLabel: 'Second responsable' as const,
+      },
+      { membershipId: 10, member, roleLabel: 'Membre' as const },
+    ];
+
+    render(
+      <TeamMembersTable
+        {...defaultProps}
+        team={teamWithSecond}
+        memberList={memberListWithSecond}
+      />,
+    );
+
+    const excludeButtons = screen.getAllByRole('button', { name: /exclure/i });
+    expect(excludeButtons.length).toBe(2);
+    // tiago exclure remake
+  });
+
+  test('shows the exclude button for the second manager on primary manager row', () => {
+    // tiago exclure remake
+    const secondManager = {
+      id: 3,
+      email: 'second@test.com',
+      tag: 'healer',
+      speciality: 'Healer',
+      profilePicture: '',
+      date: '',
+    };
+    const teamWithSecond: Team = {
+      ...team,
+      secondManager,
+      managersCount: 2,
+      membersCount: 1,
+    };
+    const memberListWithSecond = [
+      { membershipId: 11, member: manager, roleLabel: 'Responsable' as const },
+      {
+        membershipId: 12,
+        member: secondManager,
+        roleLabel: 'Second responsable' as const,
+      },
+      { membershipId: 10, member, roleLabel: 'Membre' as const },
+    ];
+
+    render(
+      <TeamMembersTable
+        {...defaultProps}
+        team={teamWithSecond}
+        memberList={memberListWithSecond}
+        currentUserId={3}
+        isPrimaryManager={false}
+        isSecondManager={true}
+      />,
+    );
+
+    const excludeButtons = screen.getAllByRole('button', { name: /exclure/i });
+    expect(excludeButtons.length).toBe(2);
+    // tiago exclure remake
+  });
+
+  test('hides the exclude button for users who are not manager or co-manager', () => {
+    render(
+      <TeamMembersTable
+        {...defaultProps}
+        isPrimaryManager={false}
+        isSecondManager={false}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /exclure/i })).toBeNull();
   });
 
   test('hides the designate button when the team already has a co-manager', () => {
@@ -184,6 +297,24 @@ describe('TeamMembersTable', () => {
     });
   });
 
+  test('calls onExclude with the membership id after clicking confirm in the dialog', async () => {
+    const onExclude = vi.fn().mockResolvedValue(undefined);
+
+    render(<TeamMembersTable {...defaultProps} onExclude={onExclude} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /exclure/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /confirmer/i })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /confirmer/i }));
+
+    await waitFor(() => {
+      expect(onExclude).toHaveBeenCalledWith(10);
+    });
+  });
+
   test('closes the dialog without calling any action when cancel is clicked', async () => {
     const onDesignate = vi.fn();
 
@@ -246,8 +377,8 @@ describe('TeamMembersTable', () => {
 
     render(<TeamMembersTable {...defaultProps} />);
 
-    fireEvent.click(screen.getByText('mage'));
+    fireEvent.click(screen.getByText('archer'));
 
-    expect(navigate).toHaveBeenCalledWith('/members/1');
+    expect(navigate).toHaveBeenCalledWith('/members/2');
   });
 });

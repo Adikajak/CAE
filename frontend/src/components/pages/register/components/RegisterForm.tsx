@@ -46,12 +46,7 @@ const RegisterForm = () => {
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        width: '70%',
-        margin: '0 auto',
-        padding: 3,
-        backgroundColor: 'common.white',
-        borderRadius: 1,
-        boxShadow: 1,
+        marginX: 'auto',
       }}
     >
       <Box sx={{ marginBottom: 2 }}>
